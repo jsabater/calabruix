@@ -818,7 +818,7 @@ Should you want to customise the path of each article, you can use [permalink to
    posts = "/:sections/:slugorfilename"
 ```
 
-### Emphasising categories
+## Emphasising categories
 
 If you would like to bring up the relevance of categories, to boost your SEO and enhance site nativation by establishing a clear hierarchy, you could turn them into top-level sections, which would render them unnecessary in the front matter of the articles.
 
@@ -858,12 +858,68 @@ git add .
 git commit -m "Added a new article about Hugo and Blowfish"
 ```
 
-Once you are happy with the content of your blog, you can publish it. The first step is to generate the static files that will be served by the web server. This is done using the `hugo` command.
+Once you are happy with the content of your blog, you will want to publish it. There are two ways to do so:
+
+* Automatically, by connecting your repository to a hosting provider that supports Hugo.
+* Manually, by generating the static files and uploading them to a web server.
+
+In the second case, you will have to use the `hugo` command:
 
 ```bash
 cd ~/Sites/mywebsite
 hugo --minify --cleanDestinationDir
 ```
 
-The `--minify` option will minify the HTML, CSS and JavaScript files, which will reduce the size of the files and improve the loading time of your website. The `--cleanDestinationDir` option will remove any files in the `public/` directory that are not present in the source files, which is useful to keep the generated site clean.
+The resulting files will be placed in the `public/` directory.
 
+The `--minify` option will minify the HTML, CSS and JavaScript files, which will reduce the size of the files and improve the loading time of your website.
+
+The `--cleanDestinationDir` option will remove any files in the `public/` directory that are not present in the source files, which is useful to keep the generated site clean.
+
+## Cloudflare Pages
+
+There are certain prerequisites that you need to meet before you can deploy your Hugo site to Cloudflare Pages, namely:
+
+1. You registered a domain name with some domain registrar.
+2. You registered an account at Cloudflare.
+3. You added your domain to Cloudflare.
+4. You have configured your domain name to use Cloudflare's nameservers.
+
+Cloudflare calls this configuration a [full setup](https://developers.cloudflare.com/dns/zone-setups/full-setup/setup/). You do not need to register your domain with Cloudflare to use Cloudflare Pages, but you do need to add your domain to Cloudflare and configure it to use Cloudflare's nameservers.
+
+Once you have completed the full setup, you can easily deploy your Hugo site by following these steps:
+
+1. Log into your [Cloudflare dashboard](https://dash.cloudflare.com/) and select your account (should you have more than one).
+2. In account home, select `Compute (Workers) > Workers & Pages`.
+3. Select the `Pages` tab.
+4. Click on the `Get started` button on the `Import an existing Git repository` card.
+5. Select the `Github` tab and click on the `Connect GitHub` button.
+6. Select your Github account where you have your Hugo site repository.
+7. Select the `Only select repositories` and choose the repository from the dropdown list.
+8. Click on the `Install & Authorize` button.
+9. Back at Cloudflare, select the repository you just connected and click the `Begin setup` button.
+10. In the `Set up builds and deployments` step, fill in the following fields and click `Continue`:
+
+| Field name             | Value       | Notes                                                           |
+|------------------------|-------------|-----------------------------------------------------------------|
+| Project name           | `mywebsite` | The name of your project                                        |
+| Production branch      | `main`      | Default value should do                                         |
+| Build command          | `hugo`      | Optionally, add `--minify --cleanDestinationDir` to the command |
+| Build output directory | `public`    |                                                                 |
+
+11. Clodflare Pages will start the building and deploying process. The operation should end successfully in a few seconds, as you already have a working Hugo site in your repository.
+12. Click on the `Add custom domain` card to add your domain name to the project[^1]. In the next page, click the `Set up a custom domain` button and enter your domain name, e.g., `mywebsite.com`. Click on the `Continue` button.
+13. Click on the `Activate domain` button. Cloudflare will change the DNS records and issue the SSL certificate.
+14. In the next page you will see Cloudflare verifying the changes and waiting for the DNS propagation to complete. Once complete, you will see the `Verifying` status change to `Active`. You may now visit your website at `https://mywebsite.com/`. 
+
+At the Cloudflare Workers & Pages dashboard you will see four tabs:
+
+* **Deployments**: Shows the list of deployments made to your project. You can view the log of each deployment by clicking on the `View details` link.
+* **Metrics**: Shows the metrics of your project, such as the number of requests. It lets you enable [Web Analytics](https://developers.cloudflare.com/analytics/web-analytics/), should you wish to do so.
+* **Custom domains**: Shows the list of domains associated with your project. We were just there.
+* **Settings**: Allows you to change the settings of your project, such as the build command and, more importantly, use a specific version of Hugo by setting the `HUGO_VERSION` environment variable. This is useful if you want to use a specific version of Hugo that is not the latest one.
+
+
+[^1]: Preview end result by visiting your project at `mywebsite.pages.dev`.
+
+New commits will trigger Cloudflare to automatically build and deploy your changes.
