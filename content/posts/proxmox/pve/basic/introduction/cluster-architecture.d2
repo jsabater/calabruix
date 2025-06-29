@@ -1,0 +1,87 @@
+# Architecture diagram of an example entry-level Proxmox VE cluster
+# Render: https://play.d2lang.com/
+# See: https://aws.amazon.com/what-is/architecture-diagramming/
+# See: https://systemsarchitect.io/docs/requirements/systems/diagram-types
+
+vars: {
+  d2-config: {
+    # Terminal
+    theme-id: 300
+  }
+}
+
+# Title
+title: Proxmox VE cluster at Hetzner {
+  near: top-center
+  shape: text
+  style.font-size: 30
+}
+
+user: User {
+  shape: person
+  width: 100
+}
+
+admin: Administrator {
+  shape: person
+  width: 100
+}
+
+internet: Internet {
+  shape: cloud
+  style: {
+    stroke-dash: 2
+  }
+}
+
+fsn: Falkenstein, Germany {
+  shape: rectangle
+  style: {
+    font-size: 20
+    stroke-dash: 2
+  }
+
+  fsn-dc1: FSN-DC1 {
+    shape: package
+    style: {
+      stroke-dash: 1
+    }
+  }
+
+  fsn-dc3: FSN-DC3 {
+    shape: package
+    style: {
+      stroke-dash: 1
+    }
+  }
+}
+
+# Dedicated servers
+
+fsn.fsn-dc1: {
+  proxmox1: Proxmox 1
+  proxmox1.shape: rectangle
+}
+
+fsn.fsn-dc3: {
+  proxmox2: Proxmox 2
+  proxmox2.shape: rectangle
+
+  proxmox3: Proxmox 3
+  proxmox3.shape: rectangle
+}
+
+# Network
+
+fsn.vswitch: vSwitch
+fsn.vswitch.shape: hexagon
+
+# Connections
+
+fsn.vswitch -- internet: Floating IP address
+user -- internet: Public access
+fsn.fsn-dc1.proxmox1 -- internet: Static IP address
+internet -- admin: Private access
+fsn.vswitch -- fsn.fsn-dc1.proxmox1: VLAN
+fsn.vswitch -- fsn.fsn-dc3.proxmox2: VLAN
+fsn.vswitch -- fsn.fsn-dc3.proxmox3: VLAN

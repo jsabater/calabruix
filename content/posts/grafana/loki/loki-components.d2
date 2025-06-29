@@ -1,0 +1,76 @@
+# Loki components
+# Render: https://play.d2lang.com/
+
+vars: {
+    d2-config: {
+        # Terminal
+        theme-id: 300
+    }
+}
+
+# Title
+title: Loki components {
+    near: top-center
+    shape: text
+    style.font-size: 30
+}
+
+promtail: Promtail {
+    style.multiple: true
+}
+distributor: Distributor {
+    style.multiple: true
+}
+ingester: Ingester {
+    style.multiple: true
+}
+queryfrontend: "Query frontend" {
+    style.multiple: true
+}
+queryscheduler: "Query scheduler"
+querier: "Querier" {
+    style.multiple: true
+}
+indexgateway: "Index gateway"
+cache: "Cache" {
+    shape: stored_data
+}
+chunkstore: "Chunk store" {
+    shape: stored_data
+}
+indexstore: "Index store" {
+    shape: stored_data
+}
+ruler: "Ruler"
+compactor: "Compactor ⏱"
+storage: "Object store" {
+    shape: stored_data
+}
+
+# Bloom components
+
+bloomplanner: "Bloom planner ⏱"
+bloombuilder: "Bloom builder"
+bloomgateway: "Bloom gateway"
+
+# Connections
+
+promtail -- distributor
+distributor -- ingester
+ingester -> storage
+compactor -- storage
+distributor -- cache
+
+queryfrontend -- queryscheduler
+queryscheduler -- querier
+querier -- chunkstore
+querier -- indexgateway
+indexgateway -- indexstore
+ruler -- queryfrontend
+queryfrontend -- cache
+
+# Bloom connections
+bloombuilder -- indexstore
+bloomplanner -> bloombuilder
+bloomplanner -> bloomgateway
+bloomgateway -- indexgateway

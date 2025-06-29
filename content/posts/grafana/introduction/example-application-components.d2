@@ -1,0 +1,150 @@
+# System architecture diagram of the example application to be monitored using Grafana
+# Render: https://play.d2lang.com/
+# See: https://aws.amazon.com/what-is/architecture-diagramming/
+# See: https://systemsarchitect.io/docs/requirements/systems/diagram-types
+
+vars: {
+    d2-config: {
+        # Terminal
+        theme-id: 300
+    }
+}
+
+# Title
+title: System architecture {
+    near: top-center
+    shape: text
+    style.font-size: 30
+}
+
+# Backoffice
+
+user1: User {
+    shape: person
+    width: 100
+}
+
+nginx1: NGINX
+
+backoffice: Backoffice {
+    style.stroke-dash: 3
+    redis: Redis {
+        shape: stored_data
+        width: 120
+        height: 100
+    }
+    gunicorn: Gunicorn {
+        style.multiple: true
+        width: 120
+        height: 100
+    }
+}
+
+user1 -- nginx1: Private request
+nginx1 -- backoffice: Upstream request
+backoffice.gunicorn -- backoffice.redis: Cache
+backoffice -- nginx5: Request
+
+# API
+
+user2: User {
+    shape: person
+    width: 100
+}
+
+nginx2: NGINX
+
+api: API {
+    style.stroke-dash: 3
+    redis: Redis {
+        shape: stored_data
+        width: 120
+        height: 100
+    }
+    gunicorn: Gunicorn {
+        style.multiple: true
+        width: 120
+        height: 100
+    }
+}
+
+user2 -- nginx2: Private request
+nginx2 -- api: Upstream request
+api.gunicorn -- api.redis: Cache
+api -- nginx5: Request
+
+# Website
+
+customer1: Customer {
+    shape: person
+    width: 100
+}
+
+nginx3: NGINX
+
+website: Website {
+    style.stroke-dash: 3
+    redis: Redis {
+        shape: stored_data
+        width: 120
+        height: 100
+    }
+    gunicorn: Gunicorn {
+        style.multiple: true
+        width: 120
+        height: 100
+    }
+}
+
+customer1 -- nginx3: Public request
+nginx3 -- website: Upstream request
+website.gunicorn -- website.redis: Cache
+website -- nginx5: Request
+
+# Object storage
+
+customer2: Customer {
+    shape: person
+    width: 100
+}
+
+nginx4: NGINX
+
+minio: MinIO {
+    shape: cylinder
+    width: 120
+    height: 100
+} 
+
+customer2 -- nginx4: Public request
+nginx4 -- minio: File
+
+# Backend
+
+nginx5: NGINX
+
+backend: Back-end {
+    style.stroke-dash: 3
+    direction: right
+    redis: Redis {
+        shape: stored_data
+        width: 120
+        height: 100
+    }
+    gunicorn: Gunicorn {
+        style.multiple: true
+        width: 120
+        height: 100
+    }
+}
+
+postgresql: PostgreSQL {
+    shape: cylinder
+}
+
+# Connections
+
+nginx5 -- backend: Request
+backend.gunicorn -- backend.redis: Cache
+backend -- postgresql: Query
+backend -- minio: File

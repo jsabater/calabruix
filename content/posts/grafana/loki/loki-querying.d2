@@ -1,0 +1,41 @@
+# Loki querier components diagram
+# Render: https://play.d2lang.com/
+
+vars: {
+  d2-config: {
+    # Terminal
+    theme-id: 300
+  }
+}
+
+# Title
+title: Querying Loki {
+  near: top-center
+  shape: text
+  style.font-size: 30
+}
+
+grafana: "Grafana"
+queryfrontend: "Query frontend"
+queryscheduler: "Query scheduler"
+querier: "Querier"
+indexgateway: "Index gateway"
+bloomgateway: "Bloom gateway"
+cache: "Cache" {
+  shape: stored_data
+}
+chunkstore: "Chunk store"
+indexstore: "Index store"
+ruler: "Ruler"
+
+# Connections
+
+grafana -> queryfrontend: "Queries"
+queryfrontend -> queryscheduler: "Optimised queries"
+queryscheduler -> querier: "Split-up, queued queries"
+querier <- chunkstore: "Chunks"
+querier -> indexgateway: "Metadata queries"
+indexgateway <- indexstore: "Labels"
+indexgateway <- bloomgateway: "Filter hints"
+ruler -> queryfrontend: "Rules and\nalert expressions"
+cache -- queryfrontend: "Cached indices\nand queries"

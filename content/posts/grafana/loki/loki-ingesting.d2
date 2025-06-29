@@ -1,0 +1,52 @@
+# Loki ingester components diagram
+# Render: https://play.d2lang.com/
+
+vars: {
+    d2-config: {
+        # Terminal
+        theme-id: 300
+    }
+}
+
+# Title
+title: Ingesting logs in Loki {
+    near: top-center
+    shape: text
+    style.font-size: 30
+}
+
+promtail: Promtail
+distributor: Distributor {
+    style.stroke-dash: 3
+    hashing: Ring {
+        shape: circle
+        width: 100
+        height: 100
+    }
+}
+ingester: Ingester
+storage: Storage {
+    style.stroke-dash: 3
+    chunkstore: Chunks {
+        shape: stored_data
+        width: 120
+        height: 100
+    }
+    indexstore: Indices {
+        shape: stored_data
+        width: 120
+        height: 100
+    }
+}
+compactor: "Compactor"
+cache: "Cache" {
+    shape: stored_data
+}
+
+# Connections
+
+promtail -> distributor: "Labeled logs"
+distributor -> ingester: "Hashed logs"
+ingester -> storage: "Flushed chunks,\nupdated metadata"
+compactor -> storage: "Compacted\nindices"
+distributor -> cache: "Label data"

@@ -1,0 +1,68 @@
+# System architecture diagram of the Grafana tools
+# Render: https://play.d2lang.com/
+# See: https://aws.amazon.com/what-is/architecture-diagramming/
+# See: https://systemsarchitect.io/docs/requirements/systems/diagram-types
+
+vars: {
+    d2-config: {
+        # Terminal
+        theme-id: 300
+    }
+}
+
+# Title
+title: Grafana architecture {
+    near: top-center
+    shape: text
+    style.font-size: 30
+}
+
+# Request
+user: User {
+    shape: person
+}
+
+# NGINX reverse proxy
+nginx: NGINX
+
+# Service: Prometheus
+Prometheus: Prometheus {
+    style.stroke-dash: 3
+    tsdb: TSDB
+    tsdb.shape: stored_data
+    server: Server
+}
+
+# Service: Loki
+loki: Loki {
+    style.stroke-dash: 3
+    tsdb: TSDB
+    tsdb.shape: stored_data
+    server: Server
+}
+
+# Service: Grafana
+grafana: Grafana {
+    style.stroke-dash: 3
+    redis: Redis
+    redis.shape: stored_data
+    server: Server
+}
+
+# Service: Promtail
+promtail: Promtail {
+}
+
+exporter: Exporter {
+}
+
+# Connections
+user -> nginx: Private request
+nginx -> grafana: Upstream request
+prometheus -> exporter: Pull metric data
+promtail -> loki:  Push logs
+grafana -> prometheus: PromQL query
+grafana -> loki: LoqQL query
+grafana.server -> grafana.redis: Cache
+prometheus.server -> prometheus.tsdb: Metrics
+loki.server -> loki.tsdb: Metrics
