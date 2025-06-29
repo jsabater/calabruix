@@ -1,6 +1,6 @@
 ---
-title: "Welcome to Calabruix!"
-description: "A blog about systems administration, software development and operations."
+title: "Calabruix"
+description: "A blog about systems engineering, software development and operations."
 date: "2024-07-18"
 ---
 
