@@ -3,7 +3,7 @@ title: "Proxmox installation and configuration"
 date: 2023-08-01
 lastmod: 2024-09-21
 description: "Install Proxmox VE 7 on top of an existing Debian 11 Bullseye installation, configure the network and set up Fail2ban."
-summary: "Installing PVE, configuring the network and setting up Fail2ban"
+summary: "Installing PVE on Debian 11, configuring the network and setting up Fail2ban"
 categories: ["virtualisation"]
 tags: ["proxmox", "pve"]
 slug: installation

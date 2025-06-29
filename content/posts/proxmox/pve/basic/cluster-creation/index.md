@@ -3,7 +3,7 @@ title: "Creating the Proxmox cluster"
 date: 2023-08-01
 lastmod: 2024-09-21
 description: "Creating a Proxmox cluster, issuing the necessary certificates and configuring the firewall"
-summary: "Creating a Proxmox cluster and configuring the firewall"
+summary: "Turning your single PVE server into a one-node cluster and configuring the firewall"
 categories: ["virtualisation"]
 tags: ["proxmox", "pve"]
 series: ["PVE7"]

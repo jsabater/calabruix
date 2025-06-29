@@ -2,8 +2,8 @@
 title: "Adding nodes to a Proxmox cluster"
 date: 2023-08-01
 lastmod: 2024-09-21
-description: ""
-summary: ""
+description: "Add nodes to a Proxmox cluster following a set of well-defined steps to avoid human errors"
+summary: "Add nodes by following a set of well-defined steps that prevent human errors"
 categories: ["virtualisation"]
 tags: ["proxmox", "pve"]
 series: ["PVE7"]
