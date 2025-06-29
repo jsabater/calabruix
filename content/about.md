@@ -1,11 +1,11 @@
 ---
 title: "About me"
 date: "2024-08-11"
-lastmod: 2025-02-11
-description: "About Jaume Sabater."
+lastmod: 2025-06-29
+description: "About Jaume Sabater, the author of this blog"
 ---
 
-I am a long-time systems engineer who got his first taste of Linux via [Debian GNU/Linux](https://www.debian.org) back in the mid 90s. I started as a software developer (front-end and back-end), but soon dwelled into Internet services operations through dedicated servers and, later, virtualisation. Along the way, I also learned about monitoring, automation, and configuration management. What is now known as DevOps was common sense to me when I was in my twenties, as I never shared that development versus operations divide.
+I am a long-time systems engineer who got his first taste of Linux via [Debian GNU/Linux](https://www.debian.org) back in the mid 90s. I started as a software developer (front-end and back-end), but soon dwelled into Internet services operations through dedicated servers and, later, virtualisation. Along the way, I also learned about monitoring, automation, and configuration management. What is now known nowadays as DevOps was common sense to me when I was in my twenties, as I never shared that development versus operations divide.
 
 I spent some years alternating the roles of project manager and systems engineer and, eventually, co-founded a company offering [*](VoIP) and systems engineering services, which led me to a general manager role in the public administration for two terms (my small public service contribution).
 
