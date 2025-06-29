@@ -45,7 +45,7 @@ forgejoDefaultServer = "https://v8.next.forgejo.org"
 
 [homepage]
   layout = "background" # valid options: page, profile, hero, card, background, custom
-  homepageImage = "img/background-rain-roadway.webp"
+  homepageImage = "img/backgrounds/background-rain-roadway.webp"
   showRecent = true
   showRecentItems = 6
   showMoreLink = true
