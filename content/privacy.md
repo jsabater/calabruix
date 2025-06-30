@@ -5,7 +5,7 @@ lastmod: 2025-06-29
 description: "Privacy and cookies policy"
 ---
 
-This site neither uses cookies nor any software that tracks and collects data in the background. Moreover, I recommend using browsers that respect privacy.
+This site neither uses cookies nor any software that tracks or collects data in the background. Moreover, I recommend using browsers that respect privacy.
 
 All of the software used in this website adheres to the open-source philosophy. If you appreciate my work and it has saved you time, please consider supporting me with a donation [through PayPal](https://www.paypal.me/JaumeSabater), buying me [a coffee](https://buymeacoffee.com/jsabater), or buying me [a Ko-Fi](https://ko-fi.com/jabater).
 
