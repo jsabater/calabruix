@@ -1,7 +1,7 @@
 ---
 title: "Build your blog using Hugo and Blowfish"
 date: "2024-09-05"
-lastmod: "2025-05-29"
+lastmod: "2025-06-30"
 description: "An installation and configuration guide of the Hugo static site generator with the Blowfish theme for your blog website."
 summary: "Install and configure the Hugo site generator with the Blowfish theme for your blog website."
 categories: ["frameworks"]
@@ -15,7 +15,7 @@ We will be using the [Debian](https://www.debian.org) distribution of Linux, but
 
 ## System dependencies
 
-In our scenario, the [Git](https://git-scm.com/) distributed version control system is the only tool required. We will use to install the Blowfish theme as a Git submodule, to access [commit information](https://gohugo.io/methods/page/gitinfo/) from a local Git repository, to save a copy of our website on [Github](https://github.com/) and to host our site at [Cloudflare Pages](https://pages.cloudflare.com/).
+In our scenario, the [Git](https://git-scm.com/) distributed version control system is the only tool required. We will use to install the Blowfish theme as a Git submodule, to access [commit information](https://gohugo.io/methods/page/gitinfo/) from a local Git repository, to save a copy of our website on [Github](https://github.com/).
 
 ```bash
 apt-get install git
