@@ -9,7 +9,7 @@ tags: ["proxmox", "pve"]
 slug: installation
 series: ["PVE7"]
 series_order: 3
-weight: 90
+weight: 30
 ---
 
 Proxmox Virtual Environment 7 will be installed on top of the existing Debian 11 Bullseye installation, which currently has a MAC address with one public IPv4 and one IPv6 address.

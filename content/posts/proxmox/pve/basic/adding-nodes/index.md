@@ -8,7 +8,7 @@ categories: ["virtualisation"]
 tags: ["proxmox", "pve"]
 series: ["PVE7"]
 series_order: 5
-weight: 80
+weight: 50
 ---
 
 Once we have our Proxmox cluster up and running, whether it has just one node or multiple nodes already, we will eventually have to go through the process of adding a new node to the cluster.

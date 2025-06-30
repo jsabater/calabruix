@@ -8,7 +8,7 @@ categories: ["virtualisation"]
 tags: ["proxmox", "pve"]
 series: ["PVE7"]
 series_order: 4
-weight: 85
+weight: 40
 ---
 
 This article will lead you through the necessary steps to create the cluster and perform its initial configuration. Both the Hetzner firewall and the Proxmox firewall will be configured to allow the necessary traffic between the cluster nodes and the guests.

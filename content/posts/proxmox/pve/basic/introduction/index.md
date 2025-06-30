@@ -9,7 +9,7 @@ tags: ["proxmox", "pve"]
 slug: introduction
 series: ["PVE7"]
 series_order: 1
-weight: 100
+weight: 10
 ---
 
 ## Introduction

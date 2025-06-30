@@ -9,7 +9,7 @@ tags: ["proxmox", "pve"]
 slug: operating-system
 series: ["PVE7"]
 series_order: 2
-weight: 95
+weight: 20
 ---
 
 This article will lead you through the necessary steps to install the Debian GNU/Linux operating system on a dedicated server at [Hetzner](https://www.hetzner.com/).
