@@ -8,6 +8,7 @@ categories: ["infrastructure"]
 tags: ["monitoring", "grafana", "prometheus"]
 series: ["Grafana"]
 series_order: 3
+weight: 30
 ---
 
 Unlike SQL, that tends to be more imperative (`SELECT ... FROM ...`), the Prometheus Query Language is a nested functional language. That means that you describe the data you are looking for as a nested set of expressions that each evaluate (without side effects) to an intermediary value. Each intermediary value is used as an argument or operand of the expressions surrounding it, while the outer-most expression of your query represents the final return value that you get to see in a table, graph, or similar use case.

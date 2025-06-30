@@ -8,6 +8,7 @@ categories: ["infrastructure"]
 tags: ["monitoring", "grafana", "prometheus"]
 series: ["Grafana"]
 series_order: 2
+weight: 20
 ---
 
 This article will make use of two [*](LXC) running [Debian GNU/Linux](https://www.debian.org/) on a Proxmox cluster to get the Prometheus server installed and set up to pull and store data metrics.

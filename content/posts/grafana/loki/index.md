@@ -8,6 +8,7 @@ categories: ["infrastructure"]
 tags: ["monitoring", "grafana", "loki", "promtail"]
 series: ["Grafana"]
 series_order: 4
+weight: 40
 ---
 
 This article will make use of two [*](LXC) running [Debian GNU/Linux](https://www.debian.org/) on a Proxmox cluster to get the Loki server installed and set up to recieve and store log data.

@@ -8,6 +8,7 @@ categories: ["infrastructure"]
 tags: ["monitoring", "grafana", "prometheus", "loki", "alerting"]
 series: ["Grafana"]
 series_order: 1
+weight: 10
 ---
 
 You can monitor the hosts and guests of your [Proxmox](https://proxmox.com/) cluster using the tools provided by [Grafana Labs](https://grafana.com/). Prometheus and Loki will be used to store metric data and logs, respectively, and Grafana will be used to visualise them. A number of Prometheus exporters and the Promtail agent will be installed on nodes, containers and virtual machines to retrieve and send the data.

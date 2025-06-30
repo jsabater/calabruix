@@ -8,6 +8,7 @@ categories: ["infrastructure"]
 tags: ["monitoring", "grafana", "loki", "promtail"]
 series: ["Grafana"]
 series_order: 5
+weight: 50
 draft: true
 ---
 
