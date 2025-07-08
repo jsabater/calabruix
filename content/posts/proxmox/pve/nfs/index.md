@@ -1,28 +1,45 @@
 ---
 title: "NFS server on Proxmox VE"
 date: 2025-06-19
-lastmod: 2025-06-22
-description: "Install and configure an NFS server in a VM on a Proxmox using ZFS for optimal performance"
+lastmod: 2025-06-30
+description: "Install and configure a Network File System (NFS) server in a VM on a Proxmox using ZFS for optimal performance"
 summary: "Install and configure an NFS server in a VM on a Proxmox cluster using ZFS"
 categories: ["virtualisation"]
 tags: ["proxmox", "pve", "nfs", "zfs"]
 draft: true
 ---
 
-# NFS server on Proxmox
+[*](NFS) is a distributed file system protocol that allows clients to access files over a network as if they were local. It is commonly used for sharing files between servers and clients in a networked environment.
+
+In this article, we will install and configure an NFS server in a VM on a Proxmox cluster, optionally using our [*](ZFS) pool. The NFS server will be used to share files between multiple clients, such as web servers or application servers.
+
+This is an alternative approach to using an [*](S3) compatible object storage, such as [MinIO](https://min.io/), [Garage](https://garagehq.deuxfleurs.fr/) or [SeaweedFS](https://seaweedfs.com/). Both approaches have their own advantages and disadvantages, and the choice between them depends on the specific use case, requirements and limitations.
 
 ## ISO download
 
-Visit the [Downloading Debian](https://www.debian.org/download) page and the [SHA512SUMS](https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/SHA512SUMS) page linked there. We are looking for latest Debian 12 Bookworm Netinst ISO and its SHA-512 checksum.
+Visit the [Downloading Debian](https://www.debian.org/download) page and its linked [SHA512SUMS](https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/SHA512SUMS) page. We are looking for latest Debian 12 Bookworm Netinst ISO and its SHA-512 checksum.
 
-Click on the node where you want to install the VM, go to the `local` storage, go to the `ISO Images` menu option and click `Download from URL`:
+Click on the node where you want to install the VM, go to the `local` storage, go to the `ISO Images` menu option and click the `Download from URL` button:
 
-* URL: Paste the URL of the [latest Debian 12 Bookworm Netinst ISO](https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.11.0-amd64-netinst.iso) and click on `Query URL`. `File size` and `MIME type` will be filled in.
+* Paste the URL of the [latest Debian 12 Bookworm Netinst ISO](https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.11.0-amd64-netinst.iso) into the `URL` field and click on `Query URL`. `File size` and `MIME type` will be filled in.
 * Select the hash algorithm `SHA-512` and paste the checksum for the image.
 
-The image will be downloaded and verified. Once the download is complete, you can see the ISO image in the `local` storage.
+The image will be downloaded and verified. Once the download is complete, you will notice the ISO image in the `local` storage on the node.
 
 ## VM creation
+
+We will be using three separate virtual disks for the VM:
+
+* **OS disk**: A small disk on our local pool that will hold the operating system.
+* **Swap disk**: A small disk on our local pool that will hold the swap space.
+* **Data disk**: A larger disk on our ZFS pool that will hold the data to be shared via NFS.
+
+This is to simplify the setup and prevent us from running into issues with disk space management on multiple partitions. Both the OS and the data disks will be formatted using `ext4`, which will allow us to extend them later, if needed.
+
+Therefore, we will be using manual partitioning during the OS installation to:
+
+* Create a DOS partition table on each disk.
+* Create a single, primary partition on each disk.
 
 Select the node where you want to install the VM on, then click on the `Create VM` button on the top-right corner of the Proxmox VE WebGUI and follow the assistant.
 
@@ -49,14 +66,7 @@ Select the node where you want to install the VM on, then click on the `Create V
 [^1]: Managed via the `Datacenter > Permissions > Pools` menu option.
 [^2]: Default for newly created Linux VMs since Proxmox VE 7.3. Each disk will have its own VirtIO SCSI controller, and QEMU will handle the disks IO in a dedicated thread.
 
-In the node where this VM is being provisioned we have allocated 4-8 GB for ZFS ARC via `/etc/modprobe.d/zfs.conf`:
-
-```conf
-options zfs zfs_arc_max=8589934592
-options zfs zfs_arc_min=4294967296
-```
-
-On the `Disks` tab, we will be creating three disks, one for the OS on the `local` storage, one for the swap on the `local` storage, and one for the data to be shared via NFS on the `zfspool` storage. You can use the `Add` button on the bottom-left corner to add disks.
+On the `Disks` tab, we will be creating three disks, as described above. Use the `Add` button on the bottom-left corner to add disks.
 
 | Option            | OS disk    | Swap disk  | Data disk  | Notes                                      |
 |-------------------|:----------:|:----------:|:----------:|--------------------------------------------|
@@ -70,40 +80,58 @@ On the `Disks` tab, we will be creating three disks, one for the OS on the `loca
 | `Async IO`        | `io_uring` | `io_uring` | `io_uring` | Most compatible and reliable               |
 | `Discard`         | Yes        | Yes        | Yes        | Enable TRIM/UNMAP                          |
 
-We will be using manual partitioning during the OS installation to, first, create a DOS partition table and, then, create a single, primary partition on each disk. This will prevent us from running into issues with multiple partitions and simplify the setup. Both the OS (SCSI-0) and the data (SCSI-2) disks will be formatted using `ext4`, which will allow us to extend them later, if needed.
+> Regarding the data disk, by choosing `zfspool` as storage, the assistant creates a ZFS volume (zvol) instead of a virtual disk. More on that later.
+
+Incidentally, in the node where this VM is being provisioned we have allocated 4-8 GB for ZFS ARC via `/etc/modprobe.d/zfs.conf`:
+
+```conf
+options zfs zfs_arc_max=8589934592
+options zfs zfs_arc_min=4294967296
+```
+
+This will allow the VM to use up to 8 GB of memory for caching, which is a good amount for a moderate usage NFS server. The `Min. memory` setting will ensure that the VM has at least 4 GB of memory available, which is enough for the OS and the NFS server.
+
+The VM id will be automatically assigned by Proxmox, but you can change it to a specific number if you want. In this article, we will use `104` as the VM id.
+
+> Do not forget to add the corresponding DNS records to your internal zone `localdomain.com` and to your reverse DNS zone `0.168.192.in-addr.arpa`.
 
 ## OS install
 
 Once the VM has been created, click on its `Console` menu option and click the `Start` button. Once booted, the graphical installer will appear. Select the second option, `Install`, to change into the text mode.
 
-Language: English
-Location: Europe, Spain
-Locale: United States (`en_US.UTC-8`)
-Keymap: Spanish
+Proceed with the configuration of the language and keyboard layout. Example options:
 
-DHCP auto configuration will time out and display an error message. Select `Continue` and, in the next screen, select `Configure network manually`. 
+* Language: English
+* Location: Europe, Spain
+* Locale: United States (`en_US.UTC-8`)
+* Keymap: Spanish
 
-IP address: `192.168.0.4/24`
-Gateway: <leave blank>
-Name server addresses: `192.168.0.239 192.168.0.241`
-Hostname: `nfs1`
-Domain name: `localdomain.com`
-Root password: <some 14 alphanumeric characters>
-Full name for the new user: Systems Administrator
-Username for your account: devops
-Password for the new user: <some 14 alphanumeric characters>
-Time zone: Madrid
-Partitioning method: "Manual"
+Next, network configuration via DHCP auto configuration will be attempted. If you do not use HDCP, it will time out and display an error message. Select `Continue` and, in the next screen, select `Configure network manually`.  Example options:
+
+* IP address: `192.168.0.4/24`
+* Gateway: <leave blank>
+* Name server addresses: `192.168.0.239 192.168.0.241`
+* Hostname: `nfs1`
+* Domain name: `localdomain.com`
+* Root password: <password>
+* Full name for the new user: Systems Administrator
+* Username for your account: `devops`
+* Password for the new user: <password>
+* Time zone: Madrid
+
+> The guests in the cluster use an HTTP proxy to access the Debian package repositories, therefore the gateway is left blank.
+
+Partitioning is next. Choose the "Manual" option. Example steps for the OS, swap and data disks (unless you want to use a zvol).
 
 First disk (OS):
 
 * Select the `SCSI (0,0,0)` disk (e.g., `sda`).
-* Create new empty partition table on this device? Yes.
-* Select the `pri/log free space` UI placeholder showing available unallocated space.
+* Accept creating a new empty partition table on the device.
+* Select the `pri/log free space` UI placeholder showing the available unallocated space.
 * Select `Create a new partition`. Use all available space (default option) and select `Primary` as the partition type.
 * Set the following options:
   * Use as: `Ext4 journaling file system`.
-  * Mount point: `/` (root)
+  * Mount point: `/`
   * Mount options: `discard`, `noatime`, `nodiratime`
   * Label: `os`
   * Reserved blocks: 1%
@@ -114,56 +142,253 @@ First disk (OS):
 Second disk (swap):
 
 * Select the `SCSI (0,0,1)` disk (e.g., `sdb`).
-* Create new empty partition table on this device? Yes.
-* Select the `pri/log free space` UI placeholder showing available unallocated space.
+* Accept creating a new empty partition table on the device.
+* Select the `pri/log free space` UI placeholder showing the available unallocated space.
 * Select `Create a new partition`. Use all available space (default option) and select `Primary` as the partition type.
 * Set the following options:
   * Use as: `swap area`.
   * Bootable flag: `off`
 * Select `Done setting up the partition`.
 
-Third disk (data):
+Ignore the third `SCSI (0,0,2)` disk (e.g., `sdc`), our data disk, during the installation.
 
-* Select the `SCSI (0,0,2)` disk (e.g., `sdc`).
-* Create new empty partition table on this device? Yes.
-* Select the `pri/log free space` UI placeholder showing available unallocated space.
-* Select `Create a new partition`. Use all available space (default option) and select `Primary` as the partition type.
-* Set the following options:
-  * Use as: `Ext4 journaling file system`.
-  * Mount point: `/srv/nfs` (via the `Enter manually` option).
-  * Mount options: `discard`, `noatime`, `nodiratime`
-  * Label: `nfs`
-  * Reserved blocks: 1%
-  * Typical usage: `standard` [^2]
-  * Bootable flag: `off`
-* Select `Done setting up the partition`.
+Select the `Finish partitioning and write changes to disk` option and accept writing the changes to disk. The installer will install the base system.
 
-[^2]: Use `largefile` if your files are (almost) always at least 1 MB in size, and `largefile4` if your files are (almost) always at least 4 MB in size.
-
-And select `Finish partitioning and write changes to disk`. Select `Yes` when prompted `Write the changes to disk?`.
+> The correspondence between SCSI disks and the `/dev/sdX` device names used above is not guaranteed. The installer will display the disk size, which can help you identify them.
 
 The next step in the installer is to configure the package manager. When prompted `Scan extra installation media?`, select `No`. Then set the following options:
 
 * Debian archive mirror country: Germany
 * Debian archive mirror: `deb.debian.org`
-* HTTP proxy information: http://apt.localdomain.com:8080/
+* HTTP proxy information: `http://apt.localdomain.com:8080/`
 
-Proxy detection will be followed up by packages index update and, then, installation of software will commence.
+Proxy detection will be followed up by packages index update. Then, the installer will upgrade the base system with new packages, if any. Once complete, decide whether you want to participate in the package usage survey, then choose `SSH server` and `Standard system utilities` (default values) in the software selection screen, and continue.
 
-Participate in the package usage survey: <your choice>
+The final step is to install the GRUB boot loader. Choose to install the GRUB boot loader to the primary drive `/dev/sda (scsi-0QEMU_QEMU_HARDDISK_drive-scsi0)`. Once its installation is complete, choose `Continue` to reboot.
 
-In the software selection, choose `SSH server` and `Standard system utilities` (default values), then select `Continue`.
+Use the WebGUI to stop the VM once it has rebooted, then visit the `Options > Boot order` menu option of the VM and make sure that the `scsi0` disk is the first in the list and, optionally, the only one enabled. Then visit the `Hardware > CD/DVD Drive (ide2)` entry and select the `Do not use any media` option.
 
-The final step is to install the GRUB boot loader:
+You can now start the VM.
 
-* Install the GRUB boot loader to your primary drive? `Yes`
-* Device for boot loader installation: `/dev/sda (scsi-0QEMU_QEMU_HARDDISK_drive-scsi0)`
+## ZFS volumes
 
-Once the installation is complete, choose `Continue` to reboot.
+ZFS volumes (zvols) are an alternative to traditional virtual disks for VM data storage in Proxmox. While the Proxmox VM creation wizard typically provisions disk images in formats like `qcow2` (QEMU Copy On Write) or `raw`, these are still files sitting atop a ZFS dataset[^4]. By contrast, zvols offer native block-level storage managed directly by ZFS, eliminating the file layer entirely. This provides performance benefits, block-level snapshots, and more seamless resizing that are particularly relevant when exporting data over NFS.
 
-Use the WebGUI to stop the VM once it has rebooted, then visit the `Options > Boot order` menu option of the VM and make sure that the `scsi0` disk is the first in the list and, optionally, the only one enabled. Then visit the `Hardware > CD/DVD Drive (ide2)` entry and select the `Do not use any media` option. You can now start the VM using the WebGUI.
+[^4]: There are three types of datasets in ZFS: a filesystem following POSIX rules, a volume (zvol) existing as a true block device under `/dev`, and snapshots thereof.
 
-Do not forget to add the DNS record in your internal DNS zone `localdomain.com`.
+To clarify, zvols do not provide "raw image format", like `vm-104-disk-1.raw`, but rather the disk is a ZFS-managed block device, such as `/dev/zvol/zfspool/vm-104-data`, i.e., no file, no virtual layer. Therefore, with a zvol, you avoid writing to a file sitting inside a ZFS dataset and QEMU going through file I/O layers and, instead, you get native block device backed directly by ZFS. This means better synchronisation and performance, especially for workloads that require frequent writes.
+
+It is important to emphasise that we are not using ZFS as a filesystem inside the VM. Instead, we are using [*](ZFS) to back a block device and, inside the VM, we will format it, e.g., to [*](EXT4) or [*](XFS).
+
+In our scenario, we chose to use a zvol for the data disk when we chose `zfspool` as storage, which will allow us to take advantage of features such as snapshots and compression. It will behave exactly like a physical disk: no filesystem or partition table until we create one. Inside the VM, the zvol will appear as a new physical disk (e.g., `/dev/sdc`), and it will be completely blank until we format it.
+
+Furthermore, if you create a partition inside the VM, like most OS installers do, then resizing later will still involve partition math (e.g., using `sfdisk` to adjust size). If, instead, you use the whole device directly (i.e., format `/dev/sdc` without a partition table), then resizing becomes simpler.
+
+Therefore, inside the VM, all that is left is to format the data disk. As the `root` user, identify the disk using the `lsblk` command (e.g., `sdc`) , then format it:
+
+```bash
+mkfs.ext4 /dev/sdc
+```
+
+Finally, create the mount point, get the UUID of the new disk with the `blkid /dev/sdc` command and configure the `/etc/fstab` file to mount it automatically at boot:
+
+```bash
+mkdir /srv/nfs
+blkid /dev/sdc
+echo 'UUID=333e6175[..] /srv/nfs ext4 discard,noatime,nodiratime 0 2' >> /etc/fstab
+mount /srv/nfs
+```
+
+## Aligning block sizes
+
+By following the steps described so far in this article, we now have the following sector and block sizes:
+
+| Layer                | Option name    | Value | Notes            | Command                                     |
+|----------------------|:--------------:|:-----:|------------------|---------------------------------------------|
+| Physical sector size | `PHY-SEC`      | 4096  |                  | `lsblk -o NAME,SIZE,PHY-SEC,LOG-SEC`        |
+| ZFS storage pool     | `ashift`       | 12    | 2¹² = 4096 bytes | `zdb -C zfspool \| grep ashift`             |
+| ZVOL                 | `volblocksize` | 8K    |                  | `zfs get volblocksize zfspool/vm-104-data`  |
+| ext4                 | Block size     | 4096  |                  | `tune2fs -l /dev/sdc \| grep 'Block size'`  |
+
+
+
+
+The easiest way to improve performance, minimise fragmentation, and make the most of our disk's physical layout, is to align the physical sector size of our disk with the block sizes of the three layers involved: the ZFS storage pool, the zvol, and the filesystem inside the VM.
+
+
+So, once you have finished installing the OS, create and attach the zvol from the terminal of the Proxmox host:
+
+```bash
+zfs create -V 100G -b 4K zfspool/vm-104-data
+qm set 104 -scsi2 zfspool:vm-104-data,discard=on,iothread=1,cache=none,aio=io_uring
+```
+
+You can confirm that the new disk was attached to the VM via the `qm config 104` command, or via the `Hardware` menu option of the VM in the Proxmox WebGUI, where you can also change its flags, such as `Discard`, `IO thread`, `Cache`, and `Async IO`.
+
+Inside the VM, confirm that the disk showed up with the `lsblk` command. Even if the VM was on when you attached the zvol, the OS should see the new disk automatically. However, you can force a rescan of the SCSI bus inside the VM, then try the `lsblk` command again:
+
+```bash
+for host in /sys/class/scsi_host/host*; do
+  echo "- - -" > "$host/scan"
+done
+```
+
+Now, inside the VM, as `root` user, you can format the new disk:
+
+```bash
+mkfs.ext4 -b 4096 /dev/sdc
+```
+
+
+Later, to resize:
+
+1. On the Proxmox host: `zfs set volsize=400G zfspool/vm-104-data`.
+2. Inside the VM: `resize2fs /dev/sdc`.
+
+In the VM, force rescan of the SCSI bus to see the new zvol:
+
+```bash
+echo "- - -" > /sys/class/scsi_host/hostX/scan
+```
+
+
+Summary of the steps we went through:
+
+| Virtual Disk                                                                | Zvol                                                                                      |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Stored as a file on ZFS (qcow2 or raw format)                               | Stored as a ZFS block volume (`/dev/zvol/zfspool/vm-260-data`)                            |
+| Resizing involves dealing with partition table changes (if not pre-planned) | Resizing is faster and cleaner — especially if you use the full disk (no partition table) |
+| Snapshots work at the file level                                            | Snapshots are native ZFS snapshots — extremely fast and efficient                         |
+
+
+If you ever need to recreate a zvol, e.g., to change the block size, use the following commands:
+
+```bash
+qm set 104 -delete scsi2
+zfs destroy zfspool/vm-104-data
+qm set 104 -scsi2 zfspool:vm-104-data,discard=on,iothread=1,cache=none,aio=io_uring
+```
+
+
+## Using 8k block size
+
+https://forum.proxmox.com/threads/default-block-size-8k.126103/
+
+Choosing an 8k block size when formatting a filesystem can offer a performance sweet spot for workloads that commonly read or write in chunks larger than the standard 4k, but not excessively so. This setting is particularly useful for applications such as NFS shares, databases (like PostgreSQL), or logging systems that often deal with 8k pages or I/O patterns. It can reduce internal fragmentation compared to larger block sizes while still improving I/O efficiency over 4k blocks, especially on spinning disks or workloads where sequential throughput is valuable. However, as with any optimization, the effectiveness of using 8k blocks ultimately depends on the typical request sizes and access patterns in your environment.
+
+
+
+zpool iostat -r
+
+| Component           | Suggested Value                                                                  |
+| ------------------- | -------------------------------------------------------------------------------- |
+| ZFS pool            | `ashift=13` (8K sector alignment)                                                |
+| ZVOL                | Default block size (8K)                                                          |
+| Guest FS            | XFS with 8K block size (`mkfs.xfs -b size=8192`)                                 |
+
+Why Use XFS Inside the VM
+
+XFS is a high-performance journaling filesystem optimized for large files and high-throughput workloads, making it a strong choice inside virtual machines where data integrity, scalability, and efficiency matter. Its robustness under concurrent write-heavy operations and support for advanced features like online defragmentation and resizing make it particularly well-suited for use cases such as NFS shares, backup storage, and databases. When used within a VM, XFS's maturity and reliability offer peace of mind, while its ability to handle large files and parallel I/O workloads gracefully helps ensure that the virtualized environment doesn’t become a bottleneck in your storage stack.
+
+The physical sector size of your HDD is a hardware attribute, set by the manufacturer, not something that is decided when formatting the drive. To determine the physical sector size of your HDD drives, use `lsblk -o NAME,SIZE,PHY-SEC,LOG-SEC`:
+
+* PHY-SEC shows the physical sector size
+* LOG-SEC shows the logical sector size
+
+If your HDD has a physical sector size of 4096 bytes, then setting ashift=12 is correct (because 2¹² = 4096). However, using ashift=13 (which equals 8192 bytes) can still be a good idea, depending on your use case.
+
+ What ashift Does
+
+    ashift controls the minimum block size ZFS will use for physical I/O on disk.
+
+    It must be set at pool creation time and cannot be changed later.
+
+    ashift=12 means ZFS will issue writes in 4K blocks.
+
+    ashift=13 means ZFS will issue writes in 8K blocks.
+
+When ashift=13 (8K) Is a Good Idea — Even on 4K Drives
+
+    Workloads with larger I/O (like databases, VM images, backup servers) can benefit from the reduced metadata overhead and fewer IOPS required.
+
+    If your applications typically write in chunks larger than 4K, the 8K ashift won't waste space and may perform better.
+
+    Some modern drives are actually more efficient when aligned to 8K I/O boundaries, especially if they have internal 8K page sizes (common in some SSDs or SMR drives).
+
+
+
+ashift=13 (block size = 8K) makes sense if your drives have a physical sector size of 4K, and you’re mostly working with larger files (like VM images, NFS storage, MinIO object storage, databases).
+
+    It avoids write amplification from misalignment when the actual IO size is larger than ZFS’s internal block size.
+
+    But once you set ashift, it’s permanent for the pool. Use zdb -C to confirm current ashift.
+
+XFS is an excellent choice inside the VM:
+
+    Mature, stable, widely used.
+
+    Scales well with large files and large IO.
+
+    Great for NFS backing or general-purpose large file storag
+
+Format disk with 8K or 16K block size:
+
+# For 8K
+mkfs.xfs -b size=8192 /dev/sdX
+
+# For 16K
+mkfs.xfs -b size=16384 /dev/sdX
+
+🔹 Check disk (read-only):
+
+xfs_check /dev/sdX   # deprecated, use `xfs_repair -n`
+
+🔹 Repair filesystem (non-destructive check):
+
+xfs_repair -n /dev/sdX   # -n is a dry run, remove it to actually repair
+
+🔹 Mounting:
+
+mount -o noatime,logbufs=8 /dev/sdX /mnt/data
+
+🔹 Grow filesystem after increasing virtual disk or zvol:
+
+    Rescan disk inside VM (if using virtio/scsi):
+
+echo 1 > /sys/class/block/sdX/device/rescan
+
+Resize partition (if needed):
+
+growpart /dev/sdX 1   # if using GPT + parted
+
+Grow XFS filesystem:
+
+    xfs_growfs /mnt/data
+
+    Note: XFS can grow online, but cannot shrink.
+
+Is ZFS over ZFS a bad idea?
+
+In general, yes, avoid ZFS on ZFS, unless:
+
+    You explicitly disable compression, dedup, and caching in the inner layer to prevent weird behavior.
+
+    You need snapshots inside the VM for data integrity (e.g., database inside VM), and you're managing them carefully.
+
+    Better: Use XFS inside the VM, and ZFS at the host level for snapshots, compression, and resilience.
+
+
+## Converting the disk to a ZFS volume
+
+If we already have a virtual disk created during the VM creation, we can unlink it using the Proxmox WebGUI or the command line, then convert it to a ZFS volume.
+
+
+```bash
+qm disk unlink 104 scsi2 --delete 1
+zfs create -V 300G zfspool/vm-104-data
+qm set 104 -scsi2 zfspool:vm-104-data
+qm config 104
+```
 
 ## OS configuration
 
@@ -534,9 +759,11 @@ rsync --archive --no-owner --no-group --progress --delay-updates --timeout=5 --d
 
 ## NFS client on LXC
 
-When the NFS client is an unprivileged LXC, direct NFS mounting is not possible because [AppArmor](https://apparmor.net/) does not allow it. In such scenario, an alternative approach would be to mount the share on the Proxmox host first, then bind it to the container. Aside from security risks on our multi-tenant environment, this setup reduces isolation, requires host-level privileges and increases cluster complexity (all nodes mount the same NFS paths so that guests can be migrated).
+When the NFS client is an unprivileged LXC, direct NFS mounting is not possible because [AppArmor](https://apparmor.net/) does not allow it. In such scenario, an alternative approach would be to mount the share on the Proxmox host first, then bind it to the container.
 
-However, if we were to configure the LXC to be privileged, then we could reproduce the steps performed on the client VM. While privileged LXCs are convenient, they are less isolated than unprivileged containers (trading security for convenience), a host kernel issue or crash would affect all containers and NFS mounts inside the LXC would break during live migration or backup.
+Aside from security risks on our multi-tenant environment, this setup reduces isolation, requires host-level privileges and increases cluster complexity (all nodes mount the same NFS paths so that guests can be migrated).
+
+However, if we were to configure the LXC as privileged, then we could reproduce the steps performed on the client VM. Trading security for convenience, privileged LXCs are less isolated than unprivileged containers, therefore a host kernel issue or crash would affect all containers and NFS mounts inside the LXC. Moreover, NFS mounts would break during live migration or backup, or prevent these tasks from completing successfully.
 
 All in all, when using LXC the recommended way to store files would be an S3-compatible object storage, such as [MinIO](https://min.io/), [Garage](https://garagehq.deuxfleurs.fr/) or [SeaweedFS](https://github.com/seaweedfs/seaweedfs).
 
