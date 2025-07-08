@@ -61,3 +61,15 @@ Those containers that require a public IP address will have an additional networ
 -   IPv4: Static
 -   IPv4/CIDR: 116.202.120.32/28 subnet
 -   Gateway (IPv4): 116.202.120.33
+
+
+## ZFS volumes
+
+| Feature                  | VM (zvol)                | LXC (ZFS dataset/subvol)    |
+|--------------------------|--------------------------|-----------------------------|
+| Backed by ZFS?           | Yes (zvol)               | Yes (dataset)               |
+| Appears as block device? | `/dev/sdX`               | (uses ZFS dataset directly) |
+| Has its own ext4 inside? | Yes (created by you)     | Uses ZFS natively           |
+| Can be resized?          | Yes (zvol + `resize2fs`) | Yes (`zfs set quota`)       |
+| Snapshot support?        | Yes                      | Yes                         |
+| Uses ZFS directly as fs? | No                       | Yes                         |
