@@ -150,7 +150,9 @@ Second disk (swap):
   * Bootable flag: `off`
 * Select `Done setting up the partition`.
 
-Ignore the third `SCSI (0,0,2)` disk (e.g., `sdc`), our data disk, during the installation.
+Third disk (data):
+
+* Ignore the third `SCSI (0,0,2)` disk (e.g., `sdc`) during the installation.
 
 Select the `Finish partitioning and write changes to disk` option and accept writing the changes to disk. The installer will install the base system.
 
