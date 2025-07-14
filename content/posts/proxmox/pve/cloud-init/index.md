@@ -39,7 +39,7 @@ Because the `Download from URL` button in the `ISO Images` menu option of our no
 ```bash
 mkdir /var/lib/vz/template/cloud
 wget https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2 \
-     --output-document=/var/lib/vz/template/iso/debian-12-genericcloud-amd64.qcow2
+     --output-document=/var/lib/vz/template/cloud/debian-12-genericcloud-amd64.qcow2
 ```
 
 For security, calculate its SHA 512 checksum and compare it with the one from the SHA512SUMS file:
@@ -77,7 +77,9 @@ Next, import the cloud image as a disk:
 qm disk import 9000 /var/lib/vz/template/cloud/debian-12-genericcloud-amd64.qcow2 local  --format qcow2
 ```
 
-In Proxmox, `raw` and `qcow2` are common disk image formats, each with distinct advantages and disadvantages when using them with `qm disk import`. The former offers potentially better performance due to its simplicity, while the latter provides features like snapshots, compression, and dynamic resizing, albeit with a slight performance overhead. The choice depends on specific needs and the underlying storage type.
+In Proxmox, `raw` and `qcow2` are common disk image formats, each with distinct advantages and disadvantages when using them with `qm disk import`. The former offers potentially better performance due to its simplicity, while the latter provides features like snapshots, compression, and dynamic resizing, albeit with a slight performance overhead. The choice depends on specific needs and the underlying storage type[^2].
+
+[^2]: The [Proxmox storage documentation](https://pve.proxmox.com/wiki/Storage) explains how `/var/lib/vz`maps to the `local` storage type.
 
 Next, attach the new (unused) disk to the VM as a SCSI drive on the SCSI controller:
 
@@ -105,14 +107,16 @@ For many Cloud-Init images, it is required to configure a serial console and use
 qm set 9000 --serial0 socket --vga serial0
 ```
 
-If we were not using Ansible, this would be the point in time in which we would visit the `Cloud-Init` menu option of our newly-created, not-yet-started VM with ID 9000, and configure the following options to our liking:
+Now is the time to visit the `Cloud-Init` menu option of our newly-created, not-yet-started VM with ID 9000, and configure the following options to our liking:
 
-* User: `devops`
-* Password: <password>
+* User: `ansible`
+* Password: `<password>`
 * DNS domain: `localdomain.com`
 * DNS servers: `192.168.0.2 192.168.0.3`
-* SSH public key: <cluster-wide-devops-key>
-* IP Config (net0): DHCP
+* SSH public key: `ssh-ed25519 AAAAC3N [..] Ansible`
+* IP Config (net0): `DHCP`
+
+We will be setting each and every one of the example values via Ansible, so they can all be left blank. However, if you modify any of the fields, you need to use the `Regenerate image` button to update the CD-ROM containing the Cloud-Init configuration. 
 
 In a last step, we will convert the VM into a template. From this template we will be able to quickly create (linked) clones. The deployment from VM templates is much faster than creating a full clone.
 
@@ -132,53 +136,64 @@ By not starting the VM before converting it into a template, we are preventing t
 
 ## Ansible
 
-In the previous section, we neither configured the VM's Cloud-Init options, nor did we install basic packages such as `qemu-guest-agent`, or other basic tools and utilities such as `ccze`, `dnsutils`, `htop`, `nmap`, or `tcpdump`.
+In the previous section, we neither configured the VM's Cloud-Init options, nor did we install basic tools and utilities such as `ccze`, `dnsutils`, `htop`, `nmap`, `qemu-guest-agent`, or `tcpdump`.
 
-This choice is intentional, as we want to keep as clean as possible so that we do not have to undo or correct anything in the future. And because we will be using Ansible to configure it once it has been bootstrapped.
+This choice is intentional, as we want to keep our template as clean as possible so that we do not have to undo or correct anything in the future. And because we will be using Ansible to provision and configure it.
 
 https://claude.ai/chat/ff50568b-980f-40aa-8f85-1cdb2fc06e1f
+https://docs.ansible.com/ansible/latest/collections/community/proxmox/proxmox_module.html
+https://docs.ansible.com/ansible/latest/collections/community/general/proxmox_kvm_module.html
 
 ```yaml
-# playbooks/provision-vm.yml
----
+# inventory/myapp.yml
+
+
+# inventory/group_vars/all/vars.yml
+
+proxmox_api_host: "proxmox1.{{ localdomain }}"
+proxmox_api_user: "{{ vault_proxmox_api_user | default('root@pam') }}"
+proxmox_api_token_id: "{{ vault_proxmox_api_token_id }}"
+proxmox_api_token_secret: "{{ vault_proxmox_api_token_secret }}"
+proxmox_pubkey_file: "~/.ssh/ansible.pub"
+proxmox_pubkey: "{{ lookup('ansible.builtin.file', proxmox_pubkey_file) }}"
+
+# plays/provision.yml
 - name: Provision VM from Cloud-Init template
-  hosts: "{{ target_group | default('all') }}"
+  hosts: all
   gather_facts: false
-  vars:
-    proxmox_api_host: "{{ hostvars[inventory_hostname]['proxmox_node'] }}.your-domain.com"
-    proxmox_api_user: "root@pam"
-    proxmox_api_password: "{{ vault_proxmox_password }}"
-    
+
   tasks:
     - name: Create VM from template
       community.general.proxmox_kvm:
+        state: present
+
+        # API
         api_host: "{{ proxmox_api_host }}"
         api_user: "{{ proxmox_api_user }}"
-        api_password: "{{ proxmox_api_password }}"
-        node: "{{ proxmox_node }}"
+        api_token_id: "{{ proxmox_api_token_id }}"
+        api_token_secret: "{{ proxmox_api_token_secret }}"
+
+        # Main parametres
         vmid: "{{ proxmox_ctid }}"
-        name: "{{ inventory_hostname.split('.')[0] }}"
+        node: "{{ proxmox_node }}"
+        name: "{{ inventory_hostname_short }}"
         clone: "debian-12-cloud-template"
         full: true
-        storage: "local-lvm"
+        storage: "local"
         format: "qcow2"
-        timeout: 300
-        
+        timeout: 30
+
         # Cloud-Init configuration
-        ciuser: "ansible"
-        cipassword: "{{ vault_vm_password }}"
-        sshkeys: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
-        
+        ciuser: "{{ proxmox_ci_user }}"
+        cipassword: "{{ proxmox_ci_password }}"
+        sshkeys: "{{ proxmox_pubkey }}"
+
         # Network configuration from inventory
         ipconfig:
-          ipconfig0: "ip={{ ansible_host }}/24,gw=192.168.0.1"
-        nameservers: "192.168.0.1 8.8.8.8"
-        
-        # Environment-specific configuration
-        cicustom: "user=local:snippets/user-data-{{ group_names[0] }}.yml"
-        
-        state: present
-        
+          ipconfig0: "ip={{ ansible_host }}/{{ proxmox_net_mask }}"
+        nameservers: "{{ proxmox_nameservers | join(' ') }}"
+        searchdomains: "{{ proxmox_searchdomain }}"
+
     - name: Start VM
       community.general.proxmox_kvm:
         api_host: "{{ proxmox_api_host }}"
