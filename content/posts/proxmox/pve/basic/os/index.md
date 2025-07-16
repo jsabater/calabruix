@@ -1,9 +1,9 @@
 ---
-title: "OS installation and configuration"
+title: "Debian OS installation and configuration on Hetzner"
 date: 2023-08-01
 lastmod: 2024-09-21
-description: "Base installation of Debian GNU/Linux 11 Bullseye on a dedicated server at Hetzner."
-summary: "Install and configure the Debian OS using the tools provided by Hetzner"
+description: "Base installation of Debian GNU/Linux 11 Bullseye on a dedicated server at Hetzner"
+summary: "Install and configure the Debian OS on a dedicated server using the tools provided by Hetzner"
 categories: ["virtualisation"]
 tags: ["proxmox", "pve"]
 slug: operating-system
@@ -62,7 +62,7 @@ The base installation is Hetzner's version of Debian AMD64 includes `sudo`, `loc
 
 ```bash
 apt-get update
-apt-get install --yes ccze dnsutils htop nmap tcpdump
+apt-get install --yes ccze dnsutils htop jq nmap tcpdump
 ```
 
 If you are using Vim as your text editor, remove `nano` and `vim-tiny`, then install the full version of [Vim](https://www.vim.org/).
