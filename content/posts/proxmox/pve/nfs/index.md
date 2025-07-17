@@ -1,7 +1,7 @@
 ---
 title: "NFS server on Proxmox VE"
-date: 2025-06-19
-lastmod: 2025-06-30
+date: 2025-07-17
+lastmod: 2025-07-17
 description: "Install and configure a Network File System (NFS) server in a VM on a Proxmox using ZFS for optimal performance"
 summary: "Install and configure an NFS server in a VM on a Proxmox cluster using ZFS"
 categories: ["virtualisation"]
@@ -330,46 +330,66 @@ chown nobody:nogroup /srv/nfs/myapp
 
 NFS will translate any `root` operations on the client to the `nobody:nogroup` credentials as a security measure. Therefore, we need to change the directory ownership to match those credentials.
 
-`nfs-kernel-server` 2.6.2 on Debian 12 Bookworm supports NFSv2, v3 and v4. NFSv4 was standardized in 2003, so we will assume that all clients will be using this version of the protocol.
+Support for NFSv4 was standarized in 2003, so we will assume that all clients, as well as the server, will be using this version of the protocol. Certainly, `nfs-kernel-server` 2.6.2 on Debian 12 Bookworm does support NFSv4.
 
-NFSv4 exports typically live under a common pseudo-root, `/srv/nfs` in our case. The host exports such top-level directory with `fsid=0`, and clients mount subpaths, e.g., `/myapp`.
+NFSv4 exports typically under a common pseudo-root, `/srv/nfs` in our case. The host exports such top-level directory with `fsid=0`, and clients mount subpaths, e.g., `/myapp`.
 
 We are now ready to export the share by editing the `/etc/exports` file:
 
+```properties
+/srv/nfs \
+    myapp1.localdomain.com(rw,async,no_subtree_check,root_squash,fsid=0) \
+    myapp1.localdomain.com(rw,async,no_subtree_check,root_squash,fsid=0)
+
+/srv/nfs/myapp \
+    myapp1.localdomain.com(rw,async,no_subtree_check,root_squash) \
+    myapp2.localdomain.com(rw,async,no_subtree_check,root_squash)
 ```
-/srv/nfs       myapp1.localdomain.com(rw,async,no_subtree_check,root_squash,fsid=0) \
-               myapp1.localdomain.com(rw,async,no_subtree_check,root_squash,fsid=0)
 
-/srv/nfs/myapp myapp1.localdomain.com(rw,async,no_subtree_check,root_squash) \
-               myapp2.localdomain.com(rw,async,no_subtree_check,root_squash)
-```
+Let us review each of the options:
 
-Let's review each of the options:
-
-* `rw`: Gives the client permission to both read and write to the volume.
-* `async`: Forces NFS to reply to write requests from clients as soon as the data is received, without waiting for the data to be written to disk. This leads to better performance but there is a trade-off with data integrity.
+* `rw`: Gives the client permission to read from and write to the volume.
+* `async`: Instructs NFS to reply to write requests from clients as soon as the data is received, without waiting for the data to be written to disk. This leads to better performance but there is a trade-off with data integrity.
 * `no_subtree_check`: Prevents the process where, for every request, the host must check whether a given file is actually still available in the exported tree, e.g., when a client requests renaming a file that is still open by another client.
 * `root_squash`: Map client's `root` user to `nobody`, for security (default behaviour).
 * `fsid=0`: Defines the NFSv4 root export.
 
-If your workload is not sensitive to latency, it is recommended to use `sync` (default) instead of `async`, which will force NFS to write changes to disk before replying. This reduces the speed of operations but results in a more stable and consistent interaction.
+If your workload is not sensitive to latency, it is recommended to use `sync` (default) instead of `async`, so that NFS is forced to to write changes to disk before replying. This reduces the speed of operations but results in a more stable and consistent interaction.
 
 > The `fsid=0` option is not required for root access, but to define the NFSv4 root export.
 
-Ensure that the NFSv4 domain matches by editing the `/etc/idmapd.conf` file:
+NFS takes the seach domain of its host as its main domain. In our case, that is correct but, if you want to be explicit about it, edit the `/etc/idmapd.conf` file:
 
 ```ini
 [General]
 Domain = localdomain.com
 ```
 
-> This is the default behaviour. We are just being explicit about it.
-
 And restart the daemon with `systemctl restart nfs-idmapd`.
 
-Run `exportfs -ra` to export the changes. Confirm the exports with `exportfs -v`. Finally, verify the setup is working fine with `showmount -e nfs1.localdomain.com`.
+Export the changes and, optionally, confirm the exported configuration:
 
-We now need to adjust the firewall rules on the VM. At the moment you should already have aliases for both the client and the host, created via the `Datacenter > Firewall > Alias` menu option.
+```bash
+exportfs -ra
+exportfs -v
+```
+
+Finally, verify the setup is working fine:
+
+```bash
+showmount -e nfs1.localdomain.com
+```
+
+Depending on the expected workload, you may want to increase the number of NFS threads (`nfsd`) started by the kernel:
+
+```bash
+echo "RPCNFSDCOUNT=32" >> /etc/default/nfs-kernel-server
+```
+
+Increasing this number can improve performance, especially under heavy load, by allowing the server to handle more concurrent NFS requests. However, excessive threads can introduce overhead and potentially lead to performance degradation.
+
+
+Finally, we also need to adjust the firewall rules on the VM. At the moment you should already have aliases for both the client and the host, created via the `Datacenter > Firewall > Alias` menu option.
 
 ```ini
 # /etc/pve/firewall/cluster.fw
@@ -413,13 +433,23 @@ And, finally, add the security group to the `nfs1` guest:
 GROUP nfs_staging -i net0 # Allow access to NFS from guests
 ```
 
+| Type  | Action      | Iface | Comment                         |
+|-------|-------------|-------|---------------------------------|
+| group | nfs_staging | net0  | Allow access to NFS from guests |
 
-| Type  | Action      | Macro | Iface | Protocol | Source | S. port | Destination | D. port | Comment             |
-|-------|-------------|-------|-------|:--------:|--------|---------|-------------|:-------:|---------------------|
-| group | nfs_staging |       | net0  |          |        |         |             |         | Allow access to NFS |
+## NFS client
 
+To access an NFS share from the client, we first need to provide ourselves with the essential userspace tools and kernel support modules needed to mount NFS shares using the standard `mount` command. Beyond installation, proper user and group ID alignment is important in order to preserve file ownership and permissions.
 
-## NFS client on VM
+Finally, we need to configure our `/etc/fstab` with the appropriate options to achieve persistent mounts across reboots.
+
+### In a VM
+
+Support for NFS at the client side requires the installation of the `nfs-common` package. Let's get that out of the way:
+
+```bash
+apt-get install --yes nfs-common
+```
 
 Let's asume that our application `myapp` is run by the user `myappuser`, that belongs to the group `myappgroup`. Let's create the mount point on the guest where NFS will act as client:
 
@@ -435,7 +465,7 @@ mount --types nfs4 nfs1.localdomain.com:/myapp /mnt/files
 umount /mnt/files
 ```
 
-For this to work the `myappuser` user and the `myappgroup` have to exist on both server and client and the `UID` and `GID`, respectively, match across both.
+For this to work, the `myappuser` user and the `myappgroup` have to exist on both server and client, with matching `UID` and `GID`, respectively.
 
 In our case, running `id myappuser` in our client tells us that both the user and the group have id 1001
 
@@ -454,8 +484,10 @@ Then file ownership will behave correctly across the mount. No need to pass any 
 
 In order to have the remote volume mounted automatically upon reboot, we need to add the appropriate entry in the `/etc/fstab`:
 
-```
-nfs1.localdomain.com:/myapp /mnt/files nfs4 auto,rw,suid,nouser,async,_netdev,nofail,noatime,nolock 0 0
+```properties
+# /etc/fstab. Static file system information
+#
+nfs1.localdomain.com:/myapp /mnt/files nfs4 auto,rw,suid,nouser,async,_netdev,nofail,noatime,nodiratime,nolock,rsize=65536,wsize=65536 0 0
 ```
 
 Explanation of options:
@@ -469,9 +501,14 @@ Explanation of options:
 * `_netdev`: Ensures mount happens after the network is up.
 * `nofail`: Allows the system to boot even if the NFS mount fails.
 * `noatime`: Disables updates to access timestamps on files.
-* `nolock`: Disable NFS file locking (avoids needing `rpc.statd` on the client side), unless your application relies on file locking internally (which is uncommon for file-based uploads like images).
+* `nodiratime`: Reduces metadata writes when directories are read or traversed.
+* `nolock`: Disable NFS file locking (avoids needing `rpc.statd` on the client side), unless your application relies on file locking internally, which is uncommon for file-based uploads like images.
+* `rsize=65536`: Read buffer size, or the maximum number of bytes the client can read from the server in a single request.
+* `wsize=65536`: Write buffer size, or the maximum number of bytes the client can send to the server in a single write request.
 
-Note that we are not using the `defaults` option, as it includes the `dev`, `suid` and `exec` options that do not apply to our use case:
+Regarding `rsize` and `wsize`, the larger the size, the fewer RPC calls for large sequential reads or writes, thus better throughput. For small random writes, this matters less. 65536 bytes equals 64 kB, which is usually the maximum supported by most modern NFS servers and clients. 
+
+Also note that we are not using the `defaults` option, as it includes the `dev`, `suid` and `exec` options that do not apply to our use case:
 
 * `suid`: Allow programs to run with set-user-identifier (SUID/SGID) bits.
 * `dev`: Interpret device special files on the filesystem.
@@ -479,128 +516,20 @@ Note that we are not using the `defaults` option, as it includes the `dev`, `sui
 
 We do not need to specify user or group, as ownership will work based on UID/GID.
 
-Use either `umount /mnt/files` or `mount -a` to mount the volume with the options we just configured.
+Regarding the trailing zeros in our configuration file, respectively:
 
-## Bulk load of files
+* `dump` tells the `dump` backup utility whether to back up this filesystem.
+* `fs_passno` controls whether `fsck` should check the filesystem on boot.
 
-Why Rsync Over NFS is Slow (and Solutions)
+For network filesystems, both options are left disabled.
 
-1. Metadata Overhead:
-NFS requires a separate network round-trip for every file operation (stat, open, read, close). For small files, this creates massive overhead.
-
-    Example: Syncing 10,000 small files = 40,000+ network requests.
-
-2. Lack of Real Parallelism:
-NFS operations are sequential by default. Rsync processes files one-by-one, amplifying latency.
-
-3. Protocol Limitations:
-
-    NFSv3: No compound operations (multiple actions in one request)
-
-    NFSv4: Better, but still less efficient than native protocols like SSH
-
-4. Write Barriers:
-NFS enforces strict write ordering (sync writes), slowing small file operations.
-Speeding Up Rsync Over NFS
-A. Rsync Tweaks
-bash
-
-rsync --archive --no-owner --no-group --progress \
-      --inplace \         # Avoid temp-file renames
-      --whole-file \      # Disable delta-xfer (good for fast LANs)
-      --recursive \
-      --links \
-      --delete \
-      /src/ /mnt/nfs/dest/
-
-Key Options:
-
-    --inplace: Writes directly to target files (reduces rename ops)
-
-    --whole-file: Sends whole files (bypasses slow rsync diffs)
-
-    Avoid: --checksum (adds massive overhead)
-
-B. NFS Server/Client Tuning
-
-On NFS Server (VM):
-
-    Increase NFS threads:
-    bash
-
-echo "RPCNFSDCOUNT=32" >> /etc/default/nfs-kernel-server
-
-Use async writes (if UPS-backed):
-bash
-
-    # /etc/exports
-    /export  *(rw,async,no_subtree_check,insecure)
-
-On NFS Client (Proxmox/LXC):
-Mount with performance options:
-bash
-
-mount -t nfs4 -o \
-  rsize=65536,wsize=65536,noatime,nodiratime,async,tcp,hard \
-  nfs-server:/share /mnt/nfs
-
-C. Nuclear Options
-
-    Tar Over Pipe (Best for initial sync):
-    bash
-
-tar cf - /src | ssh user@nfs-server "tar xf - -C /dest"
-
-Parallel Rsync:
-bash
-
-find /src -type f | parallel -j 16 rsync -a {} /mnt/nfs/dest/
-
-(Install parallel first)
-
-Switch to SSHFS:
-bash
-
-    sshfs user@nfs-server:/share /mnt/sshfs -o \
-    allow_other,cache=yes,compression=no,large_read
-
-When to Use Rsync Over NFS
-
-✅ Large files (video, databases)
-✅ Incremental updates after initial sync
-🚫 Avoid for:
-
-    Initial sync of many small files
-
-    High-churn directories
-
-    Latency-sensitive operations
-
-Performance Comparison (1GB of 10KB files)
-Method	Time	Network Reqs
-Rsync (default)	8m22s	~120,000
-Rsync (--inplace)	4m15s	~80,000
-Tar over SSH	0m48s	1
-Parallel Rsync (16j)	1m12s	16,000
-Recommendation:
-
-For initial bulk transfers, use tar or parallel methods. For ongoing syncs, use tuned rsync with --inplace. For maximum speed, SSH-based transfers will always outperform NFS for rsync workloads due to lower protocol overhead.
-
-If you need to copy or move files and folders from the current location to the mounted volume, you should use `rsync`, but make sure you do not try to change ownership:
+You are now ready to mount the volume with the options we just configured:
 
 ```bash
-rsync --archive --no-owner --no-group --progress /path/to/static/files/ /mnt/files/
+mount /mnt/files
 ```
 
-If you want to do this using `rsync` over SSH, bypassing the NFS mount, you can use the following command:
-
-```bash
-rsync --archive --no-owner --no-group --progress /opt/popeye/src/www/static/ /mnt/media/
-rsync --archive --no-owner --no-group --progress -e "ssh -p 22" /path/to/static/files/ user@remote:/path/to/destination/
-rsync --archive --no-owner --no-group --progress --delay-updates --timeout=5 --delete --delete-delay --rsh='/usr/bin/ssh -o StrictHostKeyChecking=no' /opt/popeye/src/www/static/ nfs1.andromedant.com:/srv/nfs/popeyedevel/
-```
-
-## NFS client on LXC
+### In an LXC
 
 When the NFS client is an unprivileged LXC, direct NFS mounting is not possible because [AppArmor](https://apparmor.net/) does not allow it. In such scenario, an alternative approach would be to mount the share on the Proxmox host first, then bind it to the container.
 
@@ -609,3 +538,160 @@ Aside from security risks on our multi-tenant environment, this setup reduces is
 However, if we were to configure the LXC as privileged, then we could reproduce the steps performed on the client VM. Trading security for convenience, privileged LXCs are less isolated than unprivileged containers, therefore a host kernel issue or crash would affect all containers and NFS mounts inside the LXC. Moreover, NFS mounts would break during live migration or backup, or prevent these tasks from completing successfully.
 
 All in all, when using LXC the recommended way to store files would be an S3-compatible object storage, such as [MinIO](https://min.io/), [Garage](https://garagehq.deuxfleurs.fr/) or [SeaweedFS](https://github.com/seaweedfs/seaweedfs).
+
+## Multiple shares
+
+Eventually, you may need the NFS server to share multiple volumes, perhaps for different applications in a platform. You could have shared volumes among different applications, and also different shares for the same set of applications.
+
+For example, you could create the following directory structure in the VM hosting our NFS server:
+
+```shell
+# tree -L 1 /srv/nfs
+/srv/nfs/
+├── allapps
+│   └── files
+├── newapp
+│   ├── media
+│   ├── static
+│   └── tmp
+└── oldapp
+    ├── docs
+    └── tmp
+```
+
+Unfortunately, the NFS `exports` file (`/etc/exports`) does not support variables, macros, includes, or preprocessor-like syntax such as defining common options in one place and reusing them. It is a flat file where every line must be fully expanded and interpreted literally by the `exportfs` system.
+
+Therefore, in terms of keeping the `/etc/exports` file more readable, we can only go so far as to:
+
+* Using line breaks and indentation clearly.
+* Avoiding redundant options when possible.
+* Grouping hosts when they all share the same options.
+
+Given these premises, in order to match the structure above, we would modify the `/etc/exports` file in our NFS server to this:
+
+```properties
+# Root of export tree
+/srv/nfs \
+    oldapp1.localdomain.com(rw,async,no_subtree_check,root_squash,fsid=0) \
+    oldapp2.localdomain.com(rw,async,no_subtree_check,root_squash,fsid=0) \
+    newapp1.localdomain.com(rw,async,no_subtree_check,root_squash,fsid=0) \
+    newapp2.localdomain.com(rw,async,no_subtree_check,root_squash,fsid=0)
+
+# All apps
+/srv/nfs/allapps/files \
+    oldapp1.localdomain.com(rw,async,no_subtree_check,root_squash) \
+    oldapp2.localdomain.com(rw,async,no_subtree_check,root_squash) \
+    newapp1.localdomain.com(rw,async,no_subtree_check,root_squash) \
+    newapp2.localdomain.com(rw,async,no_subtree_check,root_squash)
+
+# New app
+/srv/nfs/newapp/media \
+    newapp1.localdomain.com(rw,async,no_subtree_check,root_squash) \
+    newapp2.localdomain.com(rw,async,no_subtree_check,root_squash)
+
+/srv/nfs/newapp/static \
+    newapp1.localdomain.com(rw,async,no_subtree_check,root_squash) \
+    newapp2.localdomain.com(rw,async,no_subtree_check,root_squash)
+
+/srv/nfs/newapp/tmp \
+    newapp1.localdomain.com(rw,sync,no_subtree_check,root_squash) \
+    newapp2.localdomain.com(rw,sync,no_subtree_check,root_squash)
+
+# Old app
+/srv/nfs/oldapp/docss \
+    oldapp1.localdomain.com(rw,async,no_subtree_check,root_squash) \
+    oldapp2.localdomain.com(rw,async,no_subtree_check,root_squash)
+
+/srv/nfs/oldapp/tmp \
+    oldapp1.localdomain.com(rw,sync,no_subtree_check,root_squash) \
+    oldapp2.localdomain.com(rw,sync,no_subtree_check,root_squash)
+
+```
+
+At each of our client VMs, we would create the necessary mount points using `mkdir` and set the correct permissions using `chown`.
+
+```shell
+# New app guest
+# tree -L 1 /mnt
+/mnt
+├── files
+├── media
+├── static
+└── tmp
+
+# Old app guest
+# tree -L 1 /mnt
+/mnt
+├── docs
+├── files
+└── tmp
+```
+
+Finally, when adapting the `/etc/fstab` configuration files in the client VMs, aside from getting the paths right, make sure you mount leaf nodes only:
+
+```properties
+# New app guest
+# /etc/fstab
+nfs1.andromedant.com:/allapps/files /mnt/files  nfs4 auto,rw,suid,nouser,async,[..] 0 0
+nfs1.andromedant.com:/newapp/media  /mnt/media  nfs4 auto,rw,suid,nouser,async,[..] 0 0
+nfs1.andromedant.com:/newapp/static /mnt/static nfs4 auto,rw,suid,nouser,async,[..] 0 0
+nfs1.andromedant.com:/newapp/tmp    /mnt/tmp    nfs4 auto,rw,suid,nouser,sync,[..]  0 0
+```
+
+> All client VMs would follow a similar pattern.
+
+As an example, in this scenario we are also taking the chance to enable synchronous writes to our `tmp` shares because we do not want any of our consumers taking jobs from some work queue and attempting to read data that has not yet been flushed to disk.
+
+## Bulk load of files
+
+Our NFS server is ready, and so are our NFS clients. We now need to copy our existing files from their previous location to their new location in the shared volumes.
+
+Using Rsync to do this would seem like the more sensible way to do this initial bulk transfer. During a maintenance window, we would execute the `rsync` command at the VMs running our old application to send the files to the mount points, then switch the paths. However, using Rsync over NFS is, probably, the least efficient way to do it due to the following reasons:
+
+1. Metadata overhead. NFS requires a separate network round-trip for every file operation (`stat`, `open`, `read`, `close`). For small files, this creates massive overhead. For example, synchronising 10,000 small files would require 40,000+ network requests.
+
+2. Lack of real parallelism. NFS operations are sequential by default. Rsync processes files one-by-one, amplifying latency.
+
+3. Protocol limitations. Although NFSv4 was a huge improvement over NFSv3 in terms of compound operations (multiple actions in one request), it is still less efficient than native protocols like SSH.
+
+4. Write barriers. By default, NFS enforces strict write ordering (sync writes), slowing small file operations. We did set up our shares using `async`, so this would be less of a problem for us.
+
+As a reference, here you have an estimation for 1 GB of 10 kB files:
+
+| Method               | Time   | Network requests |
+|----------------------|--------|------------------|
+| Rsync                | 8m 22s | ~120,000         |
+| Rsync (--inplace)    | 4m 15s | ~80,000          |
+| Tar over SSH         | 0m 48s | 1                |
+| Parallel Rsync (16j) | 1m 12s | 16,000           |
+
+Moreover, depending on the size of your archive, you want to spread this operation into several runs, using whatever criteria allows you to do one chunk at a time (e.g., by folder or subfolder).
+
+Using Tar may be a reasonable option when piping the contents of the archive being built directly into SSH:
+
+```bash
+tar cf - /opt/oldapp/files | ssh nfs1.localdomain.com "tar xf - -C /srv/nfs/allapps/"
+```
+
+Another reasonable option is to use Rsync over SSH, straight from the client VM to the server VM, not using the NFS mount point.
+
+```bash
+rsync --archive --no-owner --no-group --progress --delay-updates \
+      --timeout=5 --delete --delete-delay \
+      --rsh='/usr/bin/ssh -p 22 -o StrictHostKeyChecking=no' \
+      /opt/oldapp/files/ nfs1.localdomain.com:/srv/nfs/allapps/files/
+```
+
+For maximum speed, SSH-based transfers will always outperform NFS for `rsync` workloads due to lower protocol overhead. However, for incremental updates after the initial synchronisation, using a tuned `rsync` over NFS will work well enough:
+
+```bash
+rsync --archive --no-owner --no-group --progress \
+      --inplace --whole-file --recursive --links --delete \
+      /opt/oldapp/files /mnt/files/
+```
+
+Key options:
+
+* `--inplace`: Writes directly to target files (reduces rename ops by avoiding temp-file renames).
+* `--whole-file`: Sends whole files (disables delta-xfer to bypass slow rsync diffs).
+* `--no-owner --no-group`: Do not attempt to change ownership (requires additional network requests).
