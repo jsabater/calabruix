@@ -6,12 +6,11 @@ description: "Install and configure a Network File System (NFS) server in a VM o
 summary: "Install and configure an NFS server in a VM on a Proxmox cluster using ZFS"
 categories: ["virtualisation"]
 tags: ["proxmox", "pve", "nfs", "zfs"]
-draft: true
 ---
 
 [*](NFS) is a distributed file system protocol that allows clients to access files over a network as if they were local. It is commonly used for sharing files between servers and clients in a networked environment.
 
-In this article, we will install and configure an NFS server in a [*](VM) on a Proxmox cluster, optionally using our [*](ZFS) pool on [*](HDD) disks. The NFS server will be used to share files between multiple clients, such as web servers or application servers.
+In this article, we will install and configure an NFS server in a [*](VM) on a Proxmox cluster, optionally using our [*](ZFS) pool on [*](HDD) disks. The NFS server will be used to share files between multiple clients, such as web or application servers.
 
 This is an alternative approach to using an [*](S3) compatible object storage, such as [MinIO](https://min.io/), [Garage](https://garagehq.deuxfleurs.fr/) or [SeaweedFS](https://seaweedfs.com/). Both approaches have their own advantages and disadvantages, and the choice between them depends on the specific use case, requirements and limitations.
 
@@ -97,7 +96,7 @@ On the `Disks` tab, we will be creating three disks, as described above. Use the
 
 Incidentally, in the node where this VM is being provisioned we have allocated 4-8 GB for ZFS ARC via `/etc/modprobe.d/zfs.conf`:
 
-```conf
+```ini
 options zfs zfs_arc_max=8589934592
 options zfs zfs_arc_min=4294967296
 ```
@@ -228,14 +227,14 @@ Reduce swappiness to a minimum to save writes on the NVMe disk by setting `vm.sw
 
 ```bash
 echo "vm.swappiness=1" | tee /etc/sysctl.d/99-swap.conf
-sysctl -p /etc/sysctl.d/99-swap.conf
+sysctl --load=/etc/sysctl.d/99-swap.conf
 ```
 
 Check that support for trimming is working:
 
 ```bash
-fstrim -v /
-fstrim -v /srv/nfs
+fstrim --verbose /
+fstrim --verbose /srv/nfs
 ```
 
 Some extra packages worth installing:
