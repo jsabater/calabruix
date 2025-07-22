@@ -245,7 +245,7 @@ Check that support for trimming is working:
 fstrim --verbose /
 ```
 
-Neither the VMs nor the LXCs in our cluster have a gateway, so they use an APT proxy to update packages. Create the file `/etc/apt/apt.conf.d/00aptproxy` with the following content:
+Neither the VMs nor the LXCs in our cluster have a gateway, so they use an APT proxy to update packages. The information we provided during OS installation was saved in the `/etc/apt/apt.conf` file by the installer. Either edit such file or create the file `/etc/apt/apt.conf.d/00aptproxy` and add support for HTTPS:
 
 ```ini
 Acquire::http { Proxy "http://apt.localdomain.com:8080/"; };
