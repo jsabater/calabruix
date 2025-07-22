@@ -1,11 +1,14 @@
 ---
 title: "NFS server on Proxmox VE"
 date: 2025-07-17
-lastmod: 2025-07-17
+lastmod: 2025-07-22
 description: "Install and configure a Network File System (NFS) server in a VM on a Proxmox using ZFS for optimal performance"
-summary: "Install and configure an NFS server in a VM on a Proxmox cluster using ZFS"
+summary: "Install, configure and optimise an NFS server in a VM on a Proxmox cluster using ZFS"
 categories: ["virtualisation"]
-tags: ["proxmox", "pve", "nfs", "zfs"]
+tags: ["proxmox", "pve", "nfs", "zfs", "vm"]
+series: ["NFS"]
+series_order: 1
+weight: 10
 ---
 
 [*](NFS) is a distributed file system protocol that allows clients to access files over a network as if they were local. It is commonly used for sharing files between servers and clients in a networked environment.
@@ -92,7 +95,7 @@ On the `Disks` tab, we will be creating three disks, as described above. Use the
 | `Async IO`        | `io_uring` | `io_uring` | `io_uring` | Most compatible and reliable               |
 | `Discard`         | Yes        | Yes        | Yes        | Enable TRIM/UNMAP                          |
 
-> Regarding the data disk, by choosing `zfspool` as storage, the assistant creates a ZFS volume (zvol) instead of a virtual disk.
+> Regarding the data disk, by choosing `zfspool` as storage, the assistant creates a ZFS volume (ZVOL) instead of a virtual disk.
 
 Incidentally, in the node where this VM is being provisioned we have allocated 4-8 GB for ZFS ARC via `/etc/modprobe.d/zfs.conf`:
 
@@ -133,6 +136,12 @@ qm set 104 --scsi2 zfspool:vm-104-disk-data,format=raw,iothread=1,discard=on,bac
 ```
 
 > Note that the WebGUI would have named the disks `vm-104-disk-0.qcow2`, `vm-104-disk-1.raw` and `vm-104-disk-2`, respectively, whereas via the terminal we are being more explicit about their intended usage.
+
+Optionally, check the block size `volblocksize` of our ZVOL:
+
+```bash
+zfs get volblocksize zfspool/vm-104-disk-data
+```
 
 Optionally, verify the configuration:
 
@@ -234,7 +243,6 @@ Check that support for trimming is working:
 
 ```bash
 fstrim --verbose /
-fstrim --verbose /srv/nfs
 ```
 
 Some extra packages worth installing:
@@ -253,6 +261,8 @@ hostnamectl set-chassis "vm"
 hostnamectl set-location "Data Center Park Helsinki, Finland"
 ```
 
+> Hetzner keeps [a list of their data centres](https://www.hetzner.com/unternehmen/rechenzentrum/) in their webpage.
+
 Servers should always store [*](UTC). Local time is a presentation layer issue that only humans need to see. You can check the time zone in your server using the `timedatectl status` command, then set the time zone to `UTC`, if needed:
 
 ```bash
@@ -261,46 +271,45 @@ timedatectl set-timezone Etc/UTC
 
 ## Format the data disk
 
-We chose to use a ZFS volume (zvol) for the data disk when we chose `zfspool` as storage, which will allow us to take advantage of features such as snapshots and compression. It will behave exactly like a physical disk: no filesystem or partition table until we create one. Inside the VM, the zvol will appear as a new physical disk (e.g., `/dev/sdc`), and it will be completely blank until we format it.
+We chose to use a ZFS volume (ZVOL) for the data disk when we chose `zfspool` as storage, which allows us to take advantage of features such as snapshots and compression. It will behave exactly like a physical disk: no filesystem or partition table until we create one. Inside the VM, the ZVOL will appear as a new physical disk (e.g., `/dev/sdc`), and it will be completely blank until we format it.
 
 We are not using ZFS as a filesystem inside the VM. Instead, we are using [*](ZFS) to back a block device (our data disk) and, inside the VM, we will format it using [*](XFS).
 
 Furthermore, if you create a partition inside the VM, like most OS installers do, then resizing later will still involve partition math (e.g., using `sfdisk` to adjust size). If, instead, you use the whole device directly (i.e., format `/dev/sdc` without a partition table), then resizing becomes simpler.
 
-Therefore, inside the VM, all that is left is to format the data disk. As the `root` user, identify the disk using the `lsblk` command (e.g., `sdc`) , then format it:
+Therefore, inside the VM, all that is left is to format the data disk. As the `root` user, install the required packages:
 
 ```bash
-mkfs.xfs -b size=8192 -d su=8k,sw=1 /dev/sdc
+apt-get install --yes xfsprogs
 ```
 
-We are aligning the same block size that Proxmox used to create the ZVOL (`volblocksize`) with the block size of XFS. Also, we are telling XFS that the underlying storage works best when it writes in 8K blocks via the `su=8k` (stripe unit = 8K) and the `sw=1` (one stripe = 8K, because ZVOL is not a RAID stripe) arguments.
-
-Because `volblocksize` can change depending on your version of ZFS, before formatting the disk, check it out using the host shell:
+Then, identify the disk using the `lsblk` command (e.g., `sdc`) , then format it:
 
 ```bash
-zfs get volblocksize zfspool/vm-104-data
+mkfs.xfs -b size=4096 /dev/sdc
 ```
 
-If your `volblocksize` is 16K, then adapt how you format the data disk:
+Unfortunately, when using Debian 12 Bookworm, we cannot align the block size of our XFS filesystem (4K) to the `volblocksize` of our ZVOL (8K) because the page size of the kernel is 4K (standard for most x86_64 Linux system), and XFS requires the block size to be less or equal than the page size.
 
-```bash
-mkfs.xfs -b size=16384 -d su=16k,sw=1 /dev/sdc
-```
+Although we could install [kernel 6.12 from Debian Backports](https://packages.debian.org/bookworm-backports/linux-image-amd64), which includes support for [Large Block Sizes](https://kernelnewbies.org/KernelProjects/large-block-size) (LBS), we would still be lacking a recent-enough version of `xfsprogs` (at least 6.5) that understands LBS filesystems, and this package has not been backported. Our only option is to upgrade to Debian 13.
 
-Aligning the block size of XFS with the block size of the ZVOL is always beneficial, no matter what value of `ashift` your ZFS storage pool has.
+Even if our XFS block size is 4K, the ZVOL will still aggregate writes into 8K blocks on disk, which can improve performance on spinning disks and reduce fragmentation.
 
-> ZFS version 2.2 brings in a new default block size of 16K.
+> Aligning the block size of XFS with the block size of the ZVOL is always beneficial, no matter what value of `ashift` your ZFS storage pool has.
 
-Finally, create the mount point, get the UUID of the new disk with the `blkid /dev/sdc` command and configure the `/etc/fstab` file to mount it automatically at boot:
+Therefore, let's wrap this up by creating the mount point, gettting the UUID of the new disk with the `blkid /dev/sdc` command, and configuring the `/etc/fstab` file so it is automatically mounted at boot:
 
 ```bash
 mkdir /srv/nfs
 blkid /dev/sdc
 echo 'UUID=333e6175[..] /srv/nfs xfs noatime 0 2' >> /etc/fstab
+systemctl daemon-reload
 mount /srv/nfs
 ```
 
-> In the future, use `xfs_info /srv/nfs` to check the arguments used when formatting.
+You may notice that the output of the `blkid /dev/sdc` command includes `BLOCK_SIZE="512"`, or some other value different from the one you used when formatting the disk. This is because ZVOLs abstract physical blocks and present virtual 512-byte sectors to guests. This is hardcoded in ZFS and not configurable via `volblocksize`. Moreover, `ashift` and `volblocksize` optimise storage efficiency, but do not affect the sector size exposed to the guest.
+
+> In the future, use `xfs_info /dev/sdc` to check the arguments used when formatting.
 
 To get better performance and control, we are not using the `discard` mount option. Instead, we will run `fstrim` periodically:
 
