@@ -245,6 +245,13 @@ Check that support for trimming is working:
 fstrim --verbose /
 ```
 
+Neither the VMs nor the LXCs in our cluster have a gateway, so they use an APT proxy to update packages. Create the file `/etc/apt/apt.conf.d/00aptproxy` with the following content:
+
+```ini
+Acquire::http { Proxy "http://apt.localdomain.com:8080/"; };
+Acquire::https { Proxy "http://apt.localdomain.com:8080/"; };
+```
+
 Some extra packages worth installing:
 
 ```bash
