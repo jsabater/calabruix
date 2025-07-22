@@ -118,6 +118,26 @@ Now is the time to visit the `Cloud-Init` menu option of our newly-created, not-
 
 We will be setting each and every one of the example values via Ansible, so they can all be left blank. However, if you modify any of the fields, you need to use the `Regenerate image` button to update the CD-ROM containing the Cloud-Init configuration. 
 
+Before converting it into a template, we will be adding a second virtual disk for the swap:
+
+```bash
+qm set 9000 --scsi1 local:9000/vm-9000-disk-1.raw,format=raw,size=1G,async_io=io_uring,discard=on,backup=0
+```
+
+This is a summary of the disks our template will have:
+
+| Option            | OS disk    | Swap disk  | Notes                                      |
+|-------------------|:----------:|:----------:|--------------------------------------------|
+| `Bus/Device`      | `SCSI 0`   | `SCSI 1`   | VirtIO SCSI driver works well with discard |
+| `Storage`         | `local`    | `local`    |                                            |
+| `Disk size (GiB)` | 3          | 1          |                                            |
+| `Format`          | `qcow2`    | `raw`      | QCOW 2 supports snapshots                  |
+| `Cache`           | No cache   | No cache   | Avoid double caching with ZFS              |
+| `IO thread`       | Yes        | No         | Enable parallel access                     |
+| `Backup`          | Yes        | No         | Include disk in backup jobs                |
+| `Async IO`        | `io_uring` | `io_uring` | Most compatible and reliable               |
+| `Discard`         | Yes        | Yes        | Enable TRIM/UNMAP                          |
+
 In a last step, we will convert the VM into a template. From this template we will be able to quickly create (linked) clones. The deployment from VM templates is much faster than creating a full clone.
 
 Either right-click on the VM and choose the `Convert to template` option, or use the terminal:
