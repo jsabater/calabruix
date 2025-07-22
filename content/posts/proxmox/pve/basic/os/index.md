@@ -72,37 +72,11 @@ apt-get purge --yes nano vim-tiny
 apt-get install --yes vim
 ```
 
-Set `vim` as the system-wide default editor and as the selected editor of the `root` user:
+Then set `vim` as the system-wide default editor and as the selected editor of the `root` user:
 
 ```bash
 update-alternatives --set editor /usr/bin/vim.basic
 echo 'SELECTED_EDITOR="/usr/bin/vim.basic"' > ~/.selected_editor
-```
-
-Create the *Vim* configuration file `~/.vimrc` for the `root` user (adapt to your preferences):
-
-```vim
-" Load defaults from /etc/vim/vimrc
-runtime defaults.vim
-
-" Disable mouse support which is enabled when loading upstream defaults
-" in case /etc/vim/vimrc.local has not been deployed into the host.
-set mouse=
-set ttymouse=
-
-" Disable swap and backup files for enhanced security
-set noswapfile
-set nobackup
-set nowritebackup
-
-" On pressing tab, insert 2 spaces
-" Show existing tabs with 2 spaces width
-" When indenting with '>', use 2 spaces width
-set tabstop=2 softtabstop=0 expandtab shiftwidth=2 smarttab
-set pastetoggle=<F3>
-set nolist
-set showbreak=↪\ 
-set listchars=tab:→\ ,nbsp:␣,trail:•,extends:⟩,precedes:⟨
 ```
 
 ## DNS entries
