@@ -1,7 +1,7 @@
 ---
 title: "About me"
 date: "2024-08-11"
-lastmod: 2025-06-29
+lastmod: 2025-07-23
 description: "About Jaume Sabater, the author of this blog"
 ---
 
@@ -32,6 +32,8 @@ Planning ahead and leading by example, I try to encourage independent problem so
 As a systems engineer, I am, mostly, a back-end guy: systems, platform, devops, site reliability, but I also have great interest in good software development practices and software architectures. I am a huge fan of [*](TDD), [*](VSA) and [*](DDD), and agile methodologies.
 
 > Beautiful is better than ugly. Explicit is better than implicit. Simple is better than complex. Complex is better than complicated.
+
+Should you be interested, check out [my curriculum vitae a Kickresume](https://www.kickresume.com/cv/bLdx3M/).
 
 ## About the site
 
