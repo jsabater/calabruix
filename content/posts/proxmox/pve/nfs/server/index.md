@@ -157,6 +157,18 @@ Optionally, verify the configuration:
 qm config 104
 ```
 
+## ZFS volumes
+
+ZFS volumes (ZVOLs) are an alternative to traditional virtual disks for VM data storage in Proxmox. While the Proxmox VM creation wizard typically provisions disk images in formats like `qcow2` (QEMU Copy On Write) or `raw`, these are still files sitting atop a filesystem. By contrast, ZVOLs offer native block-level storage managed directly by [*](ZFS), eliminating the file layer entirely. This provides performance benefits, block-level snapshots, and more seamless resizing that are particularly relevant when exporting data over NFS.
+
+To clarify, ZVOLs do not provide "raw image format", like `/var/lib/vz/images/104/vm-104-disk-1.raw`, but rather the disk is a ZFS-managed block device, such as `/dev/zvol/zfspool/vm-104-data` (actually, `/dev/zd0`), i.e., no file, no virtual layer. Therefore, with a ZVOL, you avoid writing to a file sitting inside a ZFS dataset[^3] and QEMU going through file I/O layers and, instead, you get a native block device backed directly by ZFS. This means better synchronisation and performance, especially for workloads that require frequent writes.
+
+[^3]: There are three types of datasets in ZFS: a filesystem following POSIX rules, a volume (ZVOL) existing as a true block device under `/dev`, and snapshots thereof.
+
+It is important to emphasise that we are not using ZFS as a filesystem inside the VM. Instead, we are using ZFS to back a block device and, inside the VM, we will format it using [*](EXT4) or [*](XFS).
+
+In our scenario, we chose to use a ZVOL for the data disk when we chose `zfspool` as storage during the VM creation process, which will allow us to take advantage of features such as snapshots and compression. It will behave exactly like a physical disk: no filesystem or partition table until we create one. Inside the VM, the ZVOL will appear as a new physical disk (e.g., `/dev/sdc`), and it will be completely blank until we format it.
+
 ## OS install
 
 Once the VM has been created, click on its `Console` menu option and click the `Start` button. Once booted, the graphical installer will appear. Select the second option, `Install`, to change into the text mode.
@@ -286,11 +298,9 @@ timedatectl set-timezone Etc/UTC
 
 ## Format the data disk
 
-We chose to use a ZFS volume (ZVOL) for the data disk when we chose `zfspool` as storage, which allows us to take advantage of features such as snapshots and compression. It will behave exactly like a physical disk: no filesystem or partition table until we create one. Inside the VM, the ZVOL will appear as a new physical disk (e.g., `/dev/sdc`), and it will be completely blank until we format it.
+As stated before, we are not using ZFS as a filesystem inside the VM. Instead, we are using [*](ZFS) to back a block device (our data disk) and, inside the VM, we will format it using [*](XFS).
 
-We are not using ZFS as a filesystem inside the VM. Instead, we are using [*](ZFS) to back a block device (our data disk) and, inside the VM, we will format it using [*](XFS).
-
-Furthermore, if you create a partition inside the VM, like most OS installers do, then resizing later will still involve partition math (e.g., using `sfdisk` to adjust size). If, instead, you use the whole device directly (i.e., format `/dev/sdc` without a partition table), then resizing becomes simpler.
+Furthermore, if you create a partition inside the VM, like most OS installers do, then resizing later will still involve partition math (e.g., using `parted`, `fdisk`, or `sfdisk` to adjust size). If, instead, you use the whole device directly (i.e., format `/dev/sdc` without a partition table), then resizing becomes simpler.
 
 Therefore, inside the VM, all that is left is to format the data disk. As the `root` user, install the required packages:
 
