@@ -388,7 +388,11 @@ NFS takes the seach domain of its host as its main domain. In our case, that is 
 Domain = localdomain.com
 ```
 
-And restart the daemon with `systemctl restart nfs-idmapd`.
+And restart the appropriate daemon:
+
+```bash
+systemctl restart nfs-idmapd
+```
 
 Export the changes and, optionally, confirm the exported configuration:
 
@@ -409,8 +413,13 @@ Depending on the expected workload, you may want to increase the number of NFS t
 echo "RPCNFSDCOUNT=32" >> /etc/default/nfs-kernel-server
 ```
 
-Increasing this number can improve performance, especially under heavy load, by allowing the server to handle more concurrent NFS requests. However, excessive threads can introduce overhead and potentially lead to performance degradation.
+And restart the appropriate daemon:
 
+```bash
+systemctl restart nfs-server
+```
+
+Increasing this number can improve performance, especially under heavy load, by allowing the server to handle more concurrent NFS requests. However, excessive threads can introduce overhead and potentially lead to performance degradation.
 
 Finally, we also need to adjust the firewall rules on the VM. At the moment you should already have aliases for both the client and the host, created via the `Datacenter > Firewall > Alias` menu option.
 
@@ -420,9 +429,9 @@ Finally, we also need to adjust the firewall rules on the VM. At the moment you 
 [ALIASES]
 
 ipv4_private_ansible1 192.168.0.1 # Ansible Controller
-ipv4_private_nfs1 192.168.0.4 # NFS: Staging)
-ipv4_private_myapp1 192.168.0.5 # My app: Staging)
-ipv4_private_myapp2 1291.68.0.6 # My app: Staging)
+ipv4_private_nfs1 192.168.0.4 # NFS: Staging
+ipv4_private_myapp1 192.168.0.5 # My app: Staging
+ipv4_private_myapp2 1291.68.0.6 # My app: Staging
 ```
 
 And you should probably have an IP set for the two LXC running your app:
@@ -455,10 +464,6 @@ And, finally, add the security group to the `nfs1` guest:
 [RULES]
 GROUP nfs_staging -i net0 # Allow access to NFS from guests
 ```
-
-| Type  | Action      | Iface | Comment                         |
-|-------|-------------|-------|---------------------------------|
-| group | nfs_staging | net0  | Allow access to NFS from guests |
 
 ## NFS client
 
