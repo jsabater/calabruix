@@ -1,29 +1,29 @@
 ---
 title: "Extend virtual disks and ZVOLs on Proxmox"
 date: 2025-07-19
-lastmod: 2025-07-19
-description: "Extend the virtual disks and ZVOLs used in a VM running an NFS server on Proxmox without data loss or downtime, whether it has a partition table or not"
-summary: "Extend the virtual disks and ZVOLs of your VM running an NFS server without data loss or downtime"
+lastmod: 2025-07-24
+description: "Extend the virtual disks and ZVOLs used in a Proxmox VM without data loss, whether it has a partition table or not"
+summary: "Extend the virtual disks and ZVOLs of your VM running an NFS server without data loss"
 categories: ["virtualisation"]
 tags: ["proxmox", "pve", "nfs", "zfs", "vm"]
 series: ["NFS"]
 series_order: 2
 weight: 20
-draft: true
 ---
 
 On our Proxmox cluster we have configured an NFS server on a [*](VM), and for that we have used three virtual disks:
 
-1. A 3GB disk using EXT4 on our `local` pool.
-2. A 1GB disk virtual disk for the swap, on our `local` storage pool.
+1. A 3 GB virtual disk using QCOW2 format, on our `local` storage, for the OS, which we formatted using EXT4.
+2. A 1 GB virtual disk using RAW format, on our `local` storage, for the swap.
+3. A 100 GB  block device (ZVOL), on our `zfspool` storage, for the data, mounted on `/srv/nfs`.
 
 Eventually, the time to extend a disk will come. Extending a ZFS volume differs from extending a virtual disk in `qcow2` or `raw` format. Moreover, having a partition table will involve partition math.
 
 ## ZFS volume
 
-To extend the ZVOL holding your data disk, follow these steps:
+To extend the ZVOL holding the data disk, follow these steps:
 
-1. Extend the disk, using the WebGUI or the terminal.
+1. Resize the disk image or block device.
 2. Resize the filesystem inside the VM.
 
 To perform the first step, you can either use the WebGUI or the terminal. If you prefer the former, go to the `Hardware` menu option of the VM, select the data disk and use the `Disk action > Resize` button, input the number of extra gigabytes you need and click `Resize disk`. If you prefer the latter, execute the following command from the terminal of the host (adapt the value to your needs):
@@ -40,7 +40,7 @@ resize2fs /dev/sdc
 
 > Because the disk does not have partitions, the VM does not need to be powered off to perform this operation.
 
-## Virtual disk
+## OS disk
 
 To extend the size of your OS disk (a virtual disk using QCOW2 format), follow these steps:
 
@@ -94,9 +94,9 @@ Optionally, verify the results:
 df -h /
 ```
 
-> You can also perform the procedure using `fdisk` and `sfdisk`, but the procedure is more error-prone and cannot be automated.
+> You can also perform the procedure using `fdisk` and `sfdisk`, but it is more error-prone and cannot be automated.
 
-## Swap
+## Swap disk
 
 Resizing a swap disk can be simpler than resizing an OS or data partition because swap does not have a traditional filesystem. Furthermore, we do not need to preserve data.
 
