@@ -377,7 +377,7 @@ Let us review each of the options:
 * `root_squash`: Map client's `root` user to `nobody`, for security (default behaviour).
 * `fsid=0`: Defines the NFSv4 root export.
 
-If your workload is not sensitive to latency, it is recommended to use `sync` (default) instead of `async`, so that NFS is forced to to write changes to disk before replying. This reduces the speed of operations but results in a more stable and consistent interaction.
+If your workload is not sensitive to latency, it is recommended to use the default `sync` mode instead of `async`, so that NFS is forced to to write changes to disk before replying. This reduces the speed of operations but results in a more stable and consistent interaction.
 
 > The `fsid=0` option is not required for root access, but to define the NFSv4 root export.
 
@@ -420,6 +420,8 @@ systemctl restart nfs-server
 ```
 
 Increasing this number can improve performance, especially under heavy load, by allowing the server to handle more concurrent NFS requests. However, excessive threads can introduce overhead and potentially lead to performance degradation.
+
+### Firewall 
 
 Finally, we also need to adjust the firewall rules on the VM. At the moment you should already have aliases for both the client and the host, created via the `Datacenter > Firewall > Alias` menu option.
 
@@ -479,7 +481,7 @@ Support for NFS at the client side requires the installation of the `nfs-common`
 apt-get install --yes nfs-common
 ```
 
-Let's asume that our application `myapp` is run by the user `myappuser`, that belongs to the group `myappgroup`. Let's create the mount point on the guest where NFS will act as client:
+Let's asume that our application `myapp` is run by the user `myappuser`, that belongs to the group `myappgroup`. Therefore, such user requires access to the files in the shared volume. Let's create the mount point on the guest where NFS will act as client:
 
 ```bash
 mkdir /mnt/files
@@ -501,14 +503,20 @@ In our case, running `id myappuser` in our client tells us that both the user an
 uid=1001(myappuser) gid=1001(myappgroup) groups=1001(myappgroup),117(ssl-cert)
 ```
 
-So we need to create the same user and group in the `nfs1` guest:
+So we need to create the same user and group in the `nfs1` guest, where the NFS server runs:
 
 ```bash
 groupadd --gid 1001 myappgroup
 useradd --uid 1001 --gid 1001 --no-create-home --shell /bin/false myappuser
 ```
 
-Then file ownership will behave correctly across the mount. No need to pass any extra options at mount time.
+If we already have files in the shared volume `/srv/nfs/myapp`, we will need to recursively reassign ownership:
+
+```bash
+chown --recursive myappuser:myappgroup /srv/nfs/myapp
+```
+
+Now file ownership will behave correctly across the mount. No need to pass any extra options at mount time.
 
 In order to have the remote volume mounted automatically upon reboot, we need to add the appropriate entry in the `/etc/fstab`:
 
@@ -565,7 +573,7 @@ Aside from security risks on our multi-tenant environment, this setup reduces is
 
 However, if we were to configure the LXC as privileged, then we could reproduce the steps performed on the client VM. Trading security for convenience, privileged LXCs are less isolated than unprivileged containers, therefore a host kernel issue or crash would affect all containers and NFS mounts inside the LXC. Moreover, NFS mounts would break during live migration or backup, or prevent these tasks from completing successfully.
 
-All in all, when using LXC the recommended way to store files would be an S3-compatible object storage, such as [MinIO](https://min.io/), [Garage](https://garagehq.deuxfleurs.fr/) or [SeaweedFS](https://github.com/seaweedfs/seaweedfs).
+All in all, when using LXC the recommended way to store files would be an S3-compatible object storage.
 
 ## Multiple shares
 
@@ -693,7 +701,7 @@ As a reference, here you have an estimation for 1 GB of 10 kB files:
 | Tar over SSH         | 0m 48s | 1                |
 | Parallel Rsync (16j) | 1m 12s | 16,000           |
 
-Moreover, depending on the size of your archive, you want to spread this operation into several runs, using whatever criteria allows you to do one chunk at a time (e.g., by folder or subfolder).
+Moreover, depending on the size of your archive, you want to spread this operation into several runs, using whatever criteria allows you to do one chunk at a time (e.g., by subdirectory).
 
 Using Tar may be a reasonable option when piping the contents of the archive being built directly into SSH:
 
@@ -723,3 +731,5 @@ Key options:
 * `--inplace`: Writes directly to target files (reduces rename ops by avoiding temp-file renames).
 * `--whole-file`: Sends whole files (disables delta-xfer to bypass slow rsync diffs).
 * `--no-owner --no-group`: Do not attempt to change ownership (requires additional network requests).
+
+You would have to manually reassign ownership of files afterwards on the guest running the NFS server, if necessary.
