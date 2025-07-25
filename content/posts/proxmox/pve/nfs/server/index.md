@@ -1,7 +1,7 @@
 ---
 title: "NFS server on Proxmox VE"
 date: 2025-07-17
-lastmod: 2025-07-24
+lastmod: 2025-07-25
 description: "Install and configure a Network File System (NFS) server in a VM on a Proxmox using ZFS for optimal performance"
 summary: "Install, configure and optimise an NFS server in a VM on a Proxmox cluster using ZFS"
 categories: ["virtualisation"]
@@ -50,7 +50,7 @@ We will be using three separate virtual disks for the VM:
 * **Swap disk**: A small disk on our local pool that will hold the swap space.
 * **Data disk**: A larger disk on our ZFS pool that will hold the data to be shared via NFS.
 
-This is to simplify the setup and prevent us from running into issues with disk space management on multiple partitions. Both the OS and the data disks will be formatted using `ext4`, which will allow us to extend them later, if needed.
+This is to simplify the setup and prevent us from running into issues with disk space management on multiple partitions. The OS disk will be formatted using EXT4 and the data disk will be formatted using XFS, which will allow us to [extend them later]({{< relref "posts/proxmox/pve/nfs/extending-disks/">}}), if needed.
 
 Therefore, we will be using manual partitioning during the OS installation to create a DOS partition table and a primary partition on the OS and swap disks.
 
