@@ -1,7 +1,7 @@
 ---
 title: "Extend virtual disks and ZVOLs on Proxmox"
 date: 2025-07-19
-lastmod: 2025-07-24
+lastmod: 2025-07-25
 description: "Extend the virtual disks and ZVOLs used in a Proxmox VM without data loss, whether it has a partition table or not"
 summary: "Extend the virtual disks and ZVOLs of your VM running an NFS server without data loss"
 categories: ["virtualisation"]
@@ -15,7 +15,9 @@ On our Proxmox cluster we have configured an NFS server on a [*](VM), and for th
 
 1. A 3 GB virtual disk using QCOW2 format, on our `local` storage, for the OS, which we formatted using EXT4.
 2. A 1 GB virtual disk using RAW format, on our `local` storage, for the swap.
-3. A 100 GB  block device (ZVOL), on our `zfspool` storage, for the data, mounted on `/srv/nfs`.
+3. A 100 GB  virtual disk using a block device (ZVOL), on our `zfspool` storage, for the data, mounted on `/srv/nfs`.
+
+Inside the VM, these disk correspond to `/dev/sda`, `/dev/sdb` and `/dev/sdc`, respectively, and are mounted using UUID in the `/etc/fstab` file.
 
 Eventually, the time to extend a disk will come. Extending a ZFS volume differs from extending a virtual disk in `qcow2` or `raw` format. Moreover, having a partition table will involve partition math.
 
@@ -32,11 +34,21 @@ To perform the first step, you can either use the WebGUI or the terminal. If you
 zfs set volsize=+100G zfspool/vm-104-data
 ```
 
+After resizing the disk, use `lsblk` to check that the OS has already detected the new size. If it does not show the new size, use the following command to instruct the OS to rescan the block device:
+
+```bash
+echo 1 > /sys/class/block/sdc/device/rescan
+```
+
 To perform the second step you need to use the VM console:
 
 ```bash
-resize2fs /dev/sdc
+xfs_growfs /dev/sdc
 ```
+
+> Make sure the disk is mounted before running `xfs_growfs`.
+
+XFS supports online resizing, while mounted and even while actively being used. However, if the disk is under heavy load, you might want to temporarily reduce I/O to avoid unpredictable behaviour.
 
 > Because the disk does not have partitions, the VM does not need to be powered off to perform this operation.
 
