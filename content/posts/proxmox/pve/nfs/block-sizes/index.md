@@ -1,7 +1,7 @@
 ---
 title: "Aligning block sizes of VM disks on Proxmox"
 date: 2025-07-19
-lastmod: 2025-07-19
+lastmod: 2025-07-27
 description: "How to find the right block size for all I/O layers up to the VM running an NFS server"
 summary: "Get I/O statistics and decide the most convenient block size for your NFS server on a VM on Proxmox"
 categories: ["virtualisation"]
@@ -9,203 +9,59 @@ tags: ["proxmox", "pve", "nfs", "zfs", "vm"]
 series: ["NFS"]
 series_order: 3
 weight: 30
-draft: true
 ---
 
-Debian 13 (and newer) kernels, with XFS, can support block sizes larger than the default 4KB, including 8KB, through the Large Block Size (LBS) feature. This feature allows for better performance, especially with large files and databases. 
-Here's a more detailed explanation:
+{{< katex >}}
 
-    Large Block Size (LBS) Support:
-    The Linux kernel has added support for LBS in XFS, enabling block sizes larger than the system's page size (typically 4KB). 
+In previous articles of this series we have seen [how to set up an NFS server]({{< relref "/posts/proxmox/pve/nfs/server/" >}}) on a [*](VM) on Proxmox, and [how to extend the disks]({{< relref "/posts/proxmox/pve/nfs/extending-disks/" >}}) used by that VM. For that, we used default values for the block sizes of the different layers involved in the I/O operations, which are:
 
-Why 8KB?
-PostgreSQL, for example, uses an 8KB page size internally. With LBS, you can now create an XFS filesystem with an 8KB block size, matching the database's internal page size, which can improve performance and reduce overhead when writing data. 
-Benefits of Larger Block Sizes:
-Larger block sizes can lead to fewer I/O operations for larger files, potentially improving performance, particularly with high-capacity storage like QLC SSDs. 
-How to use it:
-When formatting an XFS filesystem, you can specify the desired block size using the mkfs.xfs command with the -b size=8192 option, according to the Gentoo Forums. 
-Kernel Limitations:
-While you can create an XFS partition with a larger block size, the kernel's page size might still be a limiting factor when mounting the partition. However, the LBS support addresses this limitation. 
-Potential Optimizations:
-Databases and other applications that work with large data chunks can leverage this feature to optimize their I/O operations and potentially see performance gains
+* A ZFS storage pool made of two HDD in mirror mode, with `ashift=12` (4096 bytes).
+* A ZFS volume (ZVOL) for our data disk, with `volblocksize=8K`.
+* An XFS filesystem on the data disk of the VM, with `data.bsize=4096`.
 
-## Debian 13
+In this article we will focus on the block sizes of the different layers involved in the I/O operations of our NFS server.
 
-This is perfect timing! Having xfsprogs 6.13.0-2 in Debian 13 means you'll have:
+Generally speaking, the easiest way to improve performance, minimise fragmentation, and make the most of our disk's physical layout is:
 
-Full userspace support for LBS filesystems
-All the maintenance tools (xfs_repair, xfs_check, etc.) that understand larger block sizes
-Proper compatibility between kernel and userspace tools
+1. To align the physical sector size of our disk with the block size of our ZFS storage pool.
+2. To align the block sizes of the ZVOL and the filesystem inside the VM.
 
-## Kernel 6.12 vs 6.13
+For that, we need to gather relevant statistics that allow us to make informed decisions.
 
-LBS is marked as experimental in kernel 6.12 LTS, but it is marked as stable in version 6.13.
+> ZFS ARC caching can affect the observed I/O patterns, especially for read workloads.
 
-In essence:
+## Current situation
 
-* Kernel 6.12 introduced the fundamental VFS infrastructure and initial XFS support for Large Block Sizes, making the concept viable.
-* Kernel 6.13 built upon this foundation by adding critical features like atomic write support for major filesystems (EXT4, XFS), improving general large file handling, and incorporating the usual wave of bug fixes and optimizations that are essential for a feature to be considered truly stable and production-ready.
+If you followed the steps described in the [NFS server on Proxmox VE]({{< relref "posts/proxmox/pve/nfs/server/" >}}) article in this series, using Debian 12 Bookworm, at the moment you ought to have the following sector and block sizes:
 
-Kernel.org maintenance of 6.12.y is restricted to patches that fix security issues, bugs or regressions, or provide stability. Thus, any new capability introduced in 6.13 stays exclusive to the 6.13 mainline tree and beyond.
+| Layer                | Option name    | Value  | Command                                     |
+|----------------------|:--------------:|:------:|---------------------------------------------|
+| Physical sector size | `PHY-SEC`      | 4096   | `lsblk -o NAME,SIZE,PHY-SEC,LOG-SEC`        |
+| ZFS storage pool     | `ashift`       | 12[^1] | `zdb -C zfspool \| grep ashift`             |
+| ZVOL                 | `volblocksize` | 8K     | `zfs get volblocksize zfspool/vm-104-data`  |
+| XFS                  | `data.bsize`   | 4096   | `xfs_info /dev/sdc`                         |
 
-Once a more modern kernel, version 6.13+, is backported to Trixie, we will have to check it out.
+[^1]: 2¹² = 4096 bytes.
 
-## XFS 8K
-
-We are aligning the same block size that Proxmox used to create the ZVOL (`volblocksize`) to the block size of XFS.
-
-Because `volblocksize` can change depending on your version of ZFS, before formatting the disk, check it out using the host shell:
-
-
-```bash
-zfs get volblocksize zfspool/vm-104-data
-```
-
-If your `volblocksize` is 16K, then adapt how you format the data disk:
-
-```bash
-mkfs.xfs -b size=16384 /dev/sdc
-```
-
-> ZFS version 2.2 brings in a new default block size of 16K.
-
-## XFS parametres
-
-```bash
-xfs_info /dev/sdc
-```
-
-Meta-data section
-
-    meta-data=/dev/sdc – Device where metadata (superblock, allocation groups, inode structures) resides.
-    isize=512 – The size (in bytes) of each inode. 512 is typical.
-    agcount=4 – The number of allocation groups (AGs) the filesystem is divided into. Allocation groups enable parallel allocation on multi-threaded workloads.
-    agsize=9830400 blks – Number of blocks in each allocation group (with bsize=8192, that's ~78.4 MB per AG).
-    sectsz=512 – Sector size reported by the underlying device (or emulated by ZVOL).
-    attr=2 – Extended attribute format version (v2 is current).
-    projid32bit=1 – Project quotas (32-bit project IDs) are supported.
-    crc=1 – Metadata checksumming (introduced in XFS v5 format).
-    finobt=1 – Free inode B+tree is present, improving inode allocation speed.
-    sparse=1 – Sparse inode chunk allocation.
-    rmapbt=1 – Reverse mapping B+tree (used for reflink & deduplication).
-    reflink=1 – Reflink (copy-on-write clone) feature enabled.
-    bigtime=1 – Extended timestamp range (needed beyond year 2038).
-    inobtcount=1 – Tracks inode counts per allocation group.
-    nrext64=1 – 64-bit extent counters.
-    exchange=0 – Online exchange (not enabled).
-    metadir=0 – No separate metadata directory.
-
-Data Section
-
-    bsize=8192 – Data block size (8 KiB).
-    blocks=39321600 – Total number of blocks (39321600 × 8 KiB ≈ 300 GiB).
-    imaxpct=25 – Max % of space reserved for inodes (25% default).
-    sunit=0 / swidth=0 – Stripe unit/width (relevant for RAID). Zero means no special alignment defined.
-
-Naming Section
-
-    version 2 – Directory structure format (v2 = efficient hashed directories).
-    bsize=8192 – Directory block size (matches data bsize).
-    ascii-ci=0 – Case-insensitive lookups disabled.
-    ftype=1 – Filetype field in directory entries (helps performance).
-    parent=0 – No parent pointer feature.
-
-Log Section
-
-    internal log – The journal (transaction log) is stored within the same device, not externally.
-    bsize=8192 – Log block size (8 KiB).
-    blocks=19200 – Size of the log area (19200 × 8 KiB = 150 MB).
-    version=2 – Log format version 2.
-    sectsz=512 – Log sector size.
-    sunit=0 – Log stripe unit (for RAID).
-    lazy-count=1 – Lazy log counter updates (performance optimization).
-
-Realtime Section
-
-* `none` – No separate realtime volume (used for large streaming files).
-* `extsz=8192` – Default extent size (matches 8 KiB blocks).
-* `blocks=0` – No realtime data blocks.
-* `rtextents=0` – No realtime extents.
-* `rgcount=0` – No realtime groups.
-
-## Metadata takes space
-
-Why Does a Fresh XFS Filesystem Show 4.3 GB Used?
-
-```bash
-mkfs.xfs -b size=8192 /dev/sdd
-mount -t xfs /dev/sdd /mnt
-df -h /mnt
-```
-
-And we see something like `300G total, 4.3G used, 296G available`. XFS is optimized for performance rather than minimal metadata footprint. 4.3 GB out of 300 GB is ~1.4%, which is normal.
-
-This is normal because:
-
-* XFS Pre-allocates metadata structures (like inode tables, allocation group headers, B+trees, journals). Unlike ext4, XFS reserves these areas upfront, so the initial "used space" reflects this reservation.
-* The larger the block size, the more space reserved. An 8 KiB block size slightly increases the metadata footprint compared to 4 KiB, but it's still in the 1–2% range for large filesystems.
-* The internal log (journal) – Yours is ~150 MB alone (19200 × 8 KiB).
-
-
-
-
-## ZFS volumes
-
-ZFS volumes (zvols) are an alternative to traditional virtual disks for VM data storage in Proxmox. While the Proxmox VM creation wizard typically provisions disk images in formats like `qcow2` (QEMU Copy On Write) or `raw`, these are still files sitting atop a filesystem. By contrast, zvols offer native block-level storage managed directly by ZFS, eliminating the file layer entirely. This provides performance benefits, block-level snapshots, and more seamless resizing that are particularly relevant when exporting data over NFS.
-
-To clarify, zvols do not provide "raw image format", like `/var/lib/vz/images/104/vm-104-disk-1.raw`, but rather the disk is a ZFS-managed block device, such as `/dev/zvol/zfspool/vm-104-data` (actually, `/dev/zd0`), i.e., no file, no virtual layer. Therefore, with a zvol, you avoid writing to a file sitting inside a ZFS dataset[^3] and QEMU going through file I/O layers and, instead, you get native block device backed directly by ZFS. This means better synchronisation and performance, specially for workloads that require frequent writes.
-
-[^3]: There are three types of datasets in ZFS: a filesystem following POSIX rules, a volume (zvol) existing as a true block device under `/dev`, and snapshots thereof.
-
-It is important to emphasise that we are not using ZFS as a filesystem inside the VM. Instead, we are using [*](ZFS) to back a block device and, inside the VM, we will format it using [*](EXT4) or [*](XFS).
-
-In our scenario, we chose to use a zvol for the data disk when we chose `zfspool` as storage, which allows us to take advantage of features such as snapshots and compression. It will behave exactly like a physical disk: no filesystem or partition table until we create one. Inside the VM, the zvol will appear as a new physical disk (e.g., `/dev/sdc`), and it will be completely blank until we format it.
-
-Furthermore, if you create a partition inside the VM, like most OS installers do, then resizing later will still involve partition math (e.g., using `sfdisk` to adjust size). If, instead, you use the whole device directly (i.e., format `/dev/sdc` without a partition table), then resizing becomes simpler.
-
-Therefore, inside the VM, all that is left is to format the data disk. As the `root` user, identify the disk using the `lsblk` command (e.g., `sdc`) , then format it:
-
-```bash
-mkfs.ext4 /dev/sdc
-```
-
-Finally, create the mount point, get the UUID of the new disk with the `blkid /dev/sdc` command and configure the `/etc/fstab` file to mount it automatically at boot:
-
-```bash
-mkdir /srv/nfs
-blkid /dev/sdc
-echo 'UUID=333e6175[..] /srv/nfs ext4 discard,noatime,nodiratime 0 2' >> /etc/fstab
-mount /srv/nfs
-```
-
-## Aligning block sizes
-
-Generally speaking, the easiest way to improve performance, minimise fragmentation, and make the most of our disk's physical layout is, on the one hand, to align the physical sector size of our disk with the block size of our ZFS storage pool, and on the other, to align block sizes of the ZVOL and the filesystem inside the VM.
-
-Yes, aligning volblocksize=8K on the ZVOL with XFS block size = 8K inside the VM is efficient and recommended for most workloads with 8K+ writes.
-
-ZFS does not mix metadata and file data in the same volblocksize block, so metadata always incurs its own overhead, no matter how small the file is.
-
-For small files (e.g. 6K or 4K), the data uses one 8K ZVOL block, and ZFS metadata uses additional space, i.e., it is not co-located within the same 8K.
-
-For larger files (e.g. 14K), ZFS uses 2× volblocksize blocks, regardless of the filesystem block size, since the ZVOL is just a virtual block device.
-
-By following the steps described so far in this article, at the moment we may have the following sector and block sizes:
-
-| Layer                | Option name    | Value | Command                                     | Notes            |
-|----------------------|:--------------:|:-----:|---------------------------------------------|------------------|
-| Physical sector size | `PHY-SEC`      | 4096  | `lsblk -o NAME,SIZE,PHY-SEC,LOG-SEC`        |                  |
-| ZFS storage pool     | `ashift`       | 12    | `zdb -C zfspool \| grep ashift`             | 2¹² = 4096 bytes |
-| ZVOL                 | `volblocksize` | 8K    | `zfs get volblocksize zfspool/vm-104-data`  |                  |
-| EXT4                 | Block size     | 4096  | `tune2fs -l /dev/sdc \| grep 'Block size'`  |                  |
-
-Default values of `ashift` and `volblocksize` may differ depending on your hardware, the version of Proxmox you are using, and the version of ZFS it shipped with. For instance, ZFS version 2.2 brings in a new default block size of 16K.
+Default values of `ashift` and `volblocksize` may differ depending on your hardware, the version of Proxmox you are using, and the version of ZFS it ships with. For instance, ZFS version 2.2 brings in a new default block size of 16K.
 
 > Most modern SSDs, particularly enterprise-grade ones, use 8KB logical sectors.
 
-While the table above shows a disparity in the block size of our ZVOL, this if fine for most use cases. Furthermore, the specifics of each filesytem need to be considered in the equation. In the case of ZFS, setting the block size of 4K may not make it perform better because ZFS operates a lot of metadata, therefore the data-to-metadata ratio could be worse. Besides, when using 4K sector disks, this could waste space and prevent compression from being used.
+While the table above shows a disparity in the block size of our ZVOL, this is fine for most use cases. Furthermore, the specifics of each filesytem need to be considered in the equation. In the case of the ZVOL, setting `volblocksize` down to 4K most probably would not make it perform better because ZFS operates a lot of metadata, therefore the data-to-metadata ratio would be worse.
 
-For example, let's say there are 2× 4K writes of metadata for each record when the default `ashift=12` and `redundant_metadata=all` (default) is used. When doing a single 8K write, it will store 1× 8K data plus 2× 4K metadata, for a total of 16K. However, when doing 2x 4K writes, it will store 2× 4K of data plus 4× 4K of metadata, for a total of 24K.
+> ZFS does not mix metadata and file data in the same `volblocksize` block, so metadata always incurs its own overhead, no matter how small the file is.
+
+For example, with `ashift=12` (i.e., 4K sector alignment) and the default `redundant_metadata=all`, ZFS writes two copies of metadata for redundancy. If the ZVOL has a `volblocksize=8K`, writing 8K of user data results in 1 × 8K data block and 2 × 4K metadata blocks (each redundant), for a total of 16K written.
+
+However, if `volblocksize=4K`, writing the same 8K of user data as two separate 4K writes results in 2 × 4K data blocks and 4 × 4K metadata blocks (2 per data block, due to redundancy), for a total of 24K written.
+
+## ZFS storage pool
+
+This terminology is used to describe the grouping of storage devices (HDD, SSD, etc.) into a single logical unit using the ZFS file system.
+
+The `ashift` parametre controls the minimum block size ZFS will use for physical I/O on disk. Our HDD has a physical sector size of 4096 bytes, thus setting `ashift=12` (4096 bytes) is fine.
+
+However, using `ashift=13` (8192 bytes) can still be a good idea when working with workloads with larger I/O (like our NFS server), which can benefit from the reduced metadata overhead and fewer IOPS required.
 
 Regarding the value of `ashift` used when creating a ZFS pool, Proxmox offers a recommended value on the WebGUI which depends on the logical sector size of the disks. A general guideline would be:
 
@@ -213,50 +69,47 @@ Regarding the value of `ashift` used when creating a ZFS pool, Proxmox offers a 
 * `ashift=12` for newer HDD disks with 4KB sectors.
 * `ashift=13` for SSD disks with 8KB sectors.
 
-> Once a ZFS vdev is created with a specific `ashift` value, it cannot be changed: it is immutable.
-
-Our HDD has a physical sector size of 4096 bytes, then setting `ashift=12` is correct (4096 bytes). However, using `ashift=13` (8192 bytes) can still be a good idea, given our use case.
-
-Given that `ashift` controls the minimum block size ZFS will use for physical I/O on disk, a value of `12` means ZFS will issue writes in 4K blocks, whereas a value of `13` means ZFS will issue writes in 8K blocks.
-
-Therefore, an `ashift=13` (8K) is a good idea, even on 4K-sector drives, when working with:
-
-* Workloads with larger I/O (like our NFS server), which can benefit from the reduced metadata overhead and fewer IOPS required.
-* Applications that typically write in chunks larger than 4K, as the 8K `ashift` will not waste space and may perform better.
+> Once a ZFS vdev is created with a specific `ashift` value, it cannot be changed.
 
 ## Write amplification
 
 Write amplification in ZFS refers to the phenomenon where the file system ends up writing more data to the storage device than the amount of data originally intended to be written by the user or application.
 
-This can happen because ZFS is a copy-on-write file system and uses a larger record size than the data being written, requiring it to rewrite larger blocks even when only a small portion of the data needs to be changed.
+$$
+  \text{Write amplification} = \frac{\text{Physical bytes written to storage}}{\text{Logical bytes written by the application}}
+$$
 
-But how does write amplification happen? Suppose our application writes 8K at a time (on our NFS server) and our ZFS pool has `ashift=12` (4K). Then ZFS tries to write two 4K blocks (to match 8K) but, due to misalignment or COW, ZFS might read-modify-write more 4K blocks than needed, leading to write amplification.
+This can happen because ZFS is a copy-on-write (COW) file system and uses a larger record size than the data being written, requiring it to rewrite larger blocks even when only a small portion of the data needs to be changed.
 
-But if `ashift=13` (8K), then ZFS treats each 8K write as one atomic block. This leads to better alignment with our I/O patterns, less overhead, less fragmentation, and less metadata churn.
+But how does write amplification happen? Suppose our NFS server performs plenty of 8K writes at a time and our ZFS pool has `ashift=12` (4K). Then, ZFS tries to write 2 × 4K blocks (to match 8K) but, due to misalignment or COW, it might read-modify-write more 4K blocks than needed, leading to write amplification.
 
-Therefore, even though our disk sectors are 4K, aligning ZFS to 8K avoids extra work when the application's write size exceeds 4K.
+If `ashift=13` (8K), then ZFS treats each 8K write as one atomic block. This leads to better alignment with our I/O patterns (writing 8K at a time), less overhead, less fragmentation, and less metadata churn.
+
+Therefore, even though our HDD disk sectors are 4K, aligning ZFS to 8K avoids extra work when the application's write size exceeds 4K.
 
 In conclusion, if we observe, or predict, I/O patterns happening mostly in the range of 8K-16K, we are better off creating our ZFS storage pool with an `ashift` value of 13 instead of the default 12 offered by the WebGUI.
 
-## Bigger block sizes
+## Measuring
 
-Choosing a bigger block size when formatting a filesystem can offer a performance sweet spot for workloads that commonly read or write in chunks larger than the standard 4K. It can reduce internal fragmentation and improve I/O efficiency, specially on spinning disks or workloads where sequential throughput is valuable.
+Choosing a bigger block size when formatting a filesystem can offer a performance sweet spot for workloads that commonly read or write in chunks larger than the standard 4K.
 
-However, as with any optimisation, the effectiveness of using 8K+ blocks ultimately depends on the typical request sizes and access patterns in your environment, and the specifics of the filesystem, as discussed in previous sections. So, how do we figure it out?
+However, as with any optimisation, the effectiveness of using 8K+ blocks ultimately depends on the typical request sizes and access patterns in your environment, and the specifics of the filesystem. So, how do we figure it out?
 
-We are interested in historical I/O stats, not just real time. And because we have different layers involved, we need to measure at each level.
+We are mostly interested in historical I/O stats, not real time. And because we have different layers involved, we need to measure at each level.
+
+![I/O layers](proxmox-vm-io-layers.svg)
 
 ### At the host level
 
-Using the terminal at the host, we can observer logical and physical I/O stats of our ZFS pool storage, including metadata and ZFS overhead (checksumming, compression, etc.), and all ZVOLs and datasets underneath,.
+Using the terminal at the host (the Proxmox node), we can observe logical and physical I/O stats of our ZFS storage pool, including metadata and ZFS overhead (checksumming, compression, etc.) of all ZVOLs and datasets underneath.
 
-To see logical I/O stats, we can use the `zpool` command, from the `zfsutils-linux` package. The output table shows the average request size, including ZFS metadata overhead (not just raw application reads/writes), since boot.
+To see logical I/O stats, we can use the `zpool iostat` command from the `zfsutils-linux` package. The output table shows the average request size, including ZFS metadata overhead (not just raw application reads/writes), since boot.
 
 ```bash
 zpool iostat -r zfspool
 ```
 
-Although not relevant to calculating the right block size of our ZVOL, it is convenient to understand the suffixes and prefixes being used in the output table.
+Although not essential in calculating the right `volblocksize` of our ZVOL, it is convenient to understand the suffixes and prefixes being used in the output table.
 
 Regarding the `ind` and `agg` suffixes:
 
@@ -274,7 +127,35 @@ And regarding the `sync` and `async` prefixes.
 | Sync write  | Data must be committed to stable storage before returning | Database commits, `fsync()`, `fdatasync()`      |
 | Async write | OS acknowledges write before data hits disk               | Normal buffered writes                          |
 
-Besides, given that the ZVOL is exposed as a block device, we can also use `iostat`, from the `sysstat` package, to observe physical I/O statistics:
+Example output of a ZFS storage pool made of two HDD in mirror mode that was created using `ashift=13` (for simplicity, and because trimming is not enabled, the last four columns have been cut out):
+
+```console
+# zpool iostat -r zfspool
+zfspool       sync_read    sync_write    async_read    async_write
+req_size      ind    agg    ind    agg    ind    agg    ind    agg
+----------  -----  -----  -----  -----  -----  -----  -----  -----
+512             0      0      0      0      0      0      0      0
+1K              0      0      0      0      0      0      0      0
+2K              0      0      0      0      0      0      0      0
+4K          1.87M      0  3.91M      0   217K      0  23.7M      0
+8K          54.1M  15.7K  8.99M      0  11.6M  19.8K  17.5M  9.74M
+16K         30.5K   396K  2.71M      0  5.06K   602K   948K  8.85M
+32K          329K   539K   616K      5   193K   913K  1.64M  5.59M
+64K         2.45K   633K   669K      6  1.67K  1.05M   281K  3.57M
+128K          221   173K  4.35M  46.2K    621   957K  5.71K  3.82M
+256K            0   157K      0  74.8K      0   613K      0  4.16M
+512K            0   281K      0   105K      0   648K      0  2.09M
+1M              0   280K      0  1.28M      0   671K      0  2.05K
+2M              0      0      0      0      0      0      0      0
+4M              0      0      0      0      0      0      0      0
+8M              0      0      0      0      0      0      0      0
+16M             0      0      0      0      0      0      0      0
+------------------------------------------------------------------
+```
+
+These show counts of I/O operations categorised by I/O size and type (sync/async read/write, scrub and trim). The suffixes `K` and `M` represent kilo and mega, in base 1024.
+
+In addition to `zpool iostat`, given that the ZVOL is exposed as a block device, we can also use `iostat`, from the `sysstat` package, to observe physical I/O statistics in real time:
 
 ```bash
 iostat -xd /dev/zvol/zfspool/vm-104-data
@@ -289,27 +170,35 @@ This tool shows kernel block-level I/O to the ZVOL device. Since our ZVOL is use
 | `dareq-sz` | Average discard request size        | kB    |
 | `f_await`  | Flush request average wait time     | ms    |
 
-If `rareq-sz` and `wareq-sz` are much smaller than the `volblocksize` of our ZVOL, then the VM is issuing small reads/writes. This could increase IOPS load on the pool, result in write amplification and undermine compression and coalescing.
+ZFS stores data in `recordsize` chunks for filesystems and `volblocksize` for ZVOLs. When guest I/O sizes mismatch `volblocksize`, ZFS must read-modify-write the full block, hurting performance.
 
-However, if `rareq-sz` and `wareq-sz` are much larger than the `volblocksize` of our ZVOL, then the VM is issuing large, efficient I/O ops, which is good. Larger I/O operations are more efficient and tend to align better with ZFS's recordsize (defaults to 128K). Also, they allow ZFS to compress or dedup data more effectively and reduce write amplification on underlying disks.
+If `rareq-sz` and `wareq-sz` are much smaller than the `volblocksize` of our ZVOL, meaning that the VM is issuing small reads/writes, this could increase IOPS load on the pool, result in write amplification and undermine compression and coalescing.
 
-```
+However, if `rareq-sz` and `wareq-sz` are much larger than the `volblocksize` of our ZVOL, meaning that the VM is issuing large read/writes, this would lead to efficient I/O ops, which is good. Larger I/O operations are more efficient and tend to align better with ZFS's recordsize (defaults to 128K). Also, they allow ZFS to compress or dedup data more effectively and reduce write amplification on underlying disks.
+
+```console
 # zfs get recordsize zfspool
 NAME     PROPERTY    VALUE    SOURCE
 zfspool  recordsize  128K     default
 ```
 
-Additionally, high `f_await` can mean that the VM (i.e., our NFS server) is using `fsync()` often, and that our pool is not optimized for sync writes (e.g., no Separate LOG device, or SLOG, on a fast NVMe or SSD). This can point to sync bottlenecks.
+Additionally, high `f_await` can mean that the VM (our NFS server) is using `fsync()` often, and that our pool is not optimised for synchronous writes, e.g., no Separate LOG (SLOG) device, on a fast NVMe or SSD. This can point to synchronisation bottlenecks.
+
+Example output of the same ZFS storage pool as before (for simplicity, only the four columns mentioned above are included):
+
+```console
+# iostat -xd /dev/zvol/zfspool/vm-104-data
+Device           rareq-sz  wareq-sz    dareq-sz  f_await
+zd16               126.40    277.94  1048576.00     0.00
+```
+
+> ZFS stores metadata alongside data, and this overhead is more noticeable when block sizes are small or when fragmentation occurs.
 
 ### At the guest level
 
-Next, we need to get closer to the actual workload and its I/O patterns, so we need to measure from within the [*](VM). For that, we can use `iostat` for real-time measuring, and `sar` for historical data, both in the `sysstat` package:
+Next, we need to get closer to the actual workload and its I/O patterns, so we need to measure from within the [*](VM). For that, we can use `iostat` for real-time measuring, and `sar` for historical data, both in the `sysstat` package.
 
-```bash
-apt-get install --yes sysstat
-```
-
-Use `iostat` for real-time statistics with average request size:
+Let's start by using `iostat` for real-time statistics with average request size:
 
 ```bash
 iostat -xd /dev/sdc
@@ -321,11 +210,11 @@ Relevant columns:
 |------------|-------------------------------------|:-----:|
 | `rareq-sz` | Read average request size           | kB    |
 | `wareq-sz` | Write average request size          | kB    |
-| `dareq-sz` | Average discard request size[^4]    | kB    |
-| `f_await`  | Flush request average wait time[^5] | ms    |
+| `dareq-sz` | Average discard request size[^2]    | kB    |
+| `f_await`  | Flush request average wait time[^3] | ms    |
 
-[^4]: Large discard sizes might suggest benefit from larger block sizes, but they do not usually dominate performance.
-[^5]: Tells you how long it takes to flush buffers, but not how big the data chunks are.
+[^2]: Large discard sizes might suggest benefit from larger block sizes, but they do not usually dominate performance.
+[^3]: Tells you how long it takes to flush buffers, but not how big the data chunks are.
 
 For historical data, we need to enable `sar`. Start by editing the `/etc/default/sysstat` configuration file:
 
@@ -370,44 +259,65 @@ Relevant columns:
 
 | Column    | Description              | Units |
 |-----------|--------------------------|:-----:|
-| `areq-sz` | Average request size     | kB    |
+| `tps`     | Transfers per second[^4] |       |
 | `rkB/s`   | Read throughput          | kB/s  |
 | `wkB/s`   | Write throughput         | kB/s  |
+| `dkB/s`   | Kilobytes discarded[^5]  | kB/s  |
+| `areq-sz` | Average request size     | kB    |
 | `await`   | Average wait time[^6]    | ms    |
 | `%util`   | Device utilization[^7]   | %     |
 
+[^4]: An I/O request to a physical device. Multiple logical requests can be combined into a single I/O request.
+[^5]: Due to TRIM/UNMAP operations. Often 0 unless on SSDs with discard enabled.         
 [^6]: High latency may suggest mismatch in I/O size vs block size.
-[^7]: Near 100% could mean saturation; optimizing block size may help.
+[^7]: Near 100% could mean saturation. Optimizing block size may help.
 
 >  Throughtput is useful for understanding workload volume, in context with request size.
 
 If most requests are 8 KB or larger, it may make sense to align `volblocksize` and filesystem block size to 8K or more, which reduces write amplification and fragmentation. Conversely, too small blocks increase metadata and IOPS load.
 
+Example output under heavy load:
+
+```console
+# sar -d --dev=sdc -s 07:30:00 -e 08:50:00 -f /var/log/sysstat/sa24
+07:30:13 AM  DEV     tps     rkB/s  wkB/s  dkB/s  areq-sz  await  %util
+07:40:13 AM  sdc  424.57  52524.58   0.00   0.00   123.71   1.82  75.24
+07:50:13 AM  sdc  509.13  85059.57   0.00   0.00   167.07   2.15  94.17
+08:00:13 AM  sdc  758.21  76511.56   0.00   0.00   100.91   1.39  90.90
+08:10:13 AM  sdc  508.45  63185.16   0.00   0.00   124.27   1.61  80.03
+08:20:13 AM  sdc  290.09  63357.08   0.00   0.00   218.40   1.69  43.41
+08:30:07 AM  sdc  622.21  61181.33   0.00   0.00    98.33   0.85  47.76
+08:40:13 AM  sdc  161.86  31132.86   0.00   0.00   192.35   1.81  25.46
+Average:     sdc  467.13  61807.10   0.00   0.00   132.31   1.54  65.25
+```
+
 ## Mapping metrics
 
-A number of metrics can be taken into consideration when tuning block sizes. 
+A number of metrics can be taken into consideration when tuning block sizes, but these are the most relevant ones:
 
 | Metric               | Why it matters                                                                           | HDD | SSD | Notes                                                                         |
 |----------------------|------------------------------------------------------------------------------------------|:---:|:---:|-------------------------------------------------------------------------------|
 | Average request size | Helps choose optimal block size at filesystem and ZVOL layers                            | Yes | Yes | Crucial for both, as mismatched sizes reduce throughput or increase latency   |
 | IOPS vs bandwidth    | Small, random I/O favours smaller blocks; sequential workloads benefit from large blocks | Yes | Yes | SSDs can handle much higher IOPS than HDDs, but pattern still matters         |
+| CPU usage            | Larger blocks may reduce CPU load per byte transferred.                                  | Yes | Yes | Larger I/O sizes reduce syscalls and context switches, benefiting both        |
 | Write amplification  | High when block sizes are misaligned                                                     | No  | Yes | Critical for SSDs (due to erase/write cycles)                                 |
 | Fragmentation        | Smaller blocks reduce internal fragmentation, but increase metadata overhead             | Yes | No  | HDDs suffer more from fragmentation; SSDs less so but metadata load increases |
-| CPU usage            | Larger blocks may reduce CPU load per byte transferred.                                  | Yes | Yes | Larger I/O sizes reduce syscalls and context switches, benefiting both        |
 
-Let's try to map these metrics to the output provided by `sar` and `zpool iostat`:
+Let's try to map these metrics to the output provided by `sar` and `zpool iostat`.
 
-**Average request size**
+### Average request size
+
+Average request size is the mean amount of data read or written per I/O operation, typically calculated as total bytes transferred divided by IOPS.
 
 | Tool           | Columns   | Units | Notes                                       |
 |----------------|-----------|:-----:|---------------------------------------------|
 | `sar`          | `areq-sz` | kB    | Combined average request size               |
 
-To estimate a good ZVOL `volblocksize`, find a typical average request size from these and align it, e.g., if it is consistently 8-16K, set `volblocksize` accordingly.
+**Rule of thumb**: To estimate a good ZVOL `volblocksize`, find a typical average request size from these and align it, e.g., if it is consistently ~16K, set `volblocksize` accordingly.
 
-The columns of the `zpool iostat` tool show counts of I/O operations categorised by I/O size and type (sync/async read/write, scrub and trim). The suffixes `K` and `M` represent kilo and mega, in base 1024.
+### IOPS vs bandwidth
 
-**IOPS vs bandwidth**
+Input/Output Operations Per Second (IOPS) measures how many read/write actions happen per second, while bandwidth refers to the total amount of data transferred per second (MB/s).
 
 | Tool           | Columns                | Units | Notes                             |
 | -------------- | -----------------------|:-----:|-----------------------------------|
@@ -416,50 +326,24 @@ The columns of the `zpool iostat` tool show counts of I/O operations categorised
 | `zpool iostat` | `r/s`, `w/s`           | ops/s | Total I/O operations at ZFS layer |
 | `zpool iostat` | `rbytes/s`, `wbytes/s` | kB/s  | Total bandwidth at ZFS layer      |
 
-To infer the type of workload:
-
-* High IOPS and low bandwidth means small block sizes (random I/O) of workload.
-* Low IOPS and high bandwidth means large block sizes (sequential I/O).
+We will use these to infer the type of workload:
 
 | Observation              | Interpretation                                     | Implication                                                                                |
 | ------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | High IOPS, low bandwidth | Many small ops (e.g., 4K, 8K), probably random I/O | Tuning for low latency matters more than throughput; small block size might be appropriate |
 | Low IOPS, high bandwidth | Fewer, large ops (e.g., 128K, 256K)                | Good for sequential I/O, maybe increase block size for efficiency                          |
 
-**Write amplification**
+### CPU usage per byte transferred
 
-| Tool           | Column     | Units  | Notes                                                  s|
-| -------------- | -----------|:------:|--------------------------------------------------------|
-| `zpool iostat` | `writes`   | ops    | Number of logical write operations issued to ZFS       |
-| `zpool iostat` | `nwritten` | bytes  | Amount of data written by ZFS in bytes                 |
+CPU usage per byte transferred is the amount of CPU time or percentage consumed for each byte of data moved to or from disk, reflecting efficiency of I/O handling.
 
-> `writes` shows what app is doing. `nwritten` and `asize` are what ZFS actually pushes to disk.
+We cannot measure CPU per byte directly in `sar`, but we can infer:
 
-This allows us to extract the following details:
-
-* `ẁrites` shows how many write operations the workload made.
-* `nwritten/writes` gives the average write size per operation (your workload block size).
-* `asize/nwritten` gives the write amplification at the ZFS level (due to metadata, padding, fragmentation, etc.).
-
-So, what indicates the need for a larger block size? You compare `nwritten/writes` (your workload block size) to your `volblocksize` and:
-
-* If your workload is writing 128K per operations, but your `volblocksize` is 4K, ZFS will break it into many chunks, leading to overhead, metadata, and more IOPS.
-* If ZFS writes (`nwritten`) are significantly smaller or larger than the workload size, there is a mismatch, leading to write amplification or underutilization.
-
-**Internal fragmentation**
-
-Fragmentation is more about matching request size to block size to avoid unused padding. If `areq-sz` is smaller than `volblocksize`, internal fragmentation is likely.
-
-**CPU usage per byte transferred**
-
-You cannot measure CPU per-byte directly in `sar`, but you can infer:
-
-{{< katex >}}
 $$
   \text{CPU usage per MB} = \frac{\text{\%CPU used}}{\text{MB transferred}}
 $$
 
-On the one hand, using `sar -u` provides information about CPU utilisation:
+On the one hand, `sar -u` provides information about CPU utilisation.
 
 | Column    | Meaning                                                                  |
 |-----------|--------------------------------------------------------------------------|
@@ -470,213 +354,233 @@ On the one hand, using `sar -u` provides information about CPU utilisation:
 | `%steal`  | Time stolen by the hypervisor for other VMs (only in virtualized setups) |
 | `%idle`   | Time the CPU was completely idle                                         |
 
+> `%user` + `%system` reflects the NFS server demand, while `%iowait` reflects disk latency.
+
 Let's calculate `%CPU used`:
 
 $$
   \text{\%CPU used} = 100 - \text{\%idle}
 $$
 
-Let's say we have the following last line in the output of our `sar -u` command (excerpt):
+Let's say we have the following data from our `sar -u` command:
 
-```
-                CPU     %user     %nice   %system   %iowait    %steal     %idle
-Average:        all      0.01      0.00      0.01      0.02      0.00     99.96
+```console
+# sar -u --dev=sdd -s 07:30:00 -e 08:50:00 -f /var/log/sysstat/sa24
+07:30:13 AM  CPU  %user  %nice  %system  %iowait  %steal  %idle
+07:40:13 AM  all   1.07   0.00     1.05    18.59    0.00  79.28
+07:50:13 AM  all   1.25   0.00     0.88    22.95    0.00  74.92
+08:00:13 AM  all   1.17   0.00     0.96    22.13    0.00  75.74
+08:10:13 AM  all   2.13   0.00     1.34    19.26    0.01  77.26
+08:20:13 AM  all   4.44   0.00     2.72     7.91    0.01  84.92
+08:30:07 AM  all   4.22   0.00     2.65     9.44    0.01  83.68
+08:40:13 AM  all   2.17   0.00     1.34     4.77    0.01  91.71
+Average:     all   2.34   0.00     1.56    15.02    0.01  81.07
 ```
 
 Then, we would have:
 
 $$
-  \text{\%CPU used} = 100 - 99.96 = \text{0.04\%}
+  \text{\%CPU used} = 100 - 81.07 = \text{18.93\%}
 $$
 
 If you are more interested in application CPU usage, you can sum `%user` and `%system`:
 
 $$
-  \text{\%CPU (user + system)} = 0.01 + 0.01 = \text{0.02\%}
+  \text{\%CPU (user + system)} = 2.34 + 1.56 = \text{3.90\%}
 $$
 
-> This excludes I/O wait time, which could be useful when tuning I/O-specific workloads.
+This excludes I/O wait time, which represents time the CPU is idle waiting for I/O. So, high `%iowait` is not *usage* by the NFS server, but rather a sign of storage bottleneck.
 
-On the other hand, using `sar -d --dev=sdc` provides disk I/O stats:
-
-| Column    | Description                                                                                             |
-|-----------|---------------------------------------------------------------------------------------------------------|
-| `tps`     | Transfers per second (IOPS) — how many I/O operations were issued to the device per second.             |
-| `rkB/s`   | Kilobytes read from the device per second.                                                              |
-| `wkB/s`   | Kilobytes written to the device per second.                                                             |
-| `dkB/s`   | Kilobytes discarded (e.g., TRIM/UNMAP) per second. Often 0 unless on SSDs with discard enabled.         |
-| `areq-sz` | Average request size in kilobytes.                                                                      |
-| `aqu-sz`  | Average queue length — how many I/O requests were waiting on average during the interval.               |
-| `await`   | Average wait time (in milliseconds) for I/O requests to complete. Includes both queue and service time. |
-| `%util`   | Percentage of time the device was busy doing I/O. 100% means fully saturated.                           |
-
-Let's calculate `MB transferred`.
+On the other hand, our previous use of `sar -d` provided us with the necessary disk I/O statistics to calculate `MB transferred`:
 
 $$
-  \text{CPU\ usage\ per\ MB} = \frac{100 - \% \text{idle}}{(\text{rkB/s} + \text{wkB/s} + \text{dkB/s}) / 1024}
+  \text{CPU\ usage\ per\ MB} = \frac{100 - \text{\%idle}}{(\text{rkB/s} + \text{wkB/s} + \text{dkB/s}) / 1024}
 $$
-
-Let's say we have the following last line in the output of our `sar -d --dev=sdc` command (excerpt):
-
-```
-                  DEV       tps     rkB/s     wkB/s     dkB/s   areq-sz    aqu-sz     await     %util
-Average:          sdc      0.27      0.08      1.35      0.00      5.29      0.00     11.04      0.10
-```
 
 Then, we would have:
 
 $$
-  \text{MB transferred} = \frac{0.08 + 1.35 + 0.00}{1024} ≈ \text{0.001 MB/s}
+  \text{MB transferred} = \frac{61807.10 + 0.00 + 0.00}{1024} ≈ \text{60.36 MB/s}
 $$
 
 So, the CPU usage per MB would be:
 
 $$
-  \text{CPU usage per MB} = \frac{0.04}{0.001} = \text{0.4 CPU cores per MB/s}
+  \text{CPU usage per MB} = \frac{18.93}{60.36} = \text{0.31 CPU cores per MB/s}
 $$
 
-This means the device used 40% of one CPU core to transfer 1 MB per second on average. In other words, for each 1 MB/s of throughput, the device consumes 40% of a CPU core, which suggests poor efficiency. Ideally, this number should be much lower (e.g., well below 1% per MB).
+This means the device used 31% of one CPU core to transfer 1 MB per second on average. In other words, for each 1 MB/s of throughput, the device consumes 31% of a CPU core. If we do the same calculations using the application CPU usage mentioned above, we get that the device consumes 7% of a CPU core for each 1 MB/s of throughput.
 
-**Interpretation**
+This difference means that the NFS server is not taking more CPU because it is blocked on slow disk I/O, not because the stack is inefficient.
 
-Let's say we have guest our guest issuing fairly large I/O sizes (`rareq-sz` ≈ 616 KB, `wareq-sz` ≈ 83 KB) and a ZVOL block size of 8K. This means each guest I/O is split across multiple 8K ZVOL blocks.
+**Rule of thumb**: Try using a bigger `volblocksize` in the ZVOL and a bigger `ashift` in the ZFS storage pool and see if that reduces the amount of CPU usage per MB/s.
 
-And let's say that the block distribution displayed by `zpool iostat` tells us that there is a lot of I/O at 8K and 16K, which includes our ZVOL and others in the same node, and very few 512K or 1M I/O actually reach the disks (probably because of ZFS ARC and transaction group aggregation).
+### Interpretation
 
-Should we increase the `volblocksize` of our ZVOL to 16K to get fewer IOPS, reduce metadata overhead and write amplification, and better align it with actual guest workload sizes? It seems likely beneficial given these I/O patterns but, as always, it is about trade-offs.
+On the one hand, the `areq-sz` colum on `sar` tells us that our guest is issuing I/O requests that average 132.31 kB on a ZVOL with block size of 8K. This means each guest I/O is split across multiple 8K ZVOL blocks.
 
-* Snapshots happen at the `volblocksize` level. Therefore, increasing it increases delta size.
-* We would need to recreate the ZVOL, as `volblocksize` cannot be changed live.
-* We need to align the filesystem used in the VM. The maximum block size of EXT4 is 4K.
+On the other, the block distribution displayed by `zpool iostat` tells us that most of the I/O requests happen at 8K and 16K, which includes our ZVOL and others in the same node, and a fairly big number happen between 128K and 1M, probably because of ZFS ARC and transaction group aggregation.
 
-Time to change to XFS.
+> Metadata overhead scales with the number of blocks, not their size.
 
-## Using XFS
+Therefore, should we increase the `volblocksize` of our ZVOL to 16K to get fewer IOPS, reduce metadata overhead and write amplification, and better align it with actual guest workload sizes? It seems likely beneficial given these I/O patterns but, as always, it is about trade-offs.
 
-XFS is a high-performance journaling filesystem optimized for large files and high-throughput workloads, making it a strong choice inside virtual machines where data integrity, scalability, and efficiency matter. Its robustness under concurrent write-heavy operations and support for advanced features like online defragmentation and resizing make it particularly well-suited for use cases such as NFS shares, backup storage, and databases. When used within a VM, XFS's maturity and reliability offer peace of mind, while its ability to handle large files and parallel I/O workloads gracefully helps ensure that the virtualized environment doesn’t become a bottleneck in your storage stack.
+**Rule of thumb**:
+
+* If average request size > 2× `volblocksize`, increase `volblocksize`.
+* If 80%+ of writes are > `volblocksize`, also increase it.
+* Match `volblocksize` to XFS block size.
+* Prefer 8K+ blocks for large sequential workloads, NFS/VM image storage and reduced metadata overhead.
+* Keep `volblocksize` ≤ 16K unless workload has clear benefit (snapshots cost more at higher values).
+
+> Database workloads often benefit from smaller block sizes (4K-8K) for better random I/O performance, while large sequential workloads (like media files) benefit from larger blocks (16K-128K).
+
+## I/O size mismatch
+
+When the typical I/O size from the guest (`areq-sz`) does not align well with the ZVOL's `volblocksize`, two key problems arise: internal fragmentation and write amplification.
+
+**Internal framentation** is wasted space inside blocks. For example, if your `volblocksize` is 64K but most writes (`areq-sz`) are 8K, each write may waste up to 56K, depending on the filesystem layout and how blocks are reused. Therefore, we want to match request size to block size as much as possible to avoid unused padding.
+
+The guest OS never sees this waste, but ZFS tracks and allocates the full block size, so pool space fills up faster than expected.
+
+**Write amplification** happens when one guest write results in multiple writes at the underlying storage layer. This occurs when:
+
+* Guest writes are smaller than `volblocksize`.
+* Copy-on-write forces read-modify-write cycles.
+* Metadata, padding, and block pointer overhead add extra writes.
+
+Traditional write amplification refers to how many bytes are written to disk per logical byte written by the application. We will not be calculating exactly that, but rather a simplified version based on allocated size and logical used space, which we will call *storage amplification*.
+
+In ZFS, even with compression, small writes incur overhead due to block size alignment and [*](COW). When using synchronous writes, amplification can get worse unless a fast [*](SLOG) is available.
+
+> Matching `areq-sz` and `volblocksize`, and using appropriate compression and sync settings, helps reduce both fragmentation and amplification.
+
+### Workload block size
+
+To determine the workload block size, we can use the `zpool iostat` command to see how ZFS handles writes.
+
+| Tool           | Column     | Units  | Notes                                                  |
+| -------------- | -----------|:------:|--------------------------------------------------------|
+| `zpool iostat` | `writes`   | ops    | Number of logical write operations issued to ZFS       |
+| `zpool iostat` | `nwritten` | bytes  | Amount of data written by ZFS in bytes                 |
+
+We can extract the following details:
+
+* `writes` shows how many write operations the workload made.
+* `nwritten` is what ZFS actually pushes to disk. 
+* `nwritten/writes` gives the average write size per operation (the workload block size).
+
+**Rule of thumb**: What indicates the need for a larger block size? You compare `nwritten/writes` (the workload block size) to your `volblocksize` and:
+
+* If your workload is writing 128K per operations, but your `volblocksize` is 4K, ZFS will break it into many chunks, leading to overhead, more metadata, and more IOPS.
+* If ZFS writes (`nwritten`) are significantly smaller or larger than the workload size, there is a mismatch, leading to write amplification or underutilization, respectively.
+
+### Allocated size
+
+Allocated size (`asize`) represents the actual number of on-disk bytes that a block occupies after compression, padding and metadata, aligned to the `ashift` (minimum sector size).
+
+$$
+  \text{Allocated size} = 
+    \left\lceil \frac
+      {\text{logical size}}
+      {\text{compression ratio}} 
+    \right\rceil 
+    + \text{padding} + \text{metadata}
+$$
+
+So, `asize` represents the true cost on the physical disks and will always greater than or equal to the compressed size. It is called *allocated size* because ZFS allocates in units of `ashift` (e.g., 8K if `ashift=13`), even if the actual data is smaller.
+
+This will allow us to calculate the amplification, which is the number we care about when deciding if our current block size is too small.
+
+$$
+  \text{Storage amplification} = \frac{\text{actual allocated size}}{\text{logical used}}
+$$
+
+We will gather part of the necessary data to calculate `asize` via the `zfs get` command:
 
 ```bash
-# Destroy the old ZVOL (after backup!)
-zfs destroy zfspool/vm-104-data
-
-# Recreate with 16K volblocksize
-zfs create -V 100G -b 16K zfspool/vm-104-data
+zfs get used,logicalused,compressratio zfspool/vm-104-data
 ```
 
-Then, inside the VM:
+Example output:
 
 ```bash
-mkfs.xfs -b size=16384 /dev/vdX
+# zfs get used,logicalused,compressratio zfspool/vm-104-data
+NAME                   PROPERTY       VALUE  SOURCE
+zfspool/vm-104-data    used           670G   -
+zfspool/vm-104-data    logicalused    499G   -
+zfspool/vm-104-data    compressratio  1.01x  -
 ```
 
-So, just for the sake of experimenting, having your ZVOL use 4-kilobyte block size would require the following steps:
+| Property        | Meaning                                                                         |
+|-----------------|---------------------------------------------------------------------------------|
+| `used`          | Total provisioned space for the ZVOL (entire virtual disk size)                 |
+| `logicalused`   | Bytes actually written from the VM to the ZVOL device                           |
+| `compressratio` | The ratio of logical data size to physical storage space used after compression |
 
-1. Unmount the disk inside the VM.
-2. Dettach the data disk from the VM.
-3. Destroy the disk.
-4. Create a new ZVOL with 4K block size.
-5. Attach the disk to the VM.
-6. Format the new disk.
-7. Update the `/etc/fstab` file.
+> A compressratio of 2.0x would mean that for every 2 bytes of logical data, ZFS would be using only 1 byte of physical storage.
 
-We will use the terminal to perform these tasks. Switch to the VM console to unmount the disk:
+### Estimating
+
+ZFS does not show actual allocated size per ZVOL directly, but we can try to estimate it using `zdb`:
 
 ```bash
-umount /srv/nfs
+zdb -dddd zfspool/vm-104-data
 ```
 
-Now switch back to the node shell where the VM is hosted. First, dettach and destroy the data disk:
+The output of that command shows us three objects:
 
-```bash
-qm set 104 -delete scsi2
-zfs destroy zfspool/vm-104-data
+| Object ID | Type        | Purpose                      |
+| --------- | ----------- | ---------------------------- |
+| `0`       | DMU dnode   | Root directory object        |
+| `1`       | zvol object | The actual data blocks       |
+| `2`       | zvol prop   | Dataset properties           |
+
+We want to focus on object 1, which is our virtual disk content. Example output of object 1:
+
+```console
+Object  lvl   iblk   dblk  dsize  dnsize  lsize   %full  type
+     1    4   128K     8K   495G     512   600G   82.78  zvol object
 ```
 
-> Dettaching a disk is an operation that can be reverted. Destroying a disk is not.
+Relevant columns:
 
-Second, create a new zvol, using the 4-kilobyte block size, and attach it to the VM:
+| Field   | Meaning                                         |
+|:-------:|-------------------------------------------------|
+| `lsize` | Logical size, i.e., what the guest wrote        |
+| `dsize` | Physical space used, including all overhead[^8] |
+| `%full` | How much of this dataset is written             |
 
-```bash
-zfs create -V 100G -b 4K zfspool/vm-104-data
-qm set 104 -scsi2 zfspool:vm-104-data,discard=on,iothread=1,cache=none,aio=io_uring
+[^8]: Overhead includes metadata, checksums and padding.
+
+Example output of our ZVOL object with `volblocksize` of 8K:
+
+```console
+# zdb -dddd zfspool/vm-104-data | awk '/zvol object/ {print "dsize=" $5, "lsize=" $7}'
+dsize=495G lsize=600G
 ```
 
-Optionally, confirm that the new disk was attached to the VM:
+We can now calculate the storage amplification (or allocation efficiency):
 
-```bash
-qm config 104
-```
+$
+\text{Storage amplification} = \frac{\text{dsize}}{\text{lsize}} = \frac{495}{600} \approx 0.825
+$$
 
-> The information displayed at the `Hardware` menu option of the VM in the Proxmox WebGUI should be the same.
+This shows ZFS stores only 82.5% of the logical size on disk, thanks to compression and efficient block use. A few notes worth mentioning in regards to the storage amplification threshold:
 
-Inside the VM, confirm that the disk showed up with the `lsblk` command (the OS should see the new disk automatically). However, you can force a rescan of the SCSI bus inside the VM, then try the `lsblk` command again:
+* Values below 0.7 indicate very good compression, but may also suggest that the workload is not writing enough data to fill the blocks efficiently.
+* Values of 0.7-0.9 indicate good compression and efficient block use.
+* Values of 1.1-1.5 suggest block size mismatch.
+* Values above indicate serious inefficiency.
 
-```bash
-for host in /sys/class/scsi_host/host*; do
-  echo "- - -" > "$host/scan"
-done
-```
+In our example, the slight space savings align with the low compression ratio shown by `zfs get compressratio`, which reported `1.01x`.
 
-Still inside the VM, format the new disk:
+> It is normal that the space reported by `df` inside the VM is larger than `logicalused`, because `df` includes filesystem metadata, while `logicalused` counts raw writes to the block device.
 
-```bash
-mkfs.ext4 -b 4096 /dev/sdc
-```
+**Rule of thumb**: If storage amplification is greater than 1.0, ZFS is using more space than it receives from the guest. This usually means:
 
+* The `volblocksize` is too small for the workload's typical request size.
+* ZFS is doing read-modify-write due to misaligned or sync-heavy writes.
+* Metadata or [*](COW) overhead is significant.
 
-
-
-
-XFS is an excellent choice inside the VM:
-
-    Mature, stable, widely used.
-
-    Scales well with large files and large IO.
-
-    Great for NFS backing or general-purpose large file storag
-
-Format disk with 8K or 16K block size:
-
-# For 8K
-mkfs.xfs -b size=8192 /dev/sdX
-
-# For 16K
-mkfs.xfs -b size=16384 /dev/sdX
-
-🔹 Check disk (read-only):
-
-xfs_check /dev/sdX   # deprecated, use `xfs_repair -n`
-
-🔹 Repair filesystem (non-destructive check):
-
-xfs_repair -n /dev/sdX   # -n is a dry run, remove it to actually repair
-
-🔹 Mounting:
-
-mount -o noatime,logbufs=8 /dev/sdX /mnt/data
-
-🔹 Grow filesystem after increasing virtual disk or zvol:
-
-    Rescan disk inside VM (if using virtio/scsi):
-
-echo 1 > /sys/class/block/sdX/device/rescan
-
-Resize partition (if needed):
-
-growpart /dev/sdX 1   # if using GPT + parted
-
-Grow XFS filesystem:
-
-    xfs_growfs /mnt/data
-
-    Note: XFS can grow online, but cannot shrink.
-
-Is ZFS over ZFS a bad idea?
-
-In general, yes, avoid ZFS on ZFS, unless:
-
-    You explicitly disable compression, dedup, and caching in the inner layer to prevent weird behavior.
-
-    You need snapshots inside the VM for data integrity (e.g., database inside VM), and you're managing them carefully.
-
-    Better: Use XFS inside the VM, and ZFS at the host level for snapshots, compression, and resilience.
+In such cases, consider increasing the ZVOL's `volblocksize`, ensuring alignment with the guest filesystem, and evaluating whether compression is needed for the workload.

@@ -1,0 +1,25 @@
+# I/O layers of a VM in Proxmox VE
+# Render: https://play.d2lang.com/
+
+vars: {
+  d2-config: {
+    # Terminal
+    theme-id: 300
+  }
+}
+
+# Title
+title: I/O layers of a VM in Proxmox VE {
+  near: top-center
+  shape: text
+  style.font-size: 30
+}
+
+xfs: "XFS filesystem"
+zvol: "ZFS volume"
+zfs: "ZFS pool"
+hdd: "HDD"
+
+xfs -> zvol: Guest block requests
+zvol -> zfs: Block device
+zfs -> hdd: ZFS Pool
