@@ -1,7 +1,7 @@
 ---
 title: "Using XFS on a Proxmox VM with NFS"
 date: 2025-07-27
-lastmod: 2025-07-27
+lastmod: 2025-08-03
 description: "Using XFS as the filesystem for a Proxmox VM with NFS, including block size considerations and performance optimizations"
 summary: "Explore the benefits of using XFS on a Proxmox VM with NFS, including optimal block size settings and performance tips"
 categories: ["virtualisation"]
@@ -145,7 +145,7 @@ Because `volblocksize` can change depending on your version of ZFS, before forma
 
 
 ```bash
-zfs get volblocksize zfspool/vm-104-data
+zfs get volblocksize zfspool/vm-104-disk-0
 ```
 
 If your `volblocksize` is 16K, then adapt how you format the data disk:
@@ -161,8 +161,8 @@ mkfs.xfs -b size=16384 /dev/sdc
 Second, create a new zvol, using the 4-kilobyte block size, and attach it to the VM:
 
 ```bash
-zfs create -V 100G -b 4K zfspool/vm-104-data
-qm set 104 -scsi2 zfspool:vm-104-data,discard=on,iothread=1,cache=none,aio=io_uring
+zfs create -V 100G -b 4K zfspool/vm-104-disk-0
+qm set 104 -scsi2 zfspool:vm-104-disk-0,discard=on,iothread=1,cache=none,aio=io_uring
 ```
 
 Optionally, confirm that the new disk was attached to the VM:

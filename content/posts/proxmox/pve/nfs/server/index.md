@@ -1,7 +1,7 @@
 ---
 title: "NFS server on Proxmox VE"
 date: 2025-07-17
-lastmod: 2025-07-25
+lastmod: 2025-08-03
 description: "Install and configure a Network File System (NFS) server in a VM on a Proxmox using ZFS for optimal performance"
 summary: "Install, configure and optimise an NFS server in a VM on a Proxmox cluster using ZFS"
 categories: ["virtualisation"]
@@ -125,30 +125,38 @@ pvesh create /pools --poolid databases --comment "Database and file storage serv
 Let's start by creating the VM:
 
 ```bash
-qm create 104 --name nfs1 --pool databases --memory 8192 --cores 4 --socket 1 --balloon 4096 --onboot 0 --agent enabled=1
+qm create 104 --name nfs1 --cores 4 \
+   --balloon 4096 --memory 8192 \
+   --net0 virtio,bridge=vmbr4002,firewall=1,mtu=1400 \
+   --scsihw virtio-scsi-single \
+   --ostype l26 --bios seabios \
+   --agent enabled=1,fstrim_cloned_disks=1,type=virtio \
+   --ide2 local:iso/debian-12.11.0-amd64-netinst.iso,media=cdrom \
+   --pool databases --description "NFS server" --onboot 0
 ```
 
-Then, configure the VM settings:
+Then, create and attach the OS, swap and data disks:
 
 ```bash
-qm set 104 --scsihw virtio-scsi-pci --ide2 local:iso/debian-12.11.0-amd64-netinst.iso,media=cdrom --boot order=scsi0
-qm set 104 --net0 virtio,bridge=vmbr4002,mtu=1400
+qm set 104 --scsi0 local:3,format=qcow2,iothread=1,discard=on,serial=os
+qm set 104 --scsi1 local:1,format=raw,discard=on,backup=0,serial=swap
+qm set 104 --scsi2 zfspool:100,format=raw,iothread=1,discard=on,serial=data
 ```
 
-Finally, create and attach the OS, swap and data disks:
+> We are using the special syntax `STORAGE_ID:SIZE_IN_GiB` to allocate a new volume.
+
+Proxmox names disks using the template `vm-<vmid>-disk-<diskid>`, where `<diskid>` is a zero-based index, per VM and storage. Therefore, disks will be named `local:vm-104-disk-0.qcow2`, `local:vm-104-disk-1.raw` and `zfspool:vm-104-disk-0`, respectively. We are using the `serial` option to make it easier to identify the disks later.
+
+Finally, configure the boot order:
 
 ```bash
-qm set 104 --scsi0 local:104/vm-104-disk-os.qcow2,format=qcow2,iothread=1,discard=on,backup=1,async_io=io_uring,size=3G
-qm set 104 --scsi1 local:104/vm-104-disk-swap.raw,format=raw,discard=on,async_io=io_uring,size=1G
-qm set 104 --scsi2 zfspool:vm-104-disk-data,format=raw,iothread=1,discard=on,backup=1,async_io=io_uring,size=100G
+qm set 104 --boot order=scsi0
 ```
-
-> Note that the WebGUI would have named the disks `vm-104-disk-0.qcow2`, `vm-104-disk-1.raw` and `vm-104-disk-2`, respectively, whereas via the terminal we are being more explicit about their intended usage.
 
 Optionally, check the block size `volblocksize` of our ZVOL:
 
 ```bash
-zfs get volblocksize zfspool/vm-104-disk-data
+zfs get volblocksize zfspool/vm-104-disk-0
 ```
 
 Optionally, verify the configuration:
@@ -161,7 +169,7 @@ qm config 104
 
 ZFS volumes (ZVOLs) are an alternative to traditional virtual disks for VM data storage in Proxmox. While the Proxmox VM creation wizard typically provisions disk images in formats like `qcow2` (QEMU Copy On Write) or `raw`, these are still files sitting atop a filesystem. By contrast, ZVOLs offer native block-level storage managed directly by [*](ZFS), eliminating the file layer entirely. This provides performance benefits, block-level snapshots, and more seamless resizing that are particularly relevant when exporting data over NFS.
 
-To clarify, ZVOLs do not provide "raw image format", like `/var/lib/vz/images/104/vm-104-disk-1.raw`, but rather the disk is a ZFS-managed block device, such as `/dev/zvol/zfspool/vm-104-data` (actually, `/dev/zd0`), i.e., no file, no virtual layer. Therefore, with a ZVOL, you avoid writing to a file sitting inside a ZFS dataset[^3] and QEMU going through file I/O layers and, instead, you get a native block device backed directly by ZFS. This means better synchronisation and performance, especially for workloads that require frequent writes.
+To clarify, ZVOLs do not provide "raw image format", like `/var/lib/vz/images/104/vm-104-disk-1.raw`, but rather the disk is a ZFS-managed block device, such as `/dev/zvol/zfspool/vm-104-disk-0` (actually, `/dev/zd0`), i.e., no file, no virtual layer. Therefore, with a ZVOL, you avoid writing to a file sitting inside a ZFS dataset[^3] and QEMU going through file I/O layers and, instead, you get a native block device backed directly by ZFS. This means better synchronisation and performance, especially for workloads that require frequent writes.
 
 [^3]: There are three types of datasets in ZFS: a filesystem following POSIX rules, a volume (ZVOL) existing as a true block device under `/dev`, and snapshots thereof.
 

@@ -1,7 +1,7 @@
 ---
 title: "Aligning block sizes of VM disks on Proxmox"
 date: 2025-07-19
-lastmod: 2025-07-27
+lastmod: 2025-08-03
 description: "How to find the right block size for all I/O layers up to the VM running an NFS server"
 summary: "Get I/O statistics and decide the most convenient block size for your NFS server on a VM on Proxmox"
 categories: ["virtualisation"]
@@ -34,12 +34,12 @@ For that, we need to gather relevant statistics that allow us to make informed d
 
 If you followed the steps described in the [NFS server on Proxmox VE]({{< relref "posts/proxmox/pve/nfs/server/" >}}) article in this series, using Debian 12 Bookworm, at the moment you ought to have the following sector and block sizes:
 
-| Layer                | Option name    | Value  | Command                                     |
-|----------------------|:--------------:|:------:|---------------------------------------------|
-| Physical sector size | `PHY-SEC`      | 4096   | `lsblk -o NAME,SIZE,PHY-SEC,LOG-SEC`        |
-| ZFS storage pool     | `ashift`       | 12[^1] | `zdb -C zfspool \| grep ashift`             |
-| ZVOL                 | `volblocksize` | 8K     | `zfs get volblocksize zfspool/vm-104-data`  |
-| XFS                  | `data.bsize`   | 4096   | `xfs_info /dev/sdc`                         |
+| Layer                | Option name    | Value  | Command                                      |
+|----------------------|:--------------:|:------:|----------------------------------------------|
+| Physical sector size | `PHY-SEC`      | 4096   | `lsblk -o NAME,SIZE,PHY-SEC,LOG-SEC`         |
+| ZFS storage pool     | `ashift`       | 12[^1] | `zdb -C zfspool \| grep ashift`              |
+| ZVOL                 | `volblocksize` | 8K     | `zfs get volblocksize zfspool/vm-104-disk-0` |
+| XFS                  | `data.bsize`   | 4096   | `xfs_info /dev/sdc`                          |
 
 [^1]: 2¹² = 4096 bytes.
 
@@ -158,7 +158,7 @@ These show counts of I/O operations categorised by I/O size and type (sync/async
 In addition to `zpool iostat`, given that the ZVOL is exposed as a block device, we can also use `iostat`, from the `sysstat` package, to observe physical I/O statistics in real time:
 
 ```bash
-iostat -xd /dev/zvol/zfspool/vm-104-data
+iostat -xd /dev/zvol/zfspool/vm-104-disk-0
 ```
 
 This tool shows kernel block-level I/O to the ZVOL device. Since our ZVOL is used by a VM, this shows how the host handles actual I/O coming from the guest. Relevant columns:
@@ -187,7 +187,7 @@ Additionally, high `f_await` can mean that the VM (our NFS server) is using `fsy
 Example output of the same ZFS storage pool as before (for simplicity, only the four columns mentioned above are included):
 
 ```console
-# iostat -xd /dev/zvol/zfspool/vm-104-data
+# iostat -xd /dev/zvol/zfspool/vm-104-disk-0
 Device           rareq-sz  wareq-sz    dareq-sz  f_await
 zd16               126.40    277.94  1048576.00     0.00
 ```
@@ -499,17 +499,17 @@ $$
 We will gather part of the necessary data to calculate `asize` via the `zfs get` command:
 
 ```bash
-zfs get used,logicalused,compressratio zfspool/vm-104-data
+zfs get used,logicalused,compressratio zfspool/vm-104-disk-0
 ```
 
 Example output:
 
 ```bash
-# zfs get used,logicalused,compressratio zfspool/vm-104-data
+# zfs get used,logicalused,compressratio zfspool/vm-104-disk-0
 NAME                   PROPERTY       VALUE  SOURCE
-zfspool/vm-104-data    used           670G   -
-zfspool/vm-104-data    logicalused    499G   -
-zfspool/vm-104-data    compressratio  1.01x  -
+zfspool/vm-104-disk-0  used           670G   -
+zfspool/vm-104-disk-0  logicalused    499G   -
+zfspool/vm-104-disk-0  compressratio  1.01x  -
 ```
 
 | Property        | Meaning                                                                         |
@@ -525,7 +525,7 @@ zfspool/vm-104-data    compressratio  1.01x  -
 ZFS does not show actual allocated size per ZVOL directly, but we can try to estimate it using `zdb`:
 
 ```bash
-zdb -dddd zfspool/vm-104-data
+zdb -dddd zfspool/vm-104-disk-0
 ```
 
 The output of that command shows us three objects:
@@ -556,7 +556,7 @@ Relevant columns:
 Example output of our ZVOL object with `volblocksize` of 8K:
 
 ```console
-# zdb -dddd zfspool/vm-104-data | awk '/zvol object/ {print "dsize=" $5, "lsize=" $7}'
+# zdb -dddd zfspool/vm-104-disk-0 | awk '/zvol object/ {print "dsize=" $5, "lsize=" $7}'
 dsize=495G lsize=600G
 ```
 

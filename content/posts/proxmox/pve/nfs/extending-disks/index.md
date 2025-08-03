@@ -1,7 +1,7 @@
 ---
 title: "Extend virtual disks and ZVOLs on Proxmox"
 date: 2025-07-19
-lastmod: 2025-07-25
+lastmod: 2025-08-03
 description: "Extend the virtual disks and ZVOLs used in a Proxmox VM without data loss, whether it has a partition table or not"
 summary: "Extend the virtual disks and ZVOLs of your VM running an NFS server without data loss"
 categories: ["virtualisation"]
@@ -31,7 +31,7 @@ To extend the ZVOL holding the data disk, follow these steps:
 To perform the first step, you can either use the WebGUI or the terminal. If you prefer the former, go to the `Hardware` menu option of the VM, select the data disk and use the `Disk action > Resize` button, input the number of extra gigabytes you need and click `Resize disk`. If you prefer the latter, execute the following command from the terminal of the host (adapt the value to your needs):
 
 ```bash
-zfs set volsize=+100G zfspool/vm-104-data
+zfs set volsize=+100G zfspool/vm-104-disk-0
 ```
 
 After resizing the disk, use `lsblk` to check that the OS has already detected the new size. If it does not show the new size, use the following command to instruct the OS to rescan the block device:
