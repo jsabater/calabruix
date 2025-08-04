@@ -1,21 +1,24 @@
 ---
 title: "Provisioning VMs on Proxmox using Cloud-Init and Ansible"
-date: 2025-07-08
-lastmod: 2025-07-08
+date: 2025-08-03
+lastmod: 2025-08-03
 description: "Create a Debian-based VM template using Cloud-Init and cloud images on your Proxmox cluster, then provision it using Ansible"
 summary: "Provisioning Debian VMs on Proxmox using cloud-init, cloud images and Ansible"
 categories: ["virtualisation"]
-tags: ["proxmox", "pve", "cloud-init"]
-draft: true
+tags: ["proxmox", "pve", "cloud-init", "vm", "ansible"]
 ---
 
-This article explains how to create a Cloud-Init based template to be cloned when creating new VMs in our Proxmox cluster. Proxmox offers native mechanisms to create templates from existing VMs, to be later reused, but making them Cloud-Init enabled goes a long way towards automation. Finally, Ansible will help us wrap it up nicely.
+This article explains how to create a Cloud-Init based template to be cloned when creating new VMs in our Proxmox cluster. Proxmox offers native mechanisms to create templates from existing VMs, to be later reused, but making them Cloud-Init enabled goes a long way towards automation. Moreover, Ansible will help us wrap it up nicely.
+
+## Cloud images
+
+Cloud images are lightweight snapshots of a configured OS created for use with cloud infrastructure (e.g., [*](VPS), [*](VM)). They provide a way to repeatably create identical copies of a machine across platforms.
+
+Debian provides [official cloud images](https://cloud.debian.org/images/cloud/) of its operating system, packaged into a format suitable for cloud platforms (e.g., `qcow2`, `raw`), which include tools like Cloud-Init to facilitate automated configuration and customization upon startup.
+
+> Cloud images are not meant for direct installation on physical hardware.
 
 ## Cloud-Init
-
-Cloud images are lightweight snapshots of a configured OS created for use with cloud infrastructure. They provide a way to repeatably create identical copies of a machine across platforms. Debian provides cloud images[^1] of its operating system, packaged into a format suitable for cloud platforms (e.g., `qcow2`, `raw`, `tar.xz`), which include tools like Cloud-Init to facilitate automated configuration and customization upon startup.
-
-[^1]: These images are not meant for direct installation on physical hardware.
 
 [Cloud-Init](https://cloud-init.io/) is the industry standard method for cloud instance initialization. During boot, it identifies the cloud it is running on and initializes the system accordingly. Configuration instructions can be reused and always get consistent, reliable results.
 
@@ -29,15 +32,18 @@ During late boot, Cloud-Init runs through the tasks that were not critical for p
 
 ## ISO download
 
-Debian provides [official cloud images](https://cloud.debian.org/images/cloud/). We will be using the `genericcloud` version of the image in `qcow2` (QEMU Copy On Write) format.
+We will be using the `genericcloud` version of the image in `qcow2` (QEMU Copy On Write) format.
 
-* Debian 11 Bullseye [cloud image](https://cloud.debian.org/images/cloud/bullseye/latest/debian-11-genericcloud-amd64.qcow2) and [SHA 512 sum](https://cloud.debian.org/images/cloud/bullseye/latest/SHA512SUMS).
-* Debian 12 Bookworm [cloud image](https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2) and [SHA 512 sum](https://cloud.debian.org/images/cloud/bookworm/latest/SHA512SUMS).
+Because the `Download from URL` button in the `ISO Images` menu option of our node only allows us to download images in ISO format, we will use the terminal to perform this operation. 
 
-Because the `Download from URL` button in the `ISO Images` menu option of our node only allows us to download images in ISO format, we will use the terminal to perform this operation. On your first node, e.g., `proxmox1`, download the image:
+### Debian 12
+
+We will be using the Debian 12 Bookworm [cloud image](https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2) and [SHA 512 sum](https://cloud.debian.org/images/cloud/bookworm/latest/SHA512SUMS).
+
+On your first node, e.g., `proxmox1`, download the image:
 
 ```bash
-mkdir /var/lib/vz/template/cloud
+mkdir --parents /var/lib/vz/template/cloud
 wget https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2 \
      --output-document=/var/lib/vz/template/cloud/debian-12-genericcloud-amd64.qcow2
 ```
@@ -46,16 +52,51 @@ For security, calculate its SHA 512 checksum and compare it with the one from th
 
 ```bash
 sha512sum /var/lib/vz/template/cloud/debian-12-genericcloud-amd64.qcow2
-wget https://cloud.debian.org/images/cloud/bookworm/latest/SHA512SUMS -O- | grep debian-12-genericcloud-amd64.qcow2
+wget --quiet https://cloud.debian.org/images/cloud/bookworm/latest/SHA512SUMS -O- \
+  | grep debian-12-genericcloud-amd64.qcow2
 ```
 
 Optionally, copy the `qcow2` image to the rest of nodes:
 
 ```bash
 NUM_NODES=$(pvecm nodes | grep -cE '^\s+[0-9]+\s+[0-9]+\s+proxmox[0-9]+')
+SRC_FILE="/var/lib/vz/template/cloud/debian-12-genericcloud-amd64.qcow2"
 for i in `seq 2 ${NUM_NODES}`
 do
-  rsync --rsh=ssh /var/lib/vz/template/cloud/debian-12-genericcloud-amd64.qcow2 proxmox${i}:/var/lib/vz/template/cloud/
+  echo "Copying `basename ${SRC_FILE}` to proxmox${i}"
+  rsync --rsh=ssh ${SRC_FILE} proxmox${i}:/var/lib/vz/template/cloud/
+done
+```
+
+### Debian 11
+
+We will be using the  Debian 11 Bullseye [cloud image](https://cloud.debian.org/images/cloud/bullseye/latest/debian-11-genericcloud-amd64.qcow2) and [SHA 512 sum](https://cloud.debian.org/images/cloud/bullseye/latest/SHA512SUMS).
+
+On your first node, e.g., `proxmox1`, download the image:
+
+```bash
+mkdir --parents /var/lib/vz/template/cloud
+wget https://cloud.debian.org/images/cloud/bullseye/latest/debian-11-genericcloud-amd64.qcow2 \
+     --output-document=/var/lib/vz/template/cloud/debian-11-genericcloud-amd64.qcow2
+```
+
+For security, calculate its SHA 512 checksum and compare it with the one from the SHA512SUMS file:
+
+```bash
+sha512sum /var/lib/vz/template/cloud/debian-11-genericcloud-amd64.qcow2
+wget --quiet https://cloud.debian.org/images/cloud/bullseye/latest/SHA512SUMS -O- \
+  | grep debian-11-genericcloud-amd64.qcow2
+```
+
+Optionally, copy the `qcow2` image to the rest of nodes:
+
+```bash
+NUM_NODES=$(pvecm nodes | grep -cE '^\s+[0-9]+\s+[0-9]+\s+proxmox[0-9]+')
+SRC_FILE="/var/lib/vz/template/cloud/debian-11-genericcloud-amd64.qcow2"
+for i in `seq 2 ${NUM_NODES}`
+do
+  echo "Copying `basename ${SRC_FILE}` to proxmox${i}"
+  rsync --rsh=ssh ${SRC_FILE} proxmox${i}:/var/lib/vz/template/cloud/
 done
 ```
 
@@ -63,10 +104,30 @@ done
 
 We need to create a virtual machine, then turn it into a template. The Proxmox assistant will not let us create a VM without an image, and it only accepts ISO images. Therefore, we will resort to the terminal.
 
+We will create a VM with id 9000 for Debian 12 and a VM with id 9001 for Debian 11. The following commands are for the former. For the latter, all you need to do is change the id, name, description and template file.
+
+Just in case it has not been done before, create the resource pool of your liking:
+
+```bash
+pvesh create /pools --poolid templates --comment "Templates for VMs"
+```
+
 First of all, create an empty virtual machine:
 
 ```bash
-qm create 9000 --name "debian-12-tmpl" --balloon 1024 --memory 2048 --cores 2 --net0 virtio,bridge=vmbr4002,firewall=1,mtu=1400 --scsihw virtio-scsi-single --ostype l26 --agent enabled=1,fstrim_cloned_disks=1,type=virtio --bios seabios --description "Debian 12 Bookworm cloud template"
+qm create 9000 --name "debian-12-tmpl" --cores 2 \
+   --balloon 1024 --memory 2048 --onboot 0 \
+   --net0 virtio,bridge=vmbr4002,firewall=1,mtu=1400 \
+   --scsihw virtio-scsi-single \
+   --ostype l26 --bios seabios \
+   --agent enabled=1,fstrim_cloned_disks=1,type=virtio \
+   --pool templates --description "Debian 12 Bookworm cloud template"
+```
+
+Optionally, add tags to the VM to help identify it later:
+
+```bash
+qm set 9000 --tags debian12,local
 ```
 
 > Choosing a very big VM ID is not mandatory, but rather a quick way to identify VM templates in our cluster.
@@ -74,17 +135,18 @@ qm create 9000 --name "debian-12-tmpl" --balloon 1024 --memory 2048 --cores 2 --
 Next, import the cloud image as a disk:
 
 ```bash
-qm disk import 9000 /var/lib/vz/template/cloud/debian-12-genericcloud-amd64.qcow2 local  --format qcow2
+qm disk import 9000 --format qcow2 \
+   /var/lib/vz/template/cloud/debian-12-genericcloud-amd64.qcow2 local
 ```
 
-In Proxmox, `raw` and `qcow2` are common disk image formats, each with distinct advantages and disadvantages when using them with `qm disk import`. The former offers potentially better performance due to its simplicity, while the latter provides features like snapshots, compression, and dynamic resizing, albeit with a slight performance overhead. The choice depends on specific needs and the underlying storage type[^2].
+In Proxmox, `raw` and `qcow2` are common disk image formats, each with distinct advantages and disadvantages. The former offers potentially better performance due to its simplicity, while the latter provides features like snapshots, compression, and dynamic resizing, albeit with a slight performance overhead. The choice depends on specific needs and the underlying storage type[^2].
 
-[^2]: The [Proxmox storage documentation](https://pve.proxmox.com/wiki/Storage) explains how `/var/lib/vz`maps to the `local` storage type.
+[^2]: The [Proxmox storage documentation](https://pve.proxmox.com/wiki/Storage) explains how `/var/lib/vz` maps to the `local` storage type.
 
-Next, attach the new (unused) disk to the VM as a SCSI drive on the SCSI controller:
+Next, attach the disk to the VM:
 
 ```bash
-qm set 9000 --scsihw virtio-scsi-pci --scsi0 local:9000/vm-9000-disk-0.qcow2,discard=on,iothread=1,size=3G
+qm set 9000 --scsi0 local:9000/vm-9000-disk-0.qcow2,format=qcow2,iothread=1,discard=on,serial=os
 ```
 
 The next step is to configure a CD-ROM drive, which will be used to pass the Cloud-Init data to the VM:
@@ -95,19 +157,19 @@ qm set 9000 --ide2 local:cloudinit
 
 > `--cdrom` is an alias for `--ide2`. Using `--ide2` sets `media=cdrom`.
 
-To be able to boot directly from the Cloud-Init image, we need to set the boot parameter to order=scsi0 to restrict BIOS to boot from this disk only. This will speed up booting, because VM BIOS skips the testing for a bootable CD-ROM.
+To be able to boot directly from the Cloud-Init image, we need to set the boot parameter to `order=scsi0` to restrict the [*](BIOS) to boot from this disk only. This will speed up booting, because it skips the testing for a bootable CD-ROM.
 
 ```bash
 qm set 9000 --boot order=scsi0
 ```
 
-For many Cloud-Init images, it is required to configure a serial console and use it as a display. HOwever, if the configuration does not work for a given image, switch back to the default display instead.
+For many Cloud-Init images, it is required to configure a serial console and use it as a display. However, if the configuration does not work for a given image, switch back to the default display instead.
 
 ```bash
 qm set 9000 --serial0 socket --vga serial0
 ```
 
-Now is the time to visit the `Cloud-Init` menu option of our newly-created, not-yet-started VM with ID 9000, and configure the following options to our liking:
+Now is the time to visit the `Cloud-Init` menu option of our newly-created, not-yet-started VM with ID 9000, and configure the following options with some default values (adapt to your needs):
 
 * User: `ansible`
 * Password: `<password>`
@@ -116,31 +178,29 @@ Now is the time to visit the `Cloud-Init` menu option of our newly-created, not-
 * SSH public key: `ssh-ed25519 AAAAC3N [..] Ansible`
 * IP Config (net0): `DHCP`
 
-We will be setting each and every one of the example values via Ansible, so they can all be left blank. However, if you modify any of the fields, you need to use the `Regenerate image` button to update the CD-ROM containing the Cloud-Init configuration. 
+Use a randomnly generated password for your `ansible` user, then save it in a vault, such as Proton Pass or Bitwarden/Vaultwarden. Also add it to the Ansible vault, so it can be used later to provision the VM.
 
-Before converting it into a template, we will be adding a second virtual disk for the swap:
+Once you are finished, do not forget to use the `Regenerate image` button to update the CD-ROM containing the Cloud-Init configuration. Or you can use the following command from the terminal:
 
 ```bash
-qm set 9000 --scsi1 local:9000/vm-9000-disk-1.raw,format=raw,size=1G,async_io=io_uring,discard=on,backup=0
+qm cloudinit update 9000
 ```
 
-This is a summary of the disks our template will have:
+In order to keep our template small and simple, we will use just once disk. Later on we will add a second disk to it, to be used as swap. Thus, this is a summary of the disk our template will have:
 
-| Option            | OS disk    | Swap disk  | Notes                                      |
-|-------------------|:----------:|:----------:|--------------------------------------------|
-| `Bus/Device`      | `SCSI 0`   | `SCSI 1`   | VirtIO SCSI driver works well with discard |
-| `Storage`         | `local`    | `local`    |                                            |
-| `Disk size (GiB)` | 3          | 1          |                                            |
-| `Format`          | `qcow2`    | `raw`      | QCOW 2 supports snapshots                  |
-| `Cache`           | No cache   | No cache   | Avoid double caching with ZFS              |
-| `IO thread`       | Yes        | No         | Enable parallel access                     |
-| `Backup`          | Yes        | No         | Include disk in backup jobs                |
-| `Async IO`        | `io_uring` | `io_uring` | Most compatible and reliable               |
-| `Discard`         | Yes        | Yes        | Enable TRIM/UNMAP                          |
+| Option            | OS disk    | Notes                                      |
+|-------------------|:----------:|--------------------------------------------|
+| `Bus/Device`      | `SCSI 0`   | VirtIO SCSI driver works well with discard |
+| `Storage`         | `local`    |                                            |
+| `Disk size (GiB)` | 3          |                                            |
+| `Format`          | `qcow2`    | QCOW 2 supports snapshots                  |
+| `Cache`           | No cache   |                                            |
+| `IO thread`       | Yes        | Enable parallel access                     |
+| `Backup`          | Yes        | Include disk in backup jobs                |
+| `Async IO`        | `io_uring` | Most compatible and reliable               |
+| `Discard`         | Yes        | Enable TRIM/UNMAP                          |
 
-In a last step, we will convert the VM into a template. From this template we will be able to quickly create (linked) clones. The deployment from VM templates is much faster than creating a full clone.
-
-Either right-click on the VM and choose the `Convert to template` option, or use the terminal:
+We are now ready to convert the VM into a template. From this template we will be able to quickly create clones. Either right-click on the VM and choose the `Convert to template` option, or use the terminal:
 
 ```bash
 qm template 9000
@@ -148,7 +208,7 @@ qm template 9000
 
 > Templating a VM is a one-way ticket. The VM is converted, not duplicated into a template.
 
-By not starting the VM before converting it into a template, we are preventing the Debian bootstrap process from executing. This process sets up:
+By not starting the VM before converting it into a template, we are preventing the Debian bootstrap process from executing. For your reference, bootstrapping means setting up:
 
 * **Machine id**, stored in `/etc/machine-id`, which is used by D-Bus and systemd for various purposes, including identifying the system.
 * **Disk [*](UUID)**, used in `/etc/fstab`, which allows for reliable mounting even if device names change.
@@ -156,112 +216,223 @@ By not starting the VM before converting it into a template, we are preventing t
 
 ## Ansible
 
-In the previous section, we neither configured the VM's Cloud-Init options, nor did we install basic tools and utilities such as `ccze`, `dnsutils`, `htop`, `nmap`, `qemu-guest-agent`, or `tcpdump`.
+In the previous section, we neither configured the VM's Cloud-Init options, nor did we install basic shell tools and utilities.
 
-This choice is intentional, as we want to keep our template as clean as possible so that we do not have to undo or correct anything in the future. And because we will be using Ansible to provision and configure it.
+This choice is intentional, as we want to keep our template as clean as possible so that we do not have to undo or correct anything in the future, and because we will be using Ansible to provision and configure it.
 
-https://claude.ai/chat/ff50568b-980f-40aa-8f85-1cdb2fc06e1f
-https://docs.ansible.com/ansible/latest/collections/community/proxmox/proxmox_module.html
-https://docs.ansible.com/ansible/latest/collections/community/general/proxmox_kvm_module.html
+To provision VMs from our template, including setting up Cloud-Init configurations, we will use the [Ansible Proxmox KVM](https://docs.ansible.com/ansible/devel/collections/community/proxmox/proxmox_kvm_module.html) module, which you will have to install manually:
+
+```bash
+ansible-galaxy collection install community.proxmox
+```
+
+### Provisioning
+
+To keep it simple, a lot of variables are hardcoded in the following example, but you can easily adapt it to your needs.
 
 ```yaml
 # inventory/myapp.yml
+myapp:
+  hosts:
+    myapp1.localdomain.com:
+      ansible_host: 192.168.0.21
+      proxmox_vmid: 121
+```
 
-
+```yaml
 # inventory/group_vars/all/vars.yml
-
-proxmox_api_host: "proxmox1.{{ localdomain }}"
 proxmox_api_user: "{{ vault_proxmox_api_user | default('root@pam') }}"
 proxmox_api_token_id: "{{ vault_proxmox_api_token_id }}"
 proxmox_api_token_secret: "{{ vault_proxmox_api_token_secret }}"
-proxmox_pubkey_file: "~/.ssh/ansible.pub"
-proxmox_pubkey: "{{ lookup('ansible.builtin.file', proxmox_pubkey_file) }}"
+proxmox_ci_password: "{{ vault_proxmox_ci_password }}"
+```
 
-# plays/provision.yml
-- name: Provision VM from Cloud-Init template
-  hosts: all
-  gather_facts: false
+```yaml
+# plays/tasks/provision/clone.yml
+- name: Check if the virtual machine already exists
+  register: vm_status
+  failed_when: false # Do not fail when the VM does not exist
+  delegate_to: localhost
+  community.general.proxmox_kvm:
+    api_host: "proxmox1.localdomain.com"
+    api_user: "{{ proxmox_api_user }}"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+    node: "proxmox1"
+    vmid: "{{ proxmox_vmid }}" # Use `vmid` to check for an existing VM
+    state: current
 
-  tasks:
-    - name: Create VM from template
-      community.general.proxmox_kvm:
+- name: Clone the virtual machine from the template
+  when: vm_status.status is not defined or vm_status.status == "absent"
+  # Wait for the VM to be created. Disable when in check mode.
+  async: "{{ ansible_check_mode | ternary(0, 30) }}"
+  poll: 2
+  register: cloned_vm
+  delegate_to: localhost
+  community.general.proxmox_kvm:
+    state: present
+
+    # API
+    api_host: "proxmox1.localdomain.com"
+    api_user: "{{ proxmox_api_user }}"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+
+    # VM. Use `newid` when cloning
+    newid: "{{ proxmox_vmid }}" # Use newid to create a new VM
+    node: "proxmox1"
+    name: "{{ inventory_hostname_short }}"
+    cores: "2"
+    memory: "2048"
+    balloon: "1024"
+
+    # Cloning
+    storage: "local"
+    format: "qcow2"
+    clone: "debian-12-tmpl"
+    full: true
+    description: "PostgreSQL server"
+
+- name: Update the virtual machine Cloud-Init configuration
+  # Wait for the VM to be updated. Disable when in check mode.
+  async: "{{ ansible_check_mode | ternary(0, 30) }}"
+  poll: 2
+  register: provisioned_vm
+  delegate_to: localhost
+  community.general.proxmox_kvm:
+    update: true
+
+    # API
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+
+    # VM
+    vmid: "{{ proxmox_vmid }}" # Use vmid to update an existing VM
+    node: "{{ proxmox_node }}" # Node is mandatory when state is present
+
+    # Cloud-Init credentials
+    ciuser: "ansible"
+    cipassword: "{{ proxmox_ci_password }}"
+    sshkeys: "{{ lookup('ansible.builtin.file', '~/.ssh/ansible.pub') }}"
+
+    # Cloud-Init network
+    ipconfig:
+      ipconfig0: "ip={{ ansible_host }}/16"
+    nameservers:
+      - "192.168.0.4"
+      - "192.168.0.5"
+    searchdomains: "localdomain.com"
+
+```
+
+```yaml
+# plays/tasks/provision/start.yml
+- name: Start virtual machine
+  when: provisioned_vm is changed or provisioned_vm is skipped
+  # Wait for the VM to start. Disable when in check mode.
+  async: "{{ ansible_check_mode | ternary(0, 10) }}"
+  poll: 2
+  delegate_to: localhost
+  community.general.proxmox_kvm:
+    state: started
+    timeout: 10
+
+    # API
+    api_host: "proxmox1.localdomain.com"
+    api_user: "{{ proxmox_api_user }}"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+
+    node: "proxmox1"
+    vmid: "{{ proxmox_vmid }}"
+```
+
+### Swap disk
+
+When marked as such, via the `proxmox_swap` attribute in our inventory, we can provision a second disk to the VM, to be used as swap. Again, many variables are hardcoded in the following example, but you can easily adapt it to your needs.
+
+```yaml
+# inventory/myapp.yml
+myapp:
+  hosts:
+    myapp1.localdomain.com:
+      ansible_host: 192.168.0.21
+      proxmox_vmid: 121
+      proxmox_swap: 1 # GB
+```
+
+```yaml
+- name: Create and attach swap disk to VM
+  when: proxmox_swap | default(0)
+  delegate_to: localhost
+  community.proxmox.proxmox_kvm:
+    update: true
+    update_unsafe: true # Allow updating `scsi`
+
+    # API
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+
+    # VM
+    vmid: "{{ proxmox_vmid }}"
+    node: "{{ proxmox_node }}"
+    scsi:
+      scsi1: "local:{{ proxmox_swap }},format=raw,discard=on,backup=0,serial=swap"
+```
+
+This is a summary of the disk we are adding to our VM:
+
+| Option            | Swap disk  | Notes                                      |
+|-------------------|:----------:|--------------------------------------------|
+| `Bus/Device`      | `SCSI 1`   | VirtIO SCSI driver works well with discard |
+| `Storage`         | `local`    |                                            |
+| `Disk size (GiB)` | 1          |                                            |
+| `Format`          | `raw`      | Prefer speed to snapshot support           |
+| `Cache`           | No cache   |                                            |
+| `IO thread`       | No         | Enable parallel access                     |
+| `Backup`          | No         | No need to back up this disk               |
+| `Async IO`        | `io_uring` | Most compatible and reliable               |
+| `Discard`         | Yes        | Enable TRIM/UNMAP                          |
+
+Once the disk has been attached, we need to format it as swap and enable it. To keep things as simple as possible, we will make use of the `serial` parametrer of the disk, which is set to `swap`, to identify it in the `/dev/disk/by-id` directory.
+
+```yaml
+- name: Wait for swap disk to appear
+  register: wait_for_swap_disk
+  ansible.builtin.wait_for:
+    path: "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_swap"
+    state: present
+    timeout: 30
+
+- name: Configure swap disk in VM
+  when:
+    - not wait_for_swap_disk.failed
+    - wait_for_swap_disk.state == 'link'
+  block:
+
+    - name: Create swap filesystem on disk
+      community.general.filesystem:
+        fstype: swap
+        dev: "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_swap"
+
+    - name: Add swap entry to '/etc/fstab'
+      ansible.posix.mount:
+        src: "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_swap"
+        path: none
+        fstype: swap
+        opts: sw
         state: present
 
-        # API
-        api_host: "{{ proxmox_api_host }}"
-        api_user: "{{ proxmox_api_user }}"
-        api_token_id: "{{ proxmox_api_token_id }}"
-        api_token_secret: "{{ proxmox_api_token_secret }}"
-
-        # Main parametres
-        vmid: "{{ proxmox_ctid }}"
-        node: "{{ proxmox_node }}"
-        name: "{{ inventory_hostname_short }}"
-        clone: "debian-12-cloud-template"
-        full: true
-        storage: "local"
-        format: "qcow2"
-        timeout: 30
-
-        # Cloud-Init configuration
-        ciuser: "{{ proxmox_ci_user }}"
-        cipassword: "{{ proxmox_ci_password }}"
-        sshkeys: "{{ proxmox_pubkey }}"
-
-        # Network configuration from inventory
-        ipconfig:
-          ipconfig0: "ip={{ ansible_host }}/{{ proxmox_net_mask }}"
-        nameservers: "{{ proxmox_nameservers | join(' ') }}"
-        searchdomains: "{{ proxmox_searchdomain }}"
-
-    - name: Start VM
-      community.general.proxmox_kvm:
-        api_host: "{{ proxmox_api_host }}"
-        api_user: "{{ proxmox_api_user }}"
-        api_password: "{{ proxmox_api_password }}"
-        node: "{{ proxmox_node }}"
-        vmid: "{{ proxmox_ctid }}"
-        state: started
-```
-
-## Cloning
-
-You can easily deploy such a template by cloning:
-
-```bash
-qm clone 9000 110 --name appserver1 --full
-```
-
-Then configure the SSH public key used for authentication, and configure the IP setup:
-
-```bash
-qm set 110 --sshkey ~/.ssh/id_dsa.pub --ipconfig0 ip=192.168.0.110/24,gw=
-```
-
-# Python 2.7
-
-We have a legacy application that is based on Python 2.7. Thus, we want to add Python 2.7 to the template, so it is already there when cloned.
-
-Create the file `/etc/apt/sources.list.d/bullseye.sources` use the preferred `deb822` format:
-
-```
-Types: deb
-URIs: https://deb.debian.org/debian
-Suites: bullseye bullseye-updates
-Components: main
-Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
-
-Types: deb
-URIs: https://security.debian.org/debian-security
-Suites: bullseye-security
-Components: main
-Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
-```
-
-Alternatively, if you prefer the classic format, create the file `/etc/apt/sources.list.d/bullseye.list` with the following content:
-
-```
-deb http://deb.debian.org/debian bullseye main
-deb http://deb.debian.org/debian bullseye-updates main
-deb http://security.debian.org bullseye-security main
+    - name: Activate swap partition
+      ansible.builtin.command:
+        cmd: "swapon --all --verbose"
+      register: swapon_result
+      failed_when: false
+      changed_when:
+        - swapon_result.rc != 0
+        - "'already active' not in swapon_result.stdout"
 ```
