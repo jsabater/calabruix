@@ -1,7 +1,7 @@
 ---
 title: "NFS server on Proxmox VE"
 date: 2025-07-17
-lastmod: 2025-08-03
+lastmod: 2025-08-05
 description: "Install and configure a Network File System (NFS) server in a VM on a Proxmox using ZFS for optimal performance"
 summary: "Install, configure and optimise an NFS server in a VM on a Proxmox cluster using ZFS"
 categories: ["virtualisation"]
@@ -338,6 +338,13 @@ blkid /dev/sdc
 echo 'UUID=333e6175[..] /srv/nfs xfs noatime 0 2' >> /etc/fstab
 systemctl daemon-reload
 mount /srv/nfs
+```
+
+If you created the virtual disk using the terminal, then you can take advantage of the `serial` option to skip the `blkid` command and simplify the `/etc/fstab` entry:
+
+```console
+# /etc/fstab
+/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_data /srv/nfs xfs noatime 0 2
 ```
 
 You may notice that the output of the `blkid /dev/sdc` command includes `BLOCK_SIZE="512"`, or some other value different from the one you used when formatting the disk. This is because ZVOLs abstract physical blocks and present virtual 512-byte sectors to guests. This is hardcoded in ZFS and not configurable via `volblocksize`. Moreover, `ashift` and `volblocksize` optimise storage efficiency, but do not affect the sector size exposed to the guest.
