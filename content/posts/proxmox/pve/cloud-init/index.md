@@ -1,7 +1,7 @@
 ---
 title: "Provisioning VMs on Proxmox using Cloud-Init and Ansible"
 date: 2025-08-03
-lastmod: 2025-08-03
+lastmod: 2025-08-09
 description: "Create a Debian-based VM template using Cloud-Init and cloud images on your Proxmox cluster, then provision it using Ansible"
 summary: "Provisioning Debian VMs on Proxmox using cloud-init, cloud images and Ansible"
 categories: ["virtualisation"]
@@ -36,31 +36,29 @@ We will be using the `genericcloud` version of the image in `qcow2` (QEMU Copy O
 
 Because the `Download from URL` button in the `ISO Images` menu option of our node only allows us to download images in ISO format, we will use the terminal to perform this operation. 
 
-### Debian 12
-
-We will be using the Debian 12 Bookworm [cloud image](https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2) and [SHA 512 sum](https://cloud.debian.org/images/cloud/bookworm/latest/SHA512SUMS).
+We will be using the Debian 13 Trixie [cloud image](https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2) and [SHA 512 sum](https://cloud.debian.org/images/cloud/trixie/latest/SHA512SUMS).
 
 On your first node, e.g., `proxmox1`, download the image:
 
 ```bash
 mkdir --parents /var/lib/vz/template/cloud
-wget https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2 \
-     --output-document=/var/lib/vz/template/cloud/debian-12-genericcloud-amd64.qcow2
+wget https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2 \
+     --output-document=/var/lib/vz/template/cloud/debian-13-genericcloud-amd64.qcow2
 ```
 
 For security, calculate its SHA 512 checksum and compare it with the one from the SHA512SUMS file:
 
 ```bash
-sha512sum /var/lib/vz/template/cloud/debian-12-genericcloud-amd64.qcow2
-wget --quiet https://cloud.debian.org/images/cloud/bookworm/latest/SHA512SUMS -O- \
-  | grep debian-12-genericcloud-amd64.qcow2
+sha512sum /var/lib/vz/template/cloud/debian-13-genericcloud-amd64.qcow2
+wget --quiet https://cloud.debian.org/images/cloud/trixie/latest/SHA512SUMS -O- \
+  | grep debian-13-genericcloud-amd64.qcow2
 ```
 
 Optionally, copy the `qcow2` image to the rest of nodes:
 
 ```bash
 NUM_NODES=$(pvecm nodes | grep -cE '^\s+[0-9]+\s+[0-9]+\s+proxmox[0-9]+')
-SRC_FILE="/var/lib/vz/template/cloud/debian-12-genericcloud-amd64.qcow2"
+SRC_FILE="/var/lib/vz/template/cloud/debian-13-genericcloud-amd64.qcow2"
 for i in `seq 2 ${NUM_NODES}`
 do
   echo "Copying `basename ${SRC_FILE}` to proxmox${i}"
@@ -68,43 +66,16 @@ do
 done
 ```
 
-### Debian 11
+For Debian 12 and 11, the process is similar, but you will have to download different images:
 
-We will be using the  Debian 11 Bullseye [cloud image](https://cloud.debian.org/images/cloud/bullseye/latest/debian-11-genericcloud-amd64.qcow2) and [SHA 512 sum](https://cloud.debian.org/images/cloud/bullseye/latest/SHA512SUMS).
-
-On your first node, e.g., `proxmox1`, download the image:
-
-```bash
-mkdir --parents /var/lib/vz/template/cloud
-wget https://cloud.debian.org/images/cloud/bullseye/latest/debian-11-genericcloud-amd64.qcow2 \
-     --output-document=/var/lib/vz/template/cloud/debian-11-genericcloud-amd64.qcow2
-```
-
-For security, calculate its SHA 512 checksum and compare it with the one from the SHA512SUMS file:
-
-```bash
-sha512sum /var/lib/vz/template/cloud/debian-11-genericcloud-amd64.qcow2
-wget --quiet https://cloud.debian.org/images/cloud/bullseye/latest/SHA512SUMS -O- \
-  | grep debian-11-genericcloud-amd64.qcow2
-```
-
-Optionally, copy the `qcow2` image to the rest of nodes:
-
-```bash
-NUM_NODES=$(pvecm nodes | grep -cE '^\s+[0-9]+\s+[0-9]+\s+proxmox[0-9]+')
-SRC_FILE="/var/lib/vz/template/cloud/debian-11-genericcloud-amd64.qcow2"
-for i in `seq 2 ${NUM_NODES}`
-do
-  echo "Copying `basename ${SRC_FILE}` to proxmox${i}"
-  rsync --rsh=ssh ${SRC_FILE} proxmox${i}:/var/lib/vz/template/cloud/
-done
-```
+* Debian 12 Bookworm [cloud image](https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2) and [SHA 512 sum](https://cloud.debian.org/images/cloud/bookworm/latest/SHA512SUMS).
+* Debian 11 Bullseye [cloud image](https://cloud.debian.org/images/cloud/bullseye/latest/debian-11-genericcloud-amd64.qcow2) and [SHA 512 sum](https://cloud.debian.org/images/cloud/bullseye/latest/SHA512SUMS).
 
 ## Templating
 
 We need to create a virtual machine, then turn it into a template. The Proxmox assistant will not let us create a VM without an image, and it only accepts ISO images. Therefore, we will resort to the terminal.
 
-We will create a VM with id 9000 for Debian 12 and a VM with id 9001 for Debian 11. The following commands are for the former. For the latter, all you need to do is change the id, name, description and template file.
+As an example, we will create a VM with id 9000 for Debian 12. You may want to use successive ids for other versions of Debian, and adapt the commands accordingly.
 
 Just in case it has not been done before, create the resource pool of your liking:
 
@@ -115,7 +86,7 @@ pvesh create /pools --poolid templates --comment "Templates for VMs"
 First of all, create an empty virtual machine:
 
 ```bash
-qm create 9000 --name "debian-12-tmpl" --cores 2 \
+qm create 9000 --name "debian-12-tmpl" --cores 2 --cpu host \
    --balloon 1024 --memory 2048 --onboot 0 \
    --net0 virtio,bridge=vmbr4002,firewall=1,mtu=1400 \
    --scsihw virtio-scsi-single \
@@ -123,6 +94,8 @@ qm create 9000 --name "debian-12-tmpl" --cores 2 \
    --agent enabled=1,fstrim_cloned_disks=1,type=virtio \
    --pool templates --description "Debian 12 Bookworm cloud template"
 ```
+
+Using processor type `host` exposes modern CPU features such as [*](AVX), [*](AVX2), [*](SSE4.2), [*](BMI1)/[*](BMI2), and [*](FMA). We trade better performance and compatibility with modern software for less portability, i.e., VM live migration between nodes may fail when using very different CPU architectures.
 
 Optionally, add tags to the VM to help identify it later:
 
@@ -230,6 +203,9 @@ ansible-galaxy collection install community.proxmox
 
 To keep it simple, a lot of variables are hardcoded in the following example, but you can easily adapt it to your needs.
 
+When provisioning a virtual machine from the Debian 11 Cloud-Init template, the playbook must apply a custom network snippet via the `cicustom` attribute to avoid a known issue where the default network configuration causes long boot delays. Specifically, Debian 11 cloud images may fail to bring up the `ens18` interface cleanly due to Cloud-Init generating incomplete or incorrect `ifupdown` configurations, especially when IPv6 is left blank. By injecting a valid, minimal network configuration through a `cicustom` snippet, the playbook ensures a smooth and predictable network setup during first boot, preventing timeout errors and enabling faster provisioning.
+
+
 ```yaml
 # inventory/myapp.yml
 myapp:
@@ -248,26 +224,36 @@ proxmox_ci_password: "{{ vault_proxmox_ci_password }}"
 ```
 
 ```yaml
+# plays/templates/provision/disable-ipv6-network.yaml.j2
+version: 2
+ethernets:
+  ens18:
+    dhcp4: true
+    dhcp6: false
+    accept-ra: false
+```
+
+```yaml
 # plays/tasks/provision/clone.yml
 - name: Check if the virtual machine already exists
   register: vm_status
   failed_when: false # Do not fail when the VM does not exist
   delegate_to: localhost
   community.general.proxmox_kvm:
+
+    # API
     api_host: "proxmox1.localdomain.com"
     api_user: "{{ proxmox_api_user }}"
     api_token_id: "{{ proxmox_api_token_id }}"
     api_token_secret: "{{ proxmox_api_token_secret }}"
+    
+    # VM. Use `vmid` to checking status.
+    vmid: "{{ proxmox_vmid }}"
     node: "proxmox1"
-    vmid: "{{ proxmox_vmid }}" # Use `vmid` to check for an existing VM
     state: current
 
 - name: Clone the virtual machine from the template
   when: vm_status.status is not defined or vm_status.status == "absent"
-  # Wait for the VM to be created. Disable when in check mode.
-  async: "{{ ansible_check_mode | ternary(0, 30) }}"
-  poll: 2
-  register: cloned_vm
   delegate_to: localhost
   community.general.proxmox_kvm:
     state: present
@@ -278,26 +264,39 @@ proxmox_ci_password: "{{ vault_proxmox_ci_password }}"
     api_token_id: "{{ proxmox_api_token_id }}"
     api_token_secret: "{{ proxmox_api_token_secret }}"
 
-    # VM. Use `newid` when cloning
-    newid: "{{ proxmox_vmid }}" # Use newid to create a new VM
+    # VM. Use `newid` when cloning.
+    newid: "{{ proxmox_vmid }}"
     node: "proxmox1"
     name: "{{ inventory_hostname_short }}"
-    cores: "2"
-    memory: "2048"
-    balloon: "1024"
 
     # Cloning
     storage: "local"
     format: "qcow2"
-    clone: "debian-12-tmpl"
+    clone: "debian12-tmpl"
     full: true
-    description: "PostgreSQL server"
+    description: "Cloned from Debian 12 template"
+
+- name: Debian 11 specific configuration
+  when:
+    - ansible_distribution == "Debian"
+    - ansible_distribution_major_version == "11"
+  block:
+
+    - name: Upload Cloud-Init snippet to disable IPv6 network configuration
+      delegate_to: proxmox1.localdomain.com
+      ansible.builtin.template:
+        src: templates/provision/debian-11-disable-ipv6-network.yaml.j2
+        dest: /var/lib/vz/snippets/debian-11-disable-ipv6-network.yaml
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Set Cloud-Init custom script for Debian 11
+      set_fact:
+        proxmox_cicustom:
+          network: "local:snippets/debian-11-disable-ipv6-network.yaml"
 
 - name: Update the virtual machine Cloud-Init configuration
-  # Wait for the VM to be updated. Disable when in check mode.
-  async: "{{ ansible_check_mode | ternary(0, 30) }}"
-  poll: 2
-  register: provisioned_vm
   delegate_to: localhost
   community.general.proxmox_kvm:
     update: true
@@ -308,9 +307,12 @@ proxmox_ci_password: "{{ vault_proxmox_ci_password }}"
     api_token_id: "{{ proxmox_api_token_id }}"
     api_token_secret: "{{ proxmox_api_token_secret }}"
 
-    # VM
-    vmid: "{{ proxmox_vmid }}" # Use vmid to update an existing VM
-    node: "{{ proxmox_node }}" # Node is mandatory when state is present
+    # VM. Use `vmid` when updating.
+    vmid: "{{ proxmox_vmid }}"
+    node: "{{ proxmox_node }}"
+    cores: "4"
+    memory: "8192"
+    balloon: "4096"
 
     # Cloud-Init credentials
     ciuser: "ansible"
@@ -325,15 +327,13 @@ proxmox_ci_password: "{{ vault_proxmox_ci_password }}"
       - "192.168.0.5"
     searchdomains: "localdomain.com"
 
+    # Cloud-Init custom script
+    cicustom: "{{ proxmox_cicustom | default(omit) }}"
 ```
 
 ```yaml
 # plays/tasks/provision/start.yml
 - name: Start virtual machine
-  when: provisioned_vm is changed or provisioned_vm is skipped
-  # Wait for the VM to start. Disable when in check mode.
-  async: "{{ ansible_check_mode | ternary(0, 10) }}"
-  poll: 2
   delegate_to: localhost
   community.general.proxmox_kvm:
     state: started
@@ -347,6 +347,12 @@ proxmox_ci_password: "{{ vault_proxmox_ci_password }}"
 
     node: "proxmox1"
     vmid: "{{ proxmox_vmid }}"
+
+- name: Wait for the virtual machine to be accessible
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host }}"
+    port: 22
+    timeout: 300
 ```
 
 ### Swap disk
