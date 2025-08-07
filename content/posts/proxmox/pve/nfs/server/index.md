@@ -1,7 +1,7 @@
 ---
 title: "NFS server on Proxmox VE"
 date: 2025-07-17
-lastmod: 2025-08-05
+lastmod: 2025-08-06
 description: "Install and configure a Network File System (NFS) server in a VM on a Proxmox using ZFS for optimal performance"
 summary: "Install, configure and optimise an NFS server in a VM on a Proxmox cluster using ZFS"
 categories: ["virtualisation"]
@@ -65,6 +65,7 @@ Select the node where you want to install the VM on, then click on the `Create V
 | General | Start at boot     | No                             | Will be switched to `Yes` once we are done  |
 | OS      | Storage           | `local`                        |                                             |
 | OS      | ISO image         | `debian-12.11.0-amd64-netinst` |                                             |
+| System  | Processor type    | `host`                         | To benefit from AES-NI, AVX, SSE4.2, etc.   |
 | System  | Graphic card      | Default                        |                                             |
 | System  | Machine           | Default (i440fx)               |                                             |
 | System  | BIOS              | Default (SeaBIOS)              |                                             |
@@ -80,6 +81,8 @@ Select the node where you want to install the VM on, then click on the `Create V
 
 [^1]: Managed via the `Datacenter > Permissions > Pools` menu option.
 [^2]: Default for newly created Linux VMs since Proxmox VE 7.3. Each disk will have its own VirtIO SCSI controller, and QEMU will handle the disks IO in a dedicated thread.
+
+> Using processor type `host` exposes modern CPU features such as [*](AVX), [*](AVX2), [*](SSE4.2), [*](BMI1)/[*](BMI2), and [*](FMA). We trade better performance and compatibility with modern software for less portability, i.e., VM live migration between nodes may fail when using very different CPU architectures.
 
 On the `Disks` tab, we will be creating three disks, as described above. Use the `Add` button on the bottom-left corner to add disks.
 
@@ -125,7 +128,7 @@ pvesh create /pools --poolid databases --comment "Database and file storage serv
 Let's start by creating the VM:
 
 ```bash
-qm create 104 --name nfs1 --cores 4 \
+qm create 104 --name nfs1 --cores 4 --cpu host \
    --balloon 4096 --memory 8192 \
    --net0 virtio,bridge=vmbr4002,firewall=1,mtu=1400 \
    --scsihw virtio-scsi-single \
