@@ -54,7 +54,7 @@ wget --quiet https://cloud.debian.org/images/cloud/trixie/latest/SHA512SUMS -O- 
   | grep debian-13-genericcloud-amd64.qcow2
 ```
 
-Optionally, copy the `qcow2` image to the rest of nodes:
+Optionally, copy the `qcow2` image to the rest of nodes (adapt to your cluster):
 
 ```bash
 NUM_NODES=$(pvecm nodes | grep -cE '^\s+[0-9]+\s+[0-9]+\s+proxmox[0-9]+')
@@ -201,10 +201,26 @@ ansible-galaxy collection install community.proxmox
 
 ### Provisioning
 
-To keep it simple, a lot of variables are hardcoded in the following example, but you can easily adapt it to your needs.
+The process of provisioning a virtual machine from a template follows these steps:
 
-When provisioning a virtual machine from the Debian 11 Cloud-Init template, the playbook must apply a custom network snippet via the `cicustom` attribute to avoid a known issue where the default network configuration causes long boot delays. Specifically, Debian 11 cloud images may fail to bring up the `ens18` interface cleanly due to Cloud-Init generating incomplete or incorrect `ifupdown` configurations, especially when IPv6 is left blank. By injecting a valid, minimal network configuration through a `cicustom` snippet, the playbook ensures a smooth and predictable network setup during first boot, preventing timeout errors and enabling faster provisioning.
+1. Clone the virtual machine from the template.
+2. Configure Cloud-Init options.
+3. Start the virtual machine.
+4. Optionally, customise the virtual machine.
 
+When provisioning a virtual machine from the Debian 11 template, we will add the `cicustom` attribute to the task that updates the Cloud-Init configuration so that the `proxmox_kvm` module executes a custom network configuration snippet, which is necessary to avoid a known issue where the default network configuration causes long boot delays, or even hangs, due to IPv6 misconfiguration.
+
+Specifically, Debian 11 cloud images may fail to bring up the `ens18` interface cleanly due to Cloud-Init generating incomplete or incorrect `ifupdown` configurations, especially when IPv6 is left blank. By injecting a valid, minimal network configuration through a `cicustom` snippet, the playbook ensures a smooth and predictable network setup during first boot, preventing timeout errors and enabling faster provisioning.
+
+Debian 12 and 13 cloud images do not require such snippet.
+
+To keep it simple, a lot of variables are hardcoded in the following example, but you can easily adapt it to your needs. For context, the following code would exist in the following Ansible structure:
+
+1. Inventory file at `inventory/myapp.yml`.
+2. Variables for all groups at `inventory/group_vars/all/vars.yml`.
+3. Playbook templates at `plays/templates/provision/`.
+4. Playbook tasks at `plays/tasks/provision/`.
+5. Playbook at `plays/provision.yml`.
 
 ```yaml
 # inventory/myapp.yml
@@ -370,6 +386,7 @@ myapp:
 ```
 
 ```yaml
+# plays/tasks/provision/swap.yml
 - name: Create and attach swap disk to VM
   when: proxmox_swap | default(0)
   delegate_to: localhost
@@ -404,9 +421,10 @@ This is a summary of the disk we are adding to our VM:
 | `Async IO`        | `io_uring` | Most compatible and reliable               |
 | `Discard`         | Yes        | Enable TRIM/UNMAP                          |
 
-Once the disk has been attached, we need to format it as swap and enable it. To keep things as simple as possible, we will make use of the `serial` parametrer of the disk, which is set to `swap`, to identify it in the `/dev/disk/by-id` directory.
+Once the disk has been attached, we need to format it as swap and enable it. To keep things as simple as possible, we will make use of the `serial` parametrer of the disk, which is set to `swap`, to identify it in the `/dev/disk/by-id` directory. Because this path will always point to the correct device, we can use it in our playbook without worrying about the actual device name or its UUID.
 
 ```yaml
+# plays/tasks/provision/swap.yml
 - name: Wait for swap disk to appear
   register: wait_for_swap_disk
   ansible.builtin.wait_for:
