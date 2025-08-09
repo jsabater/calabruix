@@ -1,5 +1,5 @@
 ---
-title: "Articles about Proxmox technologies"
+title: "Proxmox"
 description: "Installation, configuration and management of virtualisation, backup and email solutions by Proxmox"
 summary: "Learn to install, configure and operate Proxmox solutions in your IT infrastructure"
 categories: ["infrastructure"]

@@ -1,5 +1,5 @@
 ---
-title: "Virtualisation with Proxmox VE"
+title: "PVE"
 description: "Learn to install, configure and operate Proxmox clusters using dedicated servers"
 summary: "Learn to install, configure and operate Proxmox clusters using dedicated servers"
 categories: ["virtualisation"]

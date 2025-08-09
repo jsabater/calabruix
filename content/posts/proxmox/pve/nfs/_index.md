@@ -1,5 +1,5 @@
 ---
-title: "NFS server with optimised block sizes on Proxmox VE"
+title: "NFS"
 description: "Install and configure an NFS server on your Proxmox VE and optimise a variety of settings for performance"
 summary: "Set up an NFS server on Proxmox VE and optimise for performance"
 categories: ["virtualisation"]
