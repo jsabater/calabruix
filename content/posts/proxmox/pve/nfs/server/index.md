@@ -1,7 +1,7 @@
 ---
 title: "NFS server on Proxmox VE"
 date: 2025-07-17
-lastmod: 2025-08-06
+lastmod: 2025-08-11
 description: "Install and configure a Network File System (NFS) server in a VM on a Proxmox using ZFS for optimal performance"
 summary: "Install, configure and optimise an NFS server in a VM on a Proxmox cluster using ZFS"
 categories: ["virtualisation"]
@@ -148,7 +148,7 @@ qm set 104 --scsi2 zfspool:100,format=raw,iothread=1,discard=on,serial=data
 
 > We are using the special syntax `STORAGE_ID:SIZE_IN_GiB` to allocate a new volume.
 
-Proxmox names disks using the template `vm-<vmid>-disk-<diskid>`, where `<diskid>` is a zero-based index, per VM and storage. Therefore, disks will be named `local:vm-104-disk-0.qcow2`, `local:vm-104-disk-1.raw` and `zfspool:vm-104-disk-0`, respectively. We are using the `serial` option to make it easier to identify the disks later.
+Proxmox names disks using the template `vm-<vmid>-disk-<diskid>`, where `<diskid>` is a zero-based index, per VM and storage. Therefore, disks will be named `local:104/vm-104-disk-0.qcow2`, `local:104/vm-104-disk-1.raw` and `zfspool:vm-104-disk-0`, respectively. We are using the `serial` option to make it easier to identify the disks later.
 
 Finally, configure the boot order:
 
