@@ -1,7 +1,7 @@
 ---
 title: "Larger block sizes with XFS on a Proxmox VM"
-date: 2025-08-09
-lastmod: 2025-08-09
+date: 2025-08-12
+lastmod: 2025-08-12
 description: "Using XFS as the filesystem for a Proxmox VM, including block size considerations and performance optimizations"
 summary: "Explore the benefits of using XFS on a Proxmox VM when attempting to align block sizes of I/O layers"
 categories: ["virtualisation"]
@@ -9,7 +9,6 @@ tags: ["proxmox", "pve", "nfs", "xfs", "vm"]
 series: ["NFS"]
 series_order: 4
 weight: 40
-draft: true
 ---
 
 In a previous article in this series we discussed the convenience of [aligning block sizes]({{< relref "posts/proxmox/pve/nfs/block-sizes/" >}}) across different layers of the storage stack, especially when using ZFS volumes (ZVOL).
@@ -22,17 +21,17 @@ This feature is still marked as experimental in the 6.12 LTS kernel that Debian 
 
 ## Large Block Size
 
-Support for Large Block Size (LBS) in the Linux kernel was marked as stable in version 6.13. This support focused on enabling larger block sizes for I/O operations, moving beyond the traditional 4kB page size default.
+Support for Large Block Size (LBS) in the Linux kernel was marked as stable in version 6.13. This support focused on enabling larger block sizes for I/O operations, moving beyond the traditional 4 KB page size default.
 
 The goal is to improve performance and efficiency via:
 
 * Reduced overhead, as the number of individual I/O operations is reduced.
-* Hardware efficiency, as modern storage devices (e.g., NVMe drives) come with a default sector size of 8kB.
+* Hardware efficiency, as modern storage devices (e.g., NVMe drives) come with a default sector size of 8 KB.
 * Application needs, as some applications (e.g., databases) may have specific internal data structures that align better with larger block sizes.
 
 This involves changes to the block layer, filesystems, and potentially memory management with folios.
 
-[PostgreSQL](https://www.postgresql.org/), for example, uses an 8KB page size internally. With LBS, we can now create an XFS filesystem with an 8KB block size, matching the database's internal page size, which can improve performance and reduce overhead when writing data.
+[PostgreSQL](https://www.postgresql.org/), for example, uses an 8 KB page size internally. With LBS, we can now create an XFS filesystem with an 8 KB block size, matching the database's internal page size, which can improve performance and reduce overhead when writing data.
 
 To use it, all we have to do is format the XFS filesystem with the desired block size using the `mkfs.xfs` command with the appropriate option.
 
@@ -55,7 +54,7 @@ Debian 13 Trixie comes with kernel 6.12 [*](LTS) and modern userland tools (the 
 
 In essence, kernel 6.12 introduced the fundamental [Virtual File System](https://www.kernel.org/doc/html/latest/filesystems/vfs.html) (VFS) infrastructure and initial XFS support for Large Block Sizes, making the concept viable. Then kernel 6.13 added critical features like atomic write support for major filesystems ([*](EXT4), [*](XFS)), improving general large file handling, and incorporating the usual wave of bug fixes and optimizations that are essential for a feature to be considered truly stable and production-ready.
 
-Maintenance of version 6.12 by the [Linux Kernel Organization](https://www.kernel.org/) is restricted to patches that fix security issues, bugs or regressions, or provide stability. However, while we wait for a more modern kernel (6.15+) to be backported to Trixie, we can check it out and test it.
+Maintenance of version 6.12 by the [Linux Kernel Organization](https://www.kernel.org/) is restricted to patches that fix security issues, bugs or regressions, or provide stability. However, while we wait for a more modern kernel (hopefully 6.15+) to be backported to Trixie, we can check it out and test it.
 
 Regarding userspace tools, Debian 13 ships with `xfsprogs` version 6.13, which means we will have:
 
@@ -75,13 +74,13 @@ NAME                   PROPERTY      VALUE     SOURCE
 zfspool/vm-104-disk-0  volblocksize  8K        default
 ```
 
-Convert the value of `volblocksize` into bytes when formatting the disk. For the example above, inside the [*](VM) you would use 8192 bytes.
+When formatting the disk, convert the value of `volblocksize` into bytes. For the example above, inside the [*](VM) you would use 8192 bytes.
 
 ```bash
 mkfs.xfs -b size=8192 /dev/sdc
 ```
 
-The `mkfs.xfs` command returns the geometry information for the file system to make sure all parameters are set correctly. There are not many parameters that must be manually set for normal use.
+The `mkfs.xfs` command returns the geometry information for the file system to make sure all parameters are set correctly.
 
 > ZFS version 2.2 brings in a new default block size of 16K.
 
@@ -89,132 +88,270 @@ The `mkfs.xfs` command will fail if the block size is not supported by the kerne
 
 ## Using XFS
 
-The `xfsprogs` package provides a set of utilities for managing XFS filesystems, including tools for creating, checking, and repairing. Support 
+The `xfsprogs` package provides a set of utilities for managing XFS filesystems, including tools for creating (`mkfs.xfs`), checking and repairing (`xfs_repair`), and extending (`xfs_growfs`) a filesystem.
 
-mkfs.xfs -f -b size=16k -s size=16k → uses a 16 KiB sector size → supported as of v6.15
+### Formatting
 
-Mounting:
+Let's say that our VM has a data disk we are using to store the files served by our [*](NFS) server, or the databases in our PostgreSQL server. When formatting the disk, we want to align the block sizes of our XFS filesystem with the underlying ZFS storage.
 
-```bash
-mount -o noatime,logbufs=8 /dev/sdX /mnt/data
-```
+Recent versions of `xfsprogs` allow us to specify both the block size and the sector size when using `mkfs.xfs`. Aligning both will get us better performance.
 
-
-A file system in use should be boring and mostly invisible to the system administrator and user. However, crashes happen, and crash recovery needs to be considered. XFS provides `xfs_repair` to repair a corrupted or damaged XFS filesystem.
-
-
-Repair filesystem (non-destructive check):
+As of Debian 13 with kernel version 6.12, the following command can be used to format the disk with an 8K block size and a 4K sector size:
 
 ```bash
-# -n is a dry run, remove it to actually repair
-xfs_repair -n /dev/sdX
+mkfs.xfs -b size=8k -s size=4k /dev/sdc
 ```
 
-But how do we know the filesystem is, indeed, damaged?
+When a kernel 6.15+ is available, we will be able to specify larger sector sizes. Should our `volblocksize` be 16k, the following command would make the I/O requests even more performant:
 
-`xfs_check`
+```bash
+mkfs.xfs -b size=16k -s size=16k /dev/sdc
+```
 
+### Sector size
 
+By default, `mkfs.xfs` uses a 512-byte sector size, which matches what the ZVOL exposes. The ZVOL defaults to such sector size mainly due to two reasons:
 
+* **Legacy compatibility**. Many OS, boot loaders, and even BIOS/UEFI implementations historically expect 512-byte logical sectors, and may even refuse to mount or format a disk if it reports something unusual.
+* **Alignment problems**. By advertising 512-byte logical sectors, ZFS makes it harder for the guest filesystem to get *misaligned* (from ZFS's point of view), as every alignment is a multiple of 512.
 
+Although ZFS abstracts the physical layer, `volblocksize` is its true internal allocation unit. However, it does not tell the guest about it so that it can present a *safe* virtual disk that works on any OS regardless of its sector size support.
 
+However, if the guest filesystem knows that the real storage prefers, for example, 16 KB writes, it can:
 
-Grow filesystem after increasing virtual disk or zvol:
+* Batch I/O so it writes in 16 KB multiples.
+* Work around the [*](RMW) penalty.
 
-Rescan disk inside VM (if using virtio/scsi):
+Then, ZFS can directly map filesystem blocks to ZVOL blocks without fragmentation or partial-block writes.
 
-echo 1 > /sys/class/block/sdX/device/rescan
+Batching I/O requests is about how the filesystem plans writes in the first place. If XFS believes the sector size is 16 KB, it will naturally coalesce smaller logical changes into 16 KB-aligned writes before sending them to the block device.
 
-Resize partition (if needed):
+Avoiding RMW cycles is about what happens if a write is smaller than the underlying ZFS `volblocksize` when it finally hits ZFS. If ZFS gets a sub-16 KB write:
 
-growpart /dev/sdX 1   # if using GPT + parted
+1. It reads the whole 16 KB block from disk.
+2. It modifies just the changed part (e.g., the 512-byte region).
+3. It writes the whole 16 KB block back.
 
-Grow XFS filesystem:
+That is the read-modify-write penalty, which happens down in the storage layer.
 
-xfs_growfs /mnt/data
+Therefore, when we set, for example, `-s size=16K` in XFS, we get both:
+
+1. Fewer small writes generated, thanks to batching/alignment.
+2. No RMW cycles triggered in ZFS, because it only ever sees full 16 KB writes.
+
+> ZFS defaults to lying for maximum compatibility, leaving it to the VM admin to override if the guest OS can handle larger sectors.
+
+### Mounting
+
+Once the disk has been formatted, we need to mount it:
+
+```bash
+mount -t xfs -o noatime,logbufs=8 /dev/sdc /srv/nfs
+```
+
+Given the nature of our workload, both of these options are good, low-risk optimisations:
+
+* `noatime` tells XFS not to update the access time metadata every time a file is read. This skips extra writes for read operations, reduces metadata churn and slightly improves performance and reduces wear on [*](SSD) devices.
+* `logbufs=8` tells XFS to use 8 in-memory log buffers for the journal (i.e., the write-ahead log). This increases parallelism for metadata logging, allows more outstanding metadata transactions before forcing a flush and can improve performance in metadata-heavy workloads (file creation, deletion, renaming).
+
+### Repairing
+
+A file system in use should be boring and mostly invisible to the system administrator and user. However, crashes happen, and crash recovery needs to be considered. XFS provides `xfs_repair` to both check and repair a corrupted or damaged XFS filesystem.
+
+It is typically run on an unmounted file system to ensure no conflicting operations occur while it replays the journal log to correct errors that might have occurred due to improper unmounting. The `-n` option allows us to check the file system for inconsistencies without actually making any changes.
+
+```bash
+systemctl stop nfs-server.service
+umount /srv/nfs
+xfs_repair /dev/sdc
+```
+
+We can find out the filesystem is damaged:
+
+1. Upon boot, when mounting the filesystem, errors will be logged in the system journal. Use `journalctl --boot` to view it.
+2. During execution, logged by the kernel. Use `journalctl --dmesg` to view it.
+
+### Resizing
+
+XFS supports online resizing, while mounted and even while actively being used. However, if the disk is under heavy load, you might want to temporarily reduce I/O to avoid unpredictable behaviour.
 
 > XFS can grow online, but cannot shrink.
 
+To extend the ZVOL holding the data disk, follow these steps:
 
-A command worth note is xfs_fsr. FSR stands for file system reorganizer and is the XFS equivalent to the Windows defrag tool. It allows defragmentation of the extent lists of all files in a file system and can be run in background. It may also be used on a single file.
+1. Resize the disk image or block device.
+2. Resize the filesystem inside the VM.
 
-Although all normal backup applications can be used for XFS file systems, the `xfsdump` command is specifically designed for XFS backup. It uses a special API to perform I/O based on file handles so that it does not generate inconsistent device snapshots on the raw block device.
-
-The `xfsdump` command can perform backups to regular files on local and remote systems, and it supports incremental backups with a sophisticated inventory management system. However, since we will be using Proxmox Backup Server to backup the entire VM and its disks, this is not a tool we will be using directly.
-
-## Diving into XFS
+Use the terminal of the Proxmox host to resize the ZVOL:
 
 ```bash
-xfs_info /dev/sdc
+zfs set volsize=+100G zfspool/vm-104-disk-0
 ```
 
-Meta-data section
+After resizing, use `lsblk` to check that the OS has already detected the new size. When using using VirtIO/SCSI, the OS sees the size change immediately. Because we did not partition the disk before formatting it, we do not need to deal with partitions.
 
-    meta-data=/dev/sdc – Device where metadata (superblock, allocation groups, inode structures) resides.
-    isize=512 – The size (in bytes) of each inode. 512 is typical.
-    agcount=4 – The number of allocation groups (AGs) the filesystem is divided into. Allocation groups enable parallel allocation on multi-threaded workloads.
-    agsize=9830400 blks – Number of blocks in each allocation group (with bsize=8192, that's ~78.4 MB per AG).
-    sectsz=512 – Sector size reported by the underlying device (or emulated by ZVOL).
-    attr=2 – Extended attribute format version (v2 is current).
-    projid32bit=1 – Project quotas (32-bit project IDs) are supported.
-    crc=1 – Metadata checksumming (introduced in XFS v5 format).
-    finobt=1 – Free inode B+tree is present, improving inode allocation speed.
-    sparse=1 – Sparse inode chunk allocation.
-    rmapbt=1 – Reverse mapping B+tree (used for reflink & deduplication).
-    reflink=1 – Reflink (copy-on-write clone) feature enabled.
-    bigtime=1 – Extended timestamp range (needed beyond year 2038).
-    inobtcount=1 – Tracks inode counts per allocation group.
-    nrext64=1 – 64-bit extent counters.
-    exchange=0 – Online exchange (not enabled).
-    metadir=0 – No separate metadata directory.
+Finally, perform the second step in the VM terminal[^3]:
 
-Data Section
+[^3]: You can either use the device path `/dev/sdc` or the mount point `/srv/nfs`.
 
-    bsize=8192 – Data block size (8 KiB).
-    blocks=39321600 – Total number of blocks (39321600 × 8 KiB ≈ 300 GiB).
-    imaxpct=25 – Max % of space reserved for inodes (25% default).
-    sunit=0 / swidth=0 – Stripe unit/width (relevant for RAID). Zero means no special alignment defined.
+```bash
+xfs_growfs /srv/nfs
+```
 
-Naming Section
+> Make sure the disk is mounted before running `xfs_growfs`.
 
-    version 2 – Directory structure format (v2 = efficient hashed directories).
-    bsize=8192 – Directory block size (matches data bsize).
-    ascii-ci=0 – Case-insensitive lookups disabled.
-    ftype=1 – Filetype field in directory entries (helps performance).
-    parent=0 – No parent pointer feature.
+### Defragmenting
 
-Log Section
+A command worth note is `xfs_fsr`. FSR stands for file system reorganizer and it allows defragmentation of the extent lists of all files in a file system and can be run in background. 
 
-    internal log – The journal (transaction log) is stored within the same device, not externally.
-    bsize=8192 – Log block size (8 KiB).
-    blocks=19200 – Size of the log area (19200 × 8 KiB = 150 MB).
-    version=2 – Log format version 2.
-    sectsz=512 – Log sector size.
-    sunit=0 – Log stripe unit (for RAID).
-    lazy-count=1 – Lazy log counter updates (performance optimization).
+```bash
+xfs_fsr /srv/nfs
+```
 
-Realtime Section
+By default it assigns 7200 seconds of time to perform such operations, in 10 passes, but that can be tweaked using the `-t` and `-p` options, respectively.
 
-* `none` – No separate realtime volume (used for large streaming files).
-* `extsz=8192` – Default extent size (matches 8 KiB blocks).
-* `blocks=0` – No realtime data blocks.
-* `rtextents=0` – No realtime extents.
-* `rgcount=0` – No realtime groups.
+It may also be used on a single (large) file:
+
+```bash
+xfs_fsr /srv/nfs/myapp/pdf/file.pdf
+```
+
+### Backing up
+
+Although all normal backup applications can be used for XFS file systems, the `xfsdump` command from the `xfsdump` package is specifically designed for XFS backup. It uses a special API to perform I/O based on file handles so that it does not generate inconsistent device snapshots on the raw block device.
+
+The `xfsdump` command can perform backups to regular files on local and remote systems, and it supports incremental backups with a sophisticated inventory management system.
+
+```bash
+apt-get install --yes xfsdump
+```
+
+Let's say we mounted a backup disk on our filesystem, or a NFS share for backups, at `/mnt/backups`. We would start with a full backup (level 0):
+
+```bash
+xfsdump -l 0 -L "full-backup" -f /mnt/backups/backup.xfs /srv/nfs
+```
+
+Then we would perform an incremental backup using `-l 1`, which specifies a level 1 backup, meaning it would include changes since the last level 0 backup.
+
+```bash
+xfsdump -l 1 -L "incremental-backup-1" -f /mnt/backups/backup.xfs /srv/nfs
+```
+
+We could also resume an interrupted backup using the `-R` option:
+
+```bash
+xfsdump -l 1 -L "incremental-backup-1" -R -f /mnt/backups/backup.xfs /srv/nfs
+```
+
+Before restoring a file, we would need to list the inventory of the backup, both to see the list of contents and to obtain the session ID and session labels.
+
+```bash
+xfsrestore -I -f /mnt/backups/backup.xfs
+```
+
+Then, we would restore a backup using the `xfsrestore` command:
+
+```bash
+xfsrestore -L "incremental-backup-1" -f /mnt/backups/backup.xfs /srv/nfs/
+```
+
+We could also restore specific files or directories via the `-s` option:
+
+```bash
+xfsrestore -S "2d129e2a-7c33-47a9-ac33-5a4862b594b1" -s myapp/pdf/file.pdf \
+           -f /mnt/backups/backup.xfs /srv/nfs/
+```
+
+Anyhow, since we will be using Proxmox Backup Server to backup the entire VM and its disks, this is not a tool we will be using directly.
+
+### Information
+
+The `xfs_info` utility provides detailed information about the structure and characteristics of an XFS filesystem. It displays details like the file system size, block size, sector size, inode information, and other relevant parametres.
+
+```bash
+xfs_info /srv/nfs
+```
+
+The amount of information displayed can be quite extensive, so here is a table with an explanation of the various fields.
+
+**Meta-data section**
+
+| Field                 | Meaning                                                                                                          |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `meta-data=/dev/sdc`  | Device where metadata (superblock, allocation groups, inode structures) resides.                                 |
+| `isize=512`           | Size (in bytes) of each inode. 512 B is typical.                                                                 |
+| `agcount=4`           | Number of allocation groups (AGs) in the filesystem; AGs enable parallel allocation on multi-threaded workloads. |
+| `agsize=9830400 blks` | Number of blocks in each AG (\~78.4 MiB per AG with `bsize=8192`).                                               |
+| `sectsz=512`          | Sector size reported by the device (or emulated by ZVOL).                                                        |
+| `attr=2`              | Extended attribute format version (v2 is current).                                                               |
+| `projid32bit=1`       | Project quotas with 32-bit project IDs are supported.                                                            |
+| `crc=1`               | Metadata checksumming (XFS v5 format).                                                                           |
+| `finobt=1`            | Free inode B+tree present, improving inode allocation speed.                                                     |
+| `sparse=1`            | Sparse inode chunk allocation enabled.                                                                           |
+| `rmapbt=1`            | Reverse mapping B+tree (for reflink & deduplication).                                                            |
+| `reflink=1`           | Reflink (copy-on-write cloning) enabled.                                                                         |
+| `bigtime=1`           | Extended timestamp range (supports dates beyond 2038).                                                           |
+| `inobtcount=1`        | Tracks inode counts per AG.                                                                                      |
+| `nrext64=1`           | 64-bit extent counters enabled.                                                                                  |
+| `exchange=0`          | Online exchange feature not enabled.                                                                             |
+| `metadir=0`           | No separate metadata directory.                                                                                  |
+
+**Data section**
+
+| Field             | Meaning                                          |
+|-------------------|--------------------------------------------------|
+| `bsize=8192`      | Data block size (8 KB)                           |
+| `blocks=39321600` | Total blocks in the filesystem (\~300 GB total)  |
+| `imaxpct=25`      | Max % of space reserved for inodes (25% default) |
+| `sunit=0`         | Stripe unit size (0 = none defined)              |
+| `swidth=0`        | Stripe width (0 = none defined)                  |
+
+**Naming section**
+
+| Field        | Meaning                                                           |
+|--------------|-------------------------------------------------------------------|
+| `version=2`  | Directory structure format (v2 = efficient hashed directories)    |
+| `bsize=8192` | Directory block size (matches data `bsize`)                       |
+| `ascii-ci=0` | Case-insensitive lookups disabled                                 |
+| `ftype=1`    | Filetype field stored in directory entries (improves performance) |
+| `parent=0`   | No parent pointer feature enabled                                 |
+
+**Log section**
+
+| Field          | Meaning                                                 |
+|----------------|---------------------------------------------------------|
+| `internal log` | Journal (transaction log) stored on same device as data |
+| `bsize=8192`   | Log block size (8 KB)                                   |
+| `blocks=19200` | Log size (\~150 MiB)                                    |
+| `version=2`    | Log format version 2                                    |
+| `sectsz=512`   | Log sector size                                         |
+| `sunit=0`      | Log stripe unit (0 = none)                              |
+| `lazy-count=1` | Lazy log counter updates (performance optimization)     |
+
+**Realtime section**
+
+| Field         | Meaning                       |
+|---------------|-------------------------------|
+| `none`        | No separate realtime volume   |
+| `extsz=8192`  | Default extent size (8 KB)    |
+| `blocks=0`    | No realtime data blocks       |
+| `rtextents=0` | No realtime extents           |
+| `rgcount=0`   | No realtime allocation groups |
+
 
 ## Metadata takes space
 
-Why Does a Fresh XFS Filesystem Show 4.3 GB Used?
+Let's say that we format a 300G disk using XFS, as follows:
 
 ```bash
-mkfs.xfs -b size=8192 /dev/sdd
-mount -t xfs /dev/sdd /mnt
-df -h /mnt
+mkfs.xfs -b size=8192 /dev/sdc
+mount -t xfs /dev/sdc /srv/nfs
+df -h /srv/nfs
 ```
 
-And we see something like `300G total, 4.3G used, 296G available`. XFS is optimized for performance rather than minimal metadata footprint. 4.3 GB out of 300 GB is ~1.4%, which is normal.
+We would see something like `300G total, 4.3G used, 296G available`, meaning that a our fresh filesystem already *lost* 4.3G (~1.4%, which is expected). This is because XFS is optimised for performance rather than minimal metadata footprint. Specifically:
 
-This is normal because:
-
-* XFS Pre-allocates metadata structures (like inode tables, allocation group headers, B+trees, journals). Unlike ext4, XFS reserves these areas upfront, so the initial "used space" reflects this reservation.
-* The larger the block size, the more space reserved. An 8 KiB block size slightly increases the metadata footprint compared to 4 KiB, but it's still in the 1–2% range for large filesystems.
-* The internal log (journal) – Yours is ~150 MB alone (19200 × 8 KiB).
+* XFS pre-allocates metadata structures (like inode tables, allocation group headers, B+trees, journals), so the initial *used space* reflects this reservation.
+* The larger the block size, the more space reserved. An 8 KB block size slightly increases the metadata footprint compared to 4 KB.
+* The internal log (journal) takes space, ~150 MB in this case (19200 × 8 KB).
