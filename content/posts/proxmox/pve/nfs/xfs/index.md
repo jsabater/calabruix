@@ -1,7 +1,7 @@
 ---
 title: "Larger block sizes with XFS on a Proxmox VM"
 date: 2025-08-12
-lastmod: 2025-08-12
+lastmod: 2025-08-13
 description: "Using XFS as the filesystem for a Proxmox VM, including block size considerations and performance optimizations"
 summary: "Explore the benefits of using XFS on a Proxmox VM when attempting to align block sizes of I/O layers"
 categories: ["virtualisation"]
@@ -152,7 +152,7 @@ mount -t xfs -o noatime,logbufs=8 /dev/sdc /srv/nfs
 Given the nature of our workload, both of these options are good, low-risk optimisations:
 
 * `noatime` tells XFS not to update the access time metadata every time a file is read. This skips extra writes for read operations, reduces metadata churn and slightly improves performance and reduces wear on [*](SSD) devices.
-* `logbufs=8` tells XFS to use 8 in-memory log buffers for the journal (i.e., the write-ahead log). This increases parallelism for metadata logging, allows more outstanding metadata transactions before forcing a flush and can improve performance in metadata-heavy workloads (file creation, deletion, renaming).
+* `logbufs=8` tells XFS to use 8 in-memory log buffers for the journal (i.e., the write-ahead log). This increases parallelism for metadata logging, allows more outstanding metadata transactions before forcing a flush and can improve performance in metadata-heavy workloads (file creation, deletion, renaming). This option is often the default on modern systems.
 
 ### Repairing
 
@@ -218,52 +218,100 @@ xfs_fsr /srv/nfs/myapp/pdf/file.pdf
 
 ### Backing up
 
-Although all normal backup applications can be used for XFS file systems, the `xfsdump` command from the `xfsdump` package is specifically designed for XFS backup. It uses a special API to perform I/O based on file handles so that it does not generate inconsistent device snapshots on the raw block device.
+Although all normal backup applications can be used for XFS file systems, the `xfsdump` and `xfsrestore` commands from the `xfsdump` package are specifically designed for XFS backup.
 
-The `xfsdump` command can perform backups to regular files on local and remote systems, and it supports incremental backups with a sophisticated inventory management system.
+`xfsdump` uses a special API to perform I/O based on file handles so that it does not generate inconsistent device snapshots on the raw block device. This command can perform backups to regular files on local and remote systems, and it supports incremental backups with a sophisticated inventory management system.
 
 ```bash
 apt-get install --yes xfsdump
 ```
 
-Let's say we mounted a backup disk on our filesystem, or a NFS share for backups, at `/mnt/backups`. We would start with a full backup (level 0):
+Let's assume that we mounted a backup disk at `/mnt/backups`. We would start with a full backup (level 0):
 
 ```bash
-xfsdump -l 0 -L "full-backup" -f /mnt/backups/backup.xfs /srv/nfs
+xfsdump -l 0 -L "20250812-full-backup" -M "Full backup of NFS share" \
+        -f /mnt/backups/nfs-full-backup-20250812.xfs /srv/nfs
 ```
 
-Then we would perform an incremental backup using `-l 1`, which specifies a level 1 backup, meaning it would include changes since the last level 0 backup.
+ In case of interruption, backup operations can be resumed using the `-R` option:
 
 ```bash
-xfsdump -l 1 -L "incremental-backup-1" -f /mnt/backups/backup.xfs /srv/nfs
+xfsdump -l 0 -L "20250812-full-backup" -M "Full backup of NFS share" \
+        -f /mnt/backups/nfs-full-backup-20250812.xfs -R /srv/nfs
 ```
 
-We could also resume an interrupted backup using the `-R` option:
+The next week, we would perform an incremental backup using `-l 1`, which specifies a level 1 backup, meaning it would include changes since the last level 0 backup.
 
 ```bash
-xfsdump -l 1 -L "incremental-backup-1" -R -f /mnt/backups/backup.xfs /srv/nfs
+xfsdump -l 1 -L "20250819-incr-backup" -M "Incremental backup of NFS share week 1" \
+        -f /mnt/backups/nfs-incr-backup-20250819.xfs /srv/nfs
 ```
 
-Before restoring a file, we would need to list the inventory of the backup, both to see the list of contents and to obtain the session ID and session labels.
+This backup would contain only files changed since the level 0 backup.
+
+The following week, we would perform another incremental backup:
 
 ```bash
-xfsrestore -I -f /mnt/backups/backup.xfs
+xfsdump -l 2 -L "20250826-incr-backup" -M "Incremental backup of NFS share week 2" \
+        -f /mnt/backups/nfs-incr-backup-20250826.xfs /srv/nfs
 ```
 
-Then, we would restore a backup using the `xfsrestore` command:
+This backup would only contain files changed since the level 1 backup.
+
+### Restoring
+
+XFS offers a different command for restoring backups, named `xfsrestore`. We would start by listing the inventory of backups, which would provide us with a the available session IDs and session labels:
 
 ```bash
-xfsrestore -L "incremental-backup-1" -f /mnt/backups/backup.xfs /srv/nfs/
+xfsrestore -I
 ```
 
-We could also restore specific files or directories via the `-s` option:
+Optionally, we would list the contents of a specific backup:
 
 ```bash
-xfsrestore -S "2d129e2a-7c33-47a9-ac33-5a4862b594b1" -s myapp/pdf/file.pdf \
-           -f /mnt/backups/backup.xfs /srv/nfs/
+xfsrestore -I -f /mnt/backups/nfs-full-backup-20250812.xfs
 ```
 
-Anyhow, since we will be using Proxmox Backup Server to backup the entire VM and its disks, this is not a tool we will be using directly.
+When having to restore everything from scratch, we would follow these steps:
+
+1. Stop the services using the NFS share.
+2. Unmount the NFS share.
+3. Format the disk again, if needed.
+4. Restore the full backup.
+5. Apply the incremental backups, in order.
+
+```bash
+systemctl stop nfs-server.service
+umount /srv/nfs
+mkfs.xfs -b size=8192 -s size=4096 /dev/sdc
+xfsrestore -f /mnt/backups/nfs-full-backup-20250812.xfs /srv/nfs
+xfsrestore -f /mnt/backups/nfs-incr-backup-20250819.xfs /srv/nfs
+xfsrestore -f /mnt/backups/nfs-incr-backup-20250826.xfs /srv/nfs
+```
+
+If we wanted to restore a specific file at a given point in time, we would follow these steps:
+
+1. Find which backup contains the file.
+2. If found, restore just that file, using the session ID from the inventory.
+
+```bash
+xfsrestore -t -f /mnt/backups/nfs-incr-backup-20250826.xfs | grep proposal.odt
+xfsrestore -S "2d129e2a-7c33-47a9-ac33-5a4862b594b1" -s myapp/docs/proposal.odt \
+           -f /mnt/backups/nfs-incr-backup-20250826.xfs /srv/nfs/
+```
+
+> An entire subdirectory could also be restored by specifying the directory path instead of a single file.
+
+Summary of which backup file to use when:
+
+| When                   | Which                                                     |
+|------------------------|-----------------------------------------------------------|
+| Complete recovery      | Start with level 0, then apply all incrementals in order  |
+| Point-in-time recovery | Start with level 0, apply incrementals up to desired date |
+| Single file recovery   | Use the most recent backup that contains the file         |
+| Recent files           | Check incremental backups first (smaller and faster)      |
+
+We will be using Proxmox Backup Server to back up the entire VM and its disks (those marked for backup), including the NFS share. Still, `xfsdump` is a tool that can be used in specific cases to have a second, complementary backup copy of our data. For instance, the generated dumps could be sent to a different storage location for added redundancy.
 
 ### Information
 
