@@ -1,7 +1,7 @@
 ---
-title: "NFS server on Proxmox VE"
+title: "NFS server on a Proxmox VM"
 date: 2025-07-17
-lastmod: 2025-08-11
+lastmod: 2025-08-13
 description: "Install and configure a Network File System (NFS) server in a VM on a Proxmox using ZFS for optimal performance"
 summary: "Install, configure and optimise an NFS server in a VM on a Proxmox cluster using ZFS"
 categories: ["virtualisation"]
