@@ -99,13 +99,13 @@ Recent versions of `xfsprogs` allow us to specify both the block size and the se
 As of Debian 13 with kernel version 6.12, the following command can be used to format the disk with an 8K block size and a 4K sector size:
 
 ```bash
-mkfs.xfs -b size=8k -s size=4k /dev/sdc
+mkfs.xfs -b size=8192 -s size=4096 /dev/sdc
 ```
 
 When a kernel 6.15+ is available, we will be able to specify larger sector sizes. Should our `volblocksize` be 16k, the following command would make the I/O requests even more performant:
 
 ```bash
-mkfs.xfs -b size=16k -s size=16k /dev/sdc
+mkfs.xfs -b size=16384 -s size=16384 /dev/sdc
 ```
 
 ### Sector size
