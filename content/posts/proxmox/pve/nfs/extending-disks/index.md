@@ -1,7 +1,7 @@
 ---
 title: "Extend virtual disks and ZVOLs on Proxmox"
 date: 2025-07-19
-lastmod: 2025-08-03
+lastmod: 2025-08-18
 description: "Extend the virtual disks and ZVOLs used in a Proxmox VM without data loss, whether it has a partition table or not"
 summary: "Extend the virtual disks and ZVOLs of your VM running an NFS server without data loss"
 categories: ["virtualisation"]
@@ -58,7 +58,7 @@ To extend the size of your OS disk (a virtual disk using QCOW2 format), follow t
 
 1. Install `parted`.
 2. Shut down the VM.
-3. Resize the virtual disk in Proxmox GUI or CLI.
+3. Resize the virtual disk using the Proxmox GUI or CLI.
 4. Boot the VM again.
 5. Resize the partition and filesystem inside the VM.
 
