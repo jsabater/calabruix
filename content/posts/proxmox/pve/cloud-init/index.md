@@ -348,7 +348,7 @@ ethernets:
     searchdomains: "localdomain.com"
 
     # Cloud-Init custom script
-    cicustom: "{{ proxmox_cicustom | default(omit) }}"
+    cicustom: "{{ proxmox_cicustom if proxmox_cicustom is defined else omit }}"
 ```
 
 ```yaml
