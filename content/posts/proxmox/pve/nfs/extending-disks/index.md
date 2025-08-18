@@ -50,60 +50,80 @@ xfs_growfs /dev/sdc
 
 XFS supports online resizing, while mounted and even while actively being used. However, if the disk is under heavy load, you might want to temporarily reduce I/O to avoid unpredictable behaviour.
 
-> Because the disk does not have partitions, the VM does not need to be powered off to perform this operation.
-
 ## OS disk
 
 To extend the size of your OS disk (a virtual disk using QCOW2 format), follow these steps:
 
-1. Install `parted`.
-2. Shut down the VM.
-3. Resize the virtual disk using the Proxmox GUI or CLI.
-4. Boot the VM again.
-5. Resize the partition and filesystem inside the VM.
+1. Resize the virtual disk using the Proxmox CLI (or GUI, if you prefer).
+2. Grow the partition.
+3. Resize the filesystem inside the VM.
 
-Before shutting down the VM, install `parted`, the tool of choice for resizing when no LVM is involved:
+First of all, start by installing `growpart`, the tool of choice for resizing mounted disks when no LVM is involved:
 
 ```bash
-apt-get install --yes parted
+apt-get install --yes cloud-guest-utils
 ```
 
-Shut down the VM, then either use the WebGUI or the terminal. If you prefer the former, go to the `Hardware` menu option of the VM, select the data disk and use the `Disk action > Resize` button, input the number of extra gigabytes you need and click `Resize disk`. If you prefer the latter, execute the following command from the terminal of the host (adapt the value to your needs):
+> In Debian, the `growpart` command is part of the `cloud-guest-utils` package, which is pre-installed on cloud images but not on ISO Netinst images.
+
+Use the terminal of the host to execute the following command (adapt the value to your needs):
 
 ```bash
 qm resize 104 scsi0 +1G
 ```
 
-Start the VM, then use `parted` in the console to resize the partition:
+If you check the kernel messages using `dmesg`, you will notice the following messages (numbers will vary depending on your previous size and how much space you added):
 
-```bash
-parted /dev/sda --script resizepart 1 100%
+```console
+sd 0:0:0:0: Capacity data has changed
+sd 0:0:0:0: [sda] 8388608 512-byte logical blocks: (4.29 GB/4.00 GiB)
+sda: detected capacity change from 6291456 to 8388608
 ```
 
-> Use `print` while in `parted` to print the current partition table.
+If you now log into the VM via SSH, you can use `lsblk` to realise that the new disk size has already been caught up by the kernel. However, the `/dev/sda1` partition still shows the old size:
 
-Now instruct the kernel re-read the partition table:
-
-```bash
-partx -u /dev/sda
+```console
+# lsblk /dev/sda
+NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS
+sda      8:0    0   4G  0 disk 
+└─sda1   8:1    0   3G  0 part /
 ```
 
-Optionally, verify the operation:
+Use `growpart` in the console of the VM to resize the partition:
 
 ```bash
-fdisk -l /dev/sda
+growpart /dev/sda 1
 ```
 
-Finally, resize the filesystem:
+We can now see the changes in the partition using `lsblk`:
+
+```console
+# lsblk /dev/sdb
+NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS
+sda      8:16   0   4G  0 disk 
+└─sda1   8:17   0   4G  0 part /
+```
+
+However, the filesystem still shows the previous value:
+
+```console
+# df -h /
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1       2.9G  1.4G  1.5G  48% /
+```
+
+Therefore, all that is left is to use the EXT4 resizer to resize the filesystem:
 
 ```bash
 resize2fs /dev/sda1
 ```
 
-Optionally, verify the results:
+And verify the results:
 
-```bash
-df -h /
+```console
+# df -h /
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1       3.9G  1.4G  2.5G  36% /
 ```
 
 > You can also perform the procedure using `fdisk` and `sfdisk`, but it is more error-prone and cannot be automated.
@@ -127,6 +147,8 @@ Get started by installing `parted`, the tool of choice for resizing when no LVM 
 apt-get install --yes parted
 ```
 
+> We used `growpart` in the previous section whereas we are using `parted` here. Either tool is fine for the job, albeit arguments differ.
+
 Use the WebGUI or the terminal to extend the disk. If you prefer the former, use the `Hardware > Disk action > Resize` button on the appropriate disk (e.g., SCSI-1), set the additional size in gigabytes and confirm. If you prefer the latter, execute the following command from the terminal of the host (adapt the value to your needs):
 
 ```bash
@@ -142,7 +164,7 @@ sudo swapoff -a
 Use `parted` to delete and recreate the partition using the full disk size:
 
 ```bash
-parted /dev/sdb --script mklabel msdos mkpart primary linux-swap 1MiB 100%
+parted /dev/sdb --script 'mklabel msdos mkpart primary linux-swap 1MiB 100%'
 ```
 
 Now make a new swap area:
