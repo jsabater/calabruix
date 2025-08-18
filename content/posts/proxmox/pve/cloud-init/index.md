@@ -1,7 +1,7 @@
 ---
 title: "Provisioning VMs on Proxmox using Cloud-Init and Ansible"
 date: 2025-08-03
-lastmod: 2025-08-09
+lastmod: 2025-08-18
 description: "Create a Debian-based VM template using Cloud-Init and cloud images on your Proxmox cluster, then provision it using Ansible"
 summary: "Provisioning Debian VMs on Proxmox using cloud-init, cloud images and Ansible"
 categories: ["virtualisation"]
@@ -112,15 +112,19 @@ qm disk import 9000 --format qcow2 \
    /var/lib/vz/template/cloud/debian-12-genericcloud-amd64.qcow2 local
 ```
 
-In Proxmox, `raw` and `qcow2` are common disk image formats, each with distinct advantages and disadvantages. The former offers potentially better performance due to its simplicity, while the latter provides features like snapshots, compression, and dynamic resizing, albeit with a slight performance overhead. The choice depends on specific needs and the underlying storage type[^2].
+In Proxmox, `raw` and `qcow2` are common disk image formats, each with distinct advantages and disadvantages. The former offers potentially better performance due to its simplicity, while the latter provides features like snapshots, compression, and dynamic resizing, albeit with a slight performance overhead. The choice depends on specific needs and the underlying storage type[^1].
 
-[^2]: The [Proxmox storage documentation](https://pve.proxmox.com/wiki/Storage) explains how `/var/lib/vz` maps to the `local` storage type.
+[^1]: The [Proxmox storage documentation](https://pve.proxmox.com/wiki/Storage) explains how `/var/lib/vz` maps to the `local` storage type.
 
 Next, attach the disk to the VM:
 
 ```bash
 qm set 9000 --scsi0 local:9000/vm-9000-disk-0.qcow2,format=qcow2,iothread=1,discard=on,serial=os
 ```
+
+Using `virtio-scsi-single` type of virtual SCSI controller and the `serial` attribute helps ensure a consistent and unique identifier for the disk (such as `/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_os`), which can then be safely used in Ansible playbooks and configuration files.
+
+> If you consistently use `virtio-scsi-single` and always set a unique `serial` for each disk, the `/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_<serial>` symlink will be stable across reboots and clones, regardless of device order. However, changing controller type, omitting/changing the serial, or upgrading to a Proxmox/QEMU version that alters disk presentation could result in a different symlink.
 
 The next step is to configure a CD-ROM drive, which will be used to pass the Cloud-Init data to the VM:
 
@@ -460,3 +464,101 @@ Once the disk has been attached, we need to format it as swap and enable it. To 
         - swapon_result.rc != 0
         - "'already active' not in swapon_result.stdout"
 ```
+
+## Resizing the OS disk
+
+The cloud images of Debian 11 Bullseye and Debian 12 Bookworm we installed on the SCSI-0 disk present the following partition layout:
+
+```console
+# fdisk -l /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_os
+
+Device                                              Start     End Sectors  Size Type
+/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_os-part1  262144 6289407 6027264  2.9G Linux root (x86-64)
+/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_os-part14   2048    8191    6144    3M BIOS boot
+/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_os-part15   8192  262143  253952  124M EFI System
+```
+
+> The partition table was created using [*](GPT) and 512-byte sector size (physical and logical).
+
+Taking into consideration that partition table entries are not in disk order, by checking the start and end sectors we can figure out that there are three partitions, in the following order from closest to the start of the disk to the end:
+
+1. BIOS boot partition[^2] (3 MiB)
+2. EFI System partition[^3] (124 MiB)
+3. Linux root partition (2.9 GiB)
+
+[^2]: A [*](BIOS) boot partition is used when booting a computer with a traditional BIOS and a [*](GPT) disk. This partition stores the second stage of the [*](GRUB) bootloader, allowing the system to locate and load the operating system.
+
+[^3]: The [*](EFI) System Partition is a special partition that stores boot loaders and other files necessary for the [*](UEFI) firmware to start an operating system.
+
+Therefore, to extend the size of our OS disk (a virtual disk using QCOW2 format), we need to follow these steps:
+
+1. Resize the virtual disk using the Proxmox CLI (or GUI, if you prefer).
+2. Grow the partition.
+3. Resize the filesystem inside the VM.
+
+Use the terminal of the host to execute the following command (adapt the value to your needs):
+
+```bash
+qm resize 121 scsi0 +1G
+```
+
+If you check the kernel messages using `dmesg`, you will notice the following messages (numbers will vary depending on your previous size and how much space you added):
+
+```console
+sd 2:0:0:0: Capacity data has changed
+sd 2:0:0:0: [sda] 12582912 512-byte logical blocks: (6.44 GB/6.00 GiB)
+sd 2:0:0:0 sda: detected capacity change from 5368709120 to 6442450944
+```
+
+If you now log into the VM via SSH, you can use `lsblk` to realise that the new disk size has already been caught up by the kernel. However, the `/dev/sda1` partition still shows the old size:
+
+```console
+# lsblk /dev/sda
+NAME    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda       8:0    0    6G  0 disk
+├─sda1    8:1    0  4.9G  0 part /
+├─sda14   8:14   0    3M  0 part
+└─sda15   8:15   0  124M  0 part /boot/efi
+```
+
+At this point, use `growpart` in the console to resize the partition:
+
+```bash
+growpart /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_os 1
+```
+
+We can now see the changes in the partition using `lsblk`:
+
+```console
+# lsblk /dev/sda
+NAME    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda       8:0    0    6G  0 disk 
+├─sda1    8:1    0  5.9G  0 part /
+├─sda14   8:14   0    3M  0 part 
+└─sda15   8:15   0  124M  0 part /boot/efi
+```
+
+> In Debian, the `growpart` command is part of the `cloud-guest-utils` package, which is pre-installed on cloud images.
+
+However, the filesystem still shows the previous value:
+
+```console
+# df -h /
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1       4.8G  1.8G  2.8G  40% /
+```
+
+Therefore, all that is left is to use the EXT4 resizer to resize the filesystem:
+
+```bash
+resize2fs /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_os-part1
+```
+
+And verify the results:
+
+```console
+# df -h /
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1       5.8G  1.8G  3.7G  33% /
+```
+
