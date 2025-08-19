@@ -1,7 +1,7 @@
 ---
 title: "Provisioning VMs on Proxmox using Cloud-Init and Ansible"
 date: 2025-08-03
-lastmod: 2025-08-18
+lastmod: 2025-08-19
 description: "Create a Debian-based VM template using Cloud-Init and cloud images on your Proxmox cluster, then provision it using Ansible"
 summary: "Provisioning Debian VMs on Proxmox using cloud-init, cloud images and Ansible"
 categories: ["virtualisation"]
@@ -212,12 +212,6 @@ The process of provisioning a virtual machine from a template follows these step
 3. Start the virtual machine.
 4. Optionally, customise the virtual machine.
 
-When provisioning a virtual machine from the Debian 11 template, we will add the `cicustom` attribute to the task that updates the Cloud-Init configuration so that the `proxmox_kvm` module executes a custom network configuration snippet, which is necessary to avoid a known issue where the default network configuration causes long boot delays, or even hangs, due to IPv6 misconfiguration.
-
-Specifically, Debian 11 cloud images may fail to bring up the `ens18` interface cleanly due to Cloud-Init generating incomplete or incorrect `ifupdown` configurations, especially when IPv6 is left blank. By injecting a valid, minimal network configuration through a `cicustom` snippet, the playbook ensures a smooth and predictable network setup during first boot, preventing timeout errors and enabling faster provisioning.
-
-Debian 12 and 13 cloud images do not require such snippet.
-
 To keep it simple, a lot of variables are hardcoded in the following example, but you can easily adapt it to your needs. For context, the following code would exist in the following Ansible structure:
 
 1. Inventory file at `inventory/myapp.yml`.
@@ -233,6 +227,7 @@ myapp:
     myapp1.localdomain.com:
       ansible_host: 192.168.0.21
       proxmox_vmid: 121
+      vm_template: "debian12-tmpl"
 ```
 
 ```yaml
@@ -241,16 +236,6 @@ proxmox_api_user: "{{ vault_proxmox_api_user | default('root@pam') }}"
 proxmox_api_token_id: "{{ vault_proxmox_api_token_id }}"
 proxmox_api_token_secret: "{{ vault_proxmox_api_token_secret }}"
 proxmox_ci_password: "{{ vault_proxmox_ci_password }}"
-```
-
-```yaml
-# plays/templates/provision/disable-ipv6-network.yaml.j2
-version: 2
-ethernets:
-  ens18:
-    dhcp4: true
-    dhcp6: false
-    accept-ra: false
 ```
 
 ```yaml
@@ -292,29 +277,9 @@ ethernets:
     # Cloning
     storage: "local"
     format: "qcow2"
-    clone: "debian12-tmpl"
+    clone: "{{ vm_template }}"
     full: true
-    description: "Cloned from Debian 12 template"
-
-- name: Debian 11 specific configuration
-  when:
-    - ansible_distribution == "Debian"
-    - ansible_distribution_major_version == "11"
-  block:
-
-    - name: Upload Cloud-Init snippet to disable IPv6 network configuration
-      delegate_to: proxmox1.localdomain.com
-      ansible.builtin.template:
-        src: templates/provision/debian-11-disable-ipv6-network.yaml.j2
-        dest: /var/lib/vz/snippets/debian-11-disable-ipv6-network.yaml
-        owner: root
-        group: root
-        mode: "0644"
-
-    - name: Set Cloud-Init custom script for Debian 11
-      set_fact:
-        proxmox_cicustom:
-          network: "local:snippets/debian-11-disable-ipv6-network.yaml"
+    description: "Cloned from {{ vm_template }}"
 
 - name: Update the virtual machine Cloud-Init configuration
   delegate_to: localhost
@@ -346,9 +311,6 @@ ethernets:
       - "192.168.0.4"
       - "192.168.0.5"
     searchdomains: "localdomain.com"
-
-    # Cloud-Init custom script
-    cicustom: "{{ proxmox_cicustom if proxmox_cicustom is defined else omit }}"
 ```
 
 ```yaml
@@ -374,6 +336,25 @@ ethernets:
     port: 22
     timeout: 300
 ```
+
+### Debian 11
+
+When provisioning a virtual machine from the Debian 11 template, you will notice that the bootstrap process takes a long time. This is because the Debian 11 cloud image includes an `ifupdown` configuration that attempts a [*](DHCP) request on the interface (commonly `ens18`), whatever the network configuration in the Cloud-Init menu option you set up before converting the VM into a template.
+
+If there is no DHCP server available, the interface hangs for a minute until the timeout occurs, which can be observed in the console as a "A start job is running for Raise network interfaces..." message.
+
+The only effective fix is to modify the `/etc/network/interfaces.d/ens18` inside the image to set:
+
+```
+auto ens18
+iface ens18 inet manual
+```
+
+Unfortunately, we cannot apply this fix because our template has not been bootstrapped yet. Any attempts at instructing Cloud-Init to execute a custom snippet before configuring the network via the `cicustom` attribute of the `proxmox_kvm` module will not be successful due to the order of preference when the bootstrap process occurs.
+
+For your reference, the `proxmox_kvm` Ansible module includes the `cicustom` attribute, which is a mechanism to override any of the Cloud-Init *drives* (`user`, `network`, or `meta`) with a file stored in `/var/lib/vz/snippets/` on the node.
+
+In our case, the only solution is to set up a DHCP server and match it with the inventory in Ansible. This is outside the scope of this article and series, though.
 
 ### Swap disk
 
