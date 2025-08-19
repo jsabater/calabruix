@@ -1,7 +1,7 @@
 ---
 title: "Extend virtual disks and ZVOLs on Proxmox"
 date: 2025-07-19
-lastmod: 2025-08-18
+lastmod: 2025-08-19
 description: "Extend the virtual disks and ZVOLs used in a Proxmox VM without data loss, whether it has a partition table or not"
 summary: "Extend the virtual disks and ZVOLs of your VM running an NFS server without data loss"
 categories: ["virtualisation"]
@@ -134,20 +134,10 @@ Resizing a swap disk can be simpler than resizing an OS or data partition becaus
 
 To extend the size of your swap disk (a virtual disk using RAW format), follow these steps:
 
-1. Install `parted`.
-2. Resize the virtual disk in Proxmox GUI or CLI.
-3. Turn off swap temporarily
-4. Delete and recreate the swap partition.
-4. Make the new swap area.
-5. Enable swap again.
-
-Get started by installing `parted`, the tool of choice for resizing when no LVM is involved:
-
-```bash
-apt-get install --yes parted
-```
-
-> We used `growpart` in the previous section whereas we are using `parted` here. Either tool is fine for the job, albeit arguments differ.
+1. Resize the virtual disk in Proxmox GUI or CLI.
+2. Turn off swap temporarily
+3. Make the new swap area.
+4. Enable swap again.
 
 Use the WebGUI or the terminal to extend the disk. If you prefer the former, use the `Hardware > Disk action > Resize` button on the appropriate disk (e.g., SCSI-1), set the additional size in gigabytes and confirm. If you prefer the latter, execute the following command from the terminal of the host (adapt the value to your needs):
 
@@ -158,25 +148,19 @@ qm resize 104 scsi1 +1G
 Inside the VM, turn off swap temporarily:
 
 ```bash
-sudo swapoff -a
-```
-
-Use `parted` to delete and recreate the partition using the full disk size:
-
-```bash
-parted /dev/sdb --script 'mklabel msdos mkpart primary linux-swap 1MiB 100%'
+swapoff -a
 ```
 
 Now make a new swap area:
 
 ```bash
-mkswap /dev/sdb1
+mkswap /dev/sdb
 ```
 
 And enable swap again:
 
 ```bash
-swapon /dev/sdb1
+swapon /dev/sdb
 ```
 
 Optionally, ensure `/etc/fstab` is still pointing at the correct UUID:
