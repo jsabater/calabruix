@@ -12,7 +12,41 @@ draft: true
 ---
 
 
-[Grafana Alerting](https://grafana.com/docs/grafana/latest/alerting/) is an integrated alert management system embedded directly within the Grafana visualization platform. Tightly coupled with Grafana's dashboarding capabilities, this alerting system allows creating alert rules based on the same metrics they already monitor and visualize. The system evaluates these rules continuously against incoming data, transitioning alerts through defined states (normal, pending, alerting) as conditions evolve, with all alert management occurring within the same familiar interface used for data exploration.
+[Grafana Alerting](https://grafana.com/docs/grafana/latest/alerting/) is an integrated alert management system embedded directly within the Grafana visualization platform. Tightly coupled with Grafana's dashboarding capabilities, this alerting system allows creating alert rules based on the same metrics they already monitor and visualize.
+
+The system evaluates these rules continuously against incoming data, transitioning alerts through defined states (normal, pending, alerting) as conditions evolve, with all alert management occurring within the same familiar interface used for data exploration.
+
+## Key concepts
+
+https://grafana.com/docs/grafana/latest/alerting/fundamentals/
+
+Grafana Alerting lets you define alert rules across multiple data sources and manage notifications with flexible routing. This is the list of the key concepts we will be working with:
+
+* **Alert rules**. One or more queries and expressions that select the data to be measured. It also includes the threshold that an alert must meet or exceed to fire, as well as the contact point to receive the notification. Only alert instances that are in a firing or resolved state are sent in notifications, i.e., the same alert is not triggered more than once.
+
+* **Alert instances**. Each alert rule can produce multiple alert instances, or alerts, one for each time series or dimension. This allows observing multiple resources in a single expression.
+
+```promql
+sum by(cpu) (rate(node_cpu_seconds_total{mode!="idle"}[1m]))
+```
+
+A rule using this PromQL expression creates [as many alert instances as the amount of CPUs](https://grafana.com/docs/grafana/latest/alerting/best-practices/multi-dimensional-alerts/) after the first evaluation, enabling a single rule to report the status of each CPU.
+
+
+
+
+## How it works
+
+
+
+
+
+
+
+
+
+
+-------------------------------------------------
 
 The architecture of Grafana Alerting unifies alerting across multiple data sources, allowing teams to create consistent alert definitions regardless of whether the underlying metrics come from Prometheus, InfluxDB, or other supported backends. This unified approach simplifies multi-source monitoring environments by providing a single pane of glass for alert definition, evaluation, and notification. Each alert can trigger customizable notifications through various channels, with rich context including relevant graphs and annotations to speed troubleshooting.
 
