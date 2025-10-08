@@ -1,7 +1,7 @@
 ---
 title: "Build your blog using Hugo and Blowfish"
 date: 2024-09-05
-lastmod: 2025-08-06
+lastmod: 2025-10-08
 description: "An installation and configuration guide of the Hugo static site generator with the Blowfish theme for your blog website."
 summary: "Install and configure the Hugo site generator with the Blowfish theme for your blog website."
 categories: ["frameworks"]
@@ -26,7 +26,7 @@ apt-get install git
 We will install the extended edition of Hugo, as recommended in their [installation instructions](https://gohugo.io/installation/linux/#editions), using a Debian package that we will download from the [latest release page at Github](https://github.com/gohugoio/hugo/releases/latest).
 
 ```bash
-export HUGO_VERSION="0.148.2"
+export HUGO_VERSION="0.150.1"
 wget https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
     --output-document /tmp/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
 sudo dpkg --install /tmp/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
@@ -79,7 +79,7 @@ git submodule add --branch main https://github.com/nunocoracao/blowfish.git them
 
 > You can check the maximum Hugo version supported by the theme in its `config.toml` file and adjust your Hugo version accordingly.
 
-When in need to upgrade to a newer version of the engine or the theme, use the following Git command at the root directory of the website.
+When in need to upgrade to a newer version of the theme, use the following Git command at the root directory of the website.
 
 ```bash
 cd ~/Sites/mywebsite
