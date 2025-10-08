@@ -1,0 +1,88 @@
+# Ansible architecture
+# Render: https://play.d2lang.com/
+
+vars: {
+    d2-config: {
+        # Terminal
+        theme-id: 300
+    }
+}
+
+# Title
+title: Ansible architecture {
+    near: top-center
+    shape: text
+    style.font-size: 30
+}
+
+user: {
+  shape: person
+  label: "USER"
+}
+
+playbook: {
+  shape: note
+  label: "PLAYBOOK"
+}
+
+cloud: {
+  shape: cloud
+  label: "PUBLIC / PRIVATE\nCLOUD"
+}
+
+cmdb: {
+  shape: cylinder
+  label: "CMDB"
+}
+
+engine: {
+  shape: rectangle
+  label: "ANSIBLE'S AUTOMATION ENGINE"
+  direction: right
+
+  inventory: {
+    shape: folder
+    label: "INVENTORY"
+  }
+
+  modules: {
+    shape: component
+    label: "MODULES"
+  }
+
+  plugins: {
+    shape: hexagon
+    label: "PLUGINS"
+  }
+}
+
+managed: {
+  shape: rectangle
+  label: "MANAGED NODES"
+  direction: down
+
+  target1: {
+    shape: rectangle
+    label: "Target Node 1"
+  }
+
+  target2: {
+    shape: rectangle
+    label: "Target Node 2"
+  }
+
+  target3: {
+    shape: rectangle
+    label: "Target Node 3"
+  }
+}
+
+/* Connections */
+user -> playbook
+user -> engine
+playbook -> engine.inventory
+cloud -> engine
+cmdb -> engine.inventory
+engine -> managed.target1
+engine -> managed.target2
+engine -> managed.target3
