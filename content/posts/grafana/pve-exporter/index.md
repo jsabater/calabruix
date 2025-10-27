@@ -1,9 +1,9 @@
 ---
-title: "Gathering cluster-wide metrics with the Prometheus PVE Exporter"
+title: "Gathering cluster-wide metrics with Proxmox VE Exporter"
 date: 2025-10-27
 lastmod: 2025-10-27
-description: "Install and configure the PVE Exporter for Prometheus to gather metrics from a Proxmox cluster"
-summary: "Collect metric data from the cluster, its nodes and all its guests using the Proxmox VE Exporter."
+description: "Install and configure PVE Exporter for Prometheus to gather metrics from a Proxmox cluster"
+summary: "Collect metric data from the cluster, its nodes and all its guests using PVE Exporter."
 categories: ["infrastructure"]
 tags: ["monitoring", "grafana", "prometheus", "proxmox", "pve"]
 series: ["Grafana"]
