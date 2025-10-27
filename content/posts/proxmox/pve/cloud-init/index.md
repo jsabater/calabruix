@@ -1,7 +1,7 @@
 ---
 title: "Provisioning VMs on Proxmox using Cloud-Init and Ansible"
 date: 2025-08-03
-lastmod: 2025-08-19
+lastmod: 2025-10-20
 description: "Create a Debian-based VM template using Cloud-Init and cloud images on your Proxmox cluster, then provision it using Ansible"
 summary: "Provisioning Debian VMs on Proxmox using cloud-init, cloud images and Ansible"
 categories: ["virtualisation"]
@@ -155,7 +155,7 @@ Now is the time to visit the `Cloud-Init` menu option of our newly-created, not-
 * SSH public key: `ssh-ed25519 AAAAC3N [..] Ansible`
 * IP Config (net0): `DHCP`
 
-Use a randomnly generated password for your `ansible` user, then save it in a vault, such as Proton Pass or Bitwarden/Vaultwarden. Also add it to the Ansible vault, so it can be used later to provision the VM.
+Use a randomnly generated password for your `ansible` user, then save it in a vault, such as [Proton Pass](https://proton.me/pass) or [Vaultwarden](https://github.com/dani-garcia/vaultwarden). Also add it to the Ansible vault, so it can be used later to provision the VM.
 
 Once you are finished, do not forget to use the `Regenerate image` button to update the CD-ROM containing the Cloud-Init configuration. Or you can use the following command from the terminal:
 
