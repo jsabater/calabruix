@@ -323,6 +323,8 @@ And our `/etc/prometheus/file_sd_configs/pve_exporter.yml` would have the follow
     group: 'pve'
 ```
 
+> You can skip the node-level metrics if you do not use replication.
+
 We need to ask Prometheus to reload its configuration file for the changes to take effect:
 
 ```bash
