@@ -233,7 +233,7 @@ You can now test the exporter from the terminal of the node:
 curl "https://proxmox1.localdomain.com:9221/pve?module=default&cluster=1&node=1"
 ```
 
-The list of available metrics will be useful when configuring Alert Rules in Grafana, so you may want to save it:
+The list of available metrics will be useful when configuring [Alert Rules in Grafana]({{< relref "/posts/grafana/alerting/" >}}), so you may want to save it:
 
 ```bash
 curl "https://proxmox1.localdomain.com:9221/pve?module=default&cluster=1&node=1" > ~/pve_exporter_metrics.txt
