@@ -1,7 +1,7 @@
 ---
 title: "Gathering cluster-wide metrics with Proxmox VE Exporter"
 date: 2025-10-27
-lastmod: 2025-10-27
+lastmod: 2025-10-28
 description: "Install and configure PVE Exporter for Prometheus to gather metrics from a Proxmox cluster"
 summary: "Collect metric data from the cluster, its nodes and all its guests using PVE Exporter."
 categories: ["infrastructure"]
@@ -238,6 +238,8 @@ The list of available metrics will be useful when configuring Alert Rules in Gra
 ```bash
 curl "https://proxmox1.localdomain.com:9221/pve?module=default&cluster=1&node=1" > ~/pve_exporter_metrics.txt
 ```
+
+> The value of the `module` parametre in the query string corresponds to the configuration key we used in the [main configuration file]({{< relref "#main-options" >}}), i.e., `default`.
 
 ## Network traffic
 
