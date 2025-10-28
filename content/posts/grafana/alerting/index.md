@@ -1,14 +1,13 @@
 ---
 title: "Using Grafana Alerting to detect and notify issues"
-date: 2025-10-09
-lastmod: 2025-10-09
+date: 2025-10-28
+lastmod: 2025-10-28
 description: "Monitor incoming metrics and logs and set up an alerting system to watch for specific events or circumstances."
 summary: "Create, manage and respond to alert rules based on metrics and logs from multiple data sources"
 categories: ["infrastructure"]
 tags: ["monitoring", "grafana", "alerting"]
 series: ["Grafana"]
 series_order: 21
-draft: true
 ---
 
 [Grafana Alerting](https://grafana.com/docs/grafana/latest/alerting/) is an integrated alert management system embedded directly within the Grafana visualization platform. Tightly coupled with Grafana's dashboarding capabilities, this alerting system allows creating alert rules based on the same metrics they already monitor and visualize.
@@ -79,14 +78,14 @@ For this we have to go through these steps:
 
 ## Internet access
 
-Generally speaking, LinuX Containers in a Proxmox cluster should not have direct access to the Internet, unless they are facing the public (e.g., NGINX). In our case, though, Grafana requires access to the Internet to send notifications. Because we do not want to assign a public IP address to our LXC, we will have to use an HTTP proxy.
+LinuX Containers in our Proxmox cluster do not have direct access to the Internet, but for a few excepptions, such as an NGINX reverse proxy, a bastion host, a DNS recursor, and some others. However, Grafana requires access to the Internet to send notifications. Because we do not want to assign a public IP address to our LXC, we will use an HTTP proxy.
 
 Let's suppose that the LXC already has the an `/etc/environment` file with this:
 
 ```ini
 HTTP_PROXY=http://proxy.localdomain.com:8080
 HTTPS_PROXY=http://proxy.localdomain.com:8080
-NO_PROXY=localhost,127.0.0.1,127.0.1.1,192.168.0.0/24,.localdomain.com
+NO_PROXY=localhost,127.0.0.1,127.0.1.1,192.168.0.0/16,.localdomain.com
 ```
 
 > `localdomain.com` is the internal domain of our Proxmox cluster, its zone managed using PowerDNS.
@@ -186,7 +185,34 @@ Finally, click on the `Save contact point` button.
 
 ## Alert rules
 
-Next we will set up some alert rules within Grafana Alerting. These rules will determine whether an alert will fire and a notification sent via a contact point. This is done via the `Alerting > Alert rules` of the Grafana UI, where you can edit existing rules or create new ones by clicking on the `New alert rule` button. The form to fill in is split into these sections:
+Alert rules in Grafana Alerting will determine whether an alert fires and a notification is sent via a contact point. This is done via the `Alerting > Alert rules` of the Grafana UI.
+
+Grafana first introduced [Unified Alerting for production use](https://grafana.com/blog/2024/04/04/legacy-alerting-removal-what-you-need-to-know-about-upgrading-to-grafana-alerting/) in version 9, where it officially became the default alerting system, and has been evolving it since then.
+
+Among other things, it enforces a single condition block, meaning we cannot have two separate conditions with different thresholds (e.g., `> 80` and `> 95`) being assigned different labels (e.g., `warning` and `critical`, respectively).
+
+But, even if Grafana Alerting did not force us to have separate alert rules for the `warning` and the `critical` thresholds, because we have different queries with different semantics and metric sources[^3] for LXCs (PVE Exporter) and VMs (Node Exporter), we would still be keeping separate alert rules.
+
+[^3]: They have different units, smoothing, scaling, sensitivity and, potentially, thresholds.
+
+> Our scrape interval is configured to 15 seconds in Prometheus.
+
+We will start with a few alert rules that monitor CPU, RAM, and disk usage on our guests, taking the [Node Exporter Full](https://grafana.com/grafana/dashboards/1860) and [Proxmox via Prometheus](https://grafana.com/grafana/dashboards/10347-proxmox-via-prometheus/) dashboards as reference.
+
+The following table summarises what we will be achieving with our first batch of alert rules:
+
+| Alert      | Target | Source | Warning | Critical | Labels                              |
+|------------|:------:|:------:|:-------:|:--------:|-------------------------------------|
+| Disk usage | LXC    | PVE    | 80%     | 90%      | `host_type=lxc`, `alert_group=disk` |
+| CPU usage  | LXC    | PVE    | 80%     | 95%      | `host_type=lxc`, `alert_group=cpu`  |
+| RAM usage  | LXC    | PVE    | 80%     | 95%      | `host_type=lxc`, `alert_group=ram`  |
+| Disk usage | VM     | Node   | 80%     | 90%      | `host_type=vm`, `alert_group=disk`  |
+| CPU usage  | VM     | Node   | 80%     | 95%      | `host_type=vm`, `alert_group=cpu`   |
+| RAM usage  | VM     | Node   | 80%     | 95%      | `host_type=vm`, `alert_group=ram`   |
+
+> This is a starting point. We will most probably have to adjust the window and the threshold as the system evolves.
+
+When you click the `New alert rule` button in the UI, you will note that the form is split into several sections:
 
 1. Enter alert rule name.
 2. Define query and alert condition.
@@ -197,29 +223,95 @@ Next we will set up some alert rules within Grafana Alerting. These rules will d
 
 > The alert rule name will appear in the alert notification, so keep it short and sweet.
 
-We will start with four alert rules that will monitor system load at the node level, and CPU, RAM, and disk usage on our guests. For that, we will take the [Node Exporter Full](https://grafana.com/grafana/dashboards/1860) and [Proxmox via Prometheus](https://grafana.com/grafana/dashboards/10347-proxmox-via-prometheus/) dashboards as reference.
+When setting up an alert rule, we need to apply a threshold to the query. For instance, given the following PromQL query:
 
-The following table summarises what we will be achieving with our first batch of alert rules:
+```promql
+100 * avg(
+  1 - rate(
+    node_cpu_seconds_total{
+      mode="idle",job="node_exporter",group="qemu"
+    }[5m]
+  )
+) by (instance) > 80
+```
 
-| Alert      | Target | Source | Query (main expression)                 | Warning | Critical |
-|------------|:------:|:------:|-----------------------------------------|:-------:|:--------:|
-| Sysload    | Node   | PVE    | `pve_node_loadavg{id=~"node/.+"}`       | > 0.8   | > 0.95   |
-| Disk usage | LXC    | PVE    | `(usage/size)*100`                      | > 80 %  | > 90 %   |
-| CPU usage  | LXC    | PVE    | `pve_cpu_usage_ratio{id=~"lxc/.+"}*100` | > 80 %  | > 95 %   |
-| RAM usage  | LXC    | PVE    | `(mem_usage/mem_size)*100`              | > 80 %  | > 95 %   |
-| CPU usage  | VM     | Node   | `avg(1 - rate(node_cpu_seconds_total))` | > 80 %  | > 95 %   |
-| RAM usage  | VM     | Node   | `(1 - avail/total)*100`                 | > 80 %  | > 95 %   |
-| Disk usage | VM     | Node   | `(1 - avail/size)*100`                  | > 80 %  | > 90 %   |
+This expression returns those instances whose 5-minute average CPU usage exceeds 80%. You can try this expression on the Prometheus UI.
 
-## CPU usage
+> When creating alert rules, use the `Duplicate` option in the context menu to speed up the process.
+
+As summarised in the table above, we will be using differnt thresholds for our `warning` and `critical` levels.
+
+### Common values
+
+Next there is a list of the common values among the alert rules we will be creating:
+
+* Data source: Prometheus
+* Folder: Create or reuse an `Infrastructure` folder.
+* Evaluation group: Create or reuse a `default` evalution group, with an evaluation interval of `30s`.
+* Pending period: `2m`.
+* Keep firing for: `None`.
+* Runbook URL: link to the page in your knowledge base that explains what to do when this alert rule triggers [^2].
+
+[^2]: There are many open source options to build your knowledge base, such as [Docmost](https://docmost.com/), [Appflowy](https://appflowy.com/), or [Outline](https://www.getoutline.com/).
+
+### Specific values
+
+This section explains the values that differ in each alert rule.
+
+| Name                       | When query       | Contact point | Labels              |
+|----------------------------|------------------|:-------------:|---------------------|
+| High disk usage in LXC     | `is above`: `80` | Slack         | `severity=warning`  |
+| Critical disk usage in LXC | `is above`: `90` | Click2Call    | `severity=critical` |
+| High disk usage in VM      | `is above`: `80` | Slack         | `severity=warning`  |
+| Critical disk usage in VM  | `is above`: `90` | Click2Call    | `severity=critical` |
+| High CPU usage in LXC      | `is above`: `80` | Slack         | `severity=warning`  |
+| Critical CPU usage in LXC  | `is above`: `95` | Click2Call    | `severity=critical` |
+| High CPU usage in VM       | `is above`: `80` | Slack         | `severity=warning`  |
+| Critical CPU usage in VM   | `is above`: `95` | Click2Call    | `severity=critical` |
+| High CPU usage in LXC      | `is above`: `80` | Slack         | `severity=warning`  |
+| Critical CPU usage in LXC  | `is above`: `95` | Click2Call    | `severity=critical` |
+| High CPU usage in VM       | `is above`: `80` | Slack         | `severity=warning`  |
+| Critical CPU usage in VM   | `is above`: `95` | Click2Call    | `severity=critical` |
+
+Optionally, set a summary and a description, adapting the threshold value in the summary for each rule:
+
+* Alert group: `disk`:
+  * Summary: "Disk usage has exceeded 80%".
+  * Description: "The disk usage on this guest has reached {{ $values.A.Value | printf "%.1f" }}%. Grafana evaluated this condition continuously for 2 minutes before firing the alert."
+* Alert group: `cpu`:
+  * Summary: "CPU usage has exceeded 80% for the last 5 minutes".
+  * Description: "The CPU usage on this guest has reached {{ $values.A.Value | printf "%.1f" }}% over the last 5 minutes. Grafana evaluated this condition continuously for 2 minutes before firing the alert."
+* Alert group: `ram`:
+  * Summary: "RAM usage has exceeded 80%".
+  * Description: "The RAM usage on this guest has reached {{ $values.A.Value | printf "%.1f" }}%. Grafana evaluated this condition continuously for 2 minutes before firing the alert."
+
+The only bit we are missing now is the query. Given that they are different for each metric and guest type, they are explained in separate sections next.
+
+> Grafana automatically assigns each query a letter name, starting with A, B, C, etc. Even if you never explicitly name it.
+
+### Disk usage
+
+We want to compute disk usage per instance. We will be using metrics from the Node Exporter for the VMs, and metrics from the PVE Exporter for the LXCs.
+
+For our VMs, our [PromQL]({{<relref "posts/grafana/promql/">}}) query could look like this:
+
+```promql
+100 * (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs",job="node_exporter",group="qemu"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs",job="node_exporter",group="qemu"}))
+```
+
+This query calculates the free space given the total space and the used space for each mount point of the VM, with a few exceptions we are not intersted in monitoring. Moreover, note that the query returns attributes for the `device`, the `fstype` and the `mountpoint`.
+
+For our LXCs, the PVE Exporter offers the `pve_disk_usage_bytes` and `pve_disk_size_bytes` metrics, which will allow us to calculate the percentage of free disk space:
+
+```promql
+(pve_disk_usage_bytes{id=~"lxc/.+"} / pve_disk_size_bytes{id=~"lxc/.+"}) * 100
+```
+
+### CPU usage
 
 We want to compute CPU usage percentage per instance. We will be using metrics from the Node Exporter for the VMs, and metrics from the PVE Exporter for the LXCs.
 
-> Our scrape interval is configured to 15 seconds in Prometheus.
-
-### VM
-
-Using a 5-minute rate window in order to smooth our short spikes, our [PromQL]({{<relref "posts/grafana/promql/">}}) query could look like this:
+For our VMs, using a 5-minute rate window in order to smooth our short spikes, our [PromQL]({{<relref "posts/grafana/promql/">}}) query could look like this:
 
 ```promql
 100 * avg(
@@ -235,77 +327,13 @@ This returns the average CPU usage percentage over the last 5 minutes for each h
 
 > For our convenience, Node Exporter is configured to set the label `group="qemu"` when scrapping VMs.
 
-### LXC
-
-The PVE Exporter offers the `pve_cpu_usage_ratio` metric, which is a momentary ratio (`0-1`) reported by the Proxmox API. This means that it is already a smoothed, averaged value over the last few seconds from Proxmox itself. But, because we want extra smoothing of the usage reported by Proxmox, we will wrap it up with a moving average:
+For our LXCs, the PVE Exporter offers the `pve_cpu_usage_ratio` metric, which is a momentary ratio (`0-1`) reported by the Proxmox API. This means that it is already a smoothed, averaged value over the last few seconds from Proxmox itself. But, because we want extra smoothing of the usage reported by Proxmox, we will wrap it up with a moving average:
 
 ```promql
 avg_over_time(pve_cpu_usage_ratio{id=~"lxc/.+"}[5m]) * 100
 ```
 
 This will ignore occasional spikes before alerting, leading to the intended triggering of alerts only in case of sustained high usage of CPU.
-
-### Threshold
-
-
-When setting up an alert rule, we need to apply a threshold to the query. For instance, we could use:
-
-```promql
-100 * avg(1 - rate(node_cpu_seconds_total{mode="idle",job="node_exporter",group="qemu"}[5m])) by (instance) > 80
-```
-
-This expression returns those instances whose 5-minute average CPU usage exceeds 80%. You can try this expression on the Prometheus UI.
-
-> We can adjust the window and the threshold as needed.
-
-As summarised in the previous section, we will be using a threshold of 80% for our warning level (using the label `severity=warning`) and a threshold of 95% for our critical level (using the label `severity=critical`).
-
-### Alert rules
-
-Grafana first introduced [Unified Alerting for production use](https://grafana.com/blog/2024/04/04/legacy-alerting-removal-what-you-need-to-know-about-upgrading-to-grafana-alerting/) in version 9, where it officially became the default alerting system. Among other things, this enforces a single condition block, meaning we cannot have two separate conditions with different thresholds (e.g., `> 80` and `> 95`) being assigned different labels (e.g., `warning` and `critical`).
-
-Therefore, we will be having two separate alert rules, one for the warning threshold, one for the critical one.
-
-Moreover, we have different queries with different semantics and metric sources for LXCs (from PVE Exporter) and VMs (from Node Exporter), and they have different units, smoothing, scaling, sensitivity and, potentially, thresholds, we will be keeping separate alert rules.
-
-Let us use the `New alert rule` form to create four different alert rules. Next there is a list of the common values:
-
-* Data source: Prometheus
-* Folder: Create or reuse an `Infrastructure` folder.
-* Evaluation group: Create or reuse a `default` evalution group, with an evaluation interval of `30s`.
-* Pending period: `2m`.
-* Keep firing for: `None`.
-* Runbook URL: link to the page in your knowledge base that explains what to do when this alert rule triggers [^1].
-
-[^1]: There are many open source options to build your knowledge base, such as [Docmost](https://docmost.com/), [Appflowy](https://appflowy.com/), or [Outline](https://www.getoutline.com/).
-
-Specific values:
-
-| Name                      | Threshold        | Labels                               | Contact point |
-|---------------------------|------------------|--------------------------------------|:-------------:|
-| High CPU usage in LXC     | `is above`: `80` | `severity=warning`, `host_type=lxc`,   | Slack         |
-| Critical CPU usage in LXC | `is above`: `95` | `severity=critical`, `host_type=lxc` | Click2Call    |
-| High CPU usage in VM      | `is above`: `80` | `severity=warning`, `host_type=vm`   | Slack         |
-| Critical CPU usage in VM  | `is above`: `95` | `severity=critical`, `host_type=vm`  | Click2Call    |
-
-Optionally, set a summary and a description (adapt the threshold value in the summary for each rule):
-
-* Summary: "CPU usage has exceeded 80% for the last 5 minutes".
-* Description: "The CPU usage on this guest has reached {{ $values.A.Value | printf "%.1f" }}% over the last 5 minutes. Grafana evaluated this condition continuously for 2 minutes before firing the alert."
-
-And save the changes.
-
-> Grafana automatically assigns each query a letter name, starting with A, B, C, etc. Even if you never explicitly name it.
-
-Some tips:
-
-* Use the `Run queries` button to preview the results of the PromQL query.
-* Use the `Preview alert rule condition` to preview the alert rule firing (if the condition is met).
-* It is to our convenience for the evaluation interval to be close to the scrape interval defined in Prometheus. In our case, because our scrape interval is 15s and the evaluation interval needs to be a multiple of 10s, we set it to 30s.
-* Keep the summary of the notification concise and easily scannable.
-* Use the description field only if you do not have an external runbook URL to link to.
-
-### Pending period
 
 Regarding the 5-minute range vector in the PromQL query and Grafana's `Evaluation behavior > Pending period` setting, it is important to note that they are two different things, working in conjunction.
 
@@ -315,16 +343,37 @@ On the other hand, the `Pending period` in Grafana is an alert engine feature, t
 
 In our case, combining both aligns with our *sustained high CPU* logic we want to watch for.
 
+### RAM
 
+We want to compute RAM usage per instance. We will be using metrics from the Node Exporter for the VMs, and metrics from the PVE Exporter for the LXCs.
 
+For our VMs, our [PromQL]({{<relref "posts/grafana/promql/">}}) query could look like this:
 
+```promql
+(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+```
 
+This query calculates the percentage of RAM used from the amount of bytes avalable at a given time and the total amount of bytes available in the VM.
 
+For our LXCs, the PVE Exporter offers the `pve_memory_usage_bytes` and `pve_memory_size_bytes` metrics, which will allow us to calculate the percentage of free RAM:
 
+```promql
+(pve_memory_usage_bytes{id=~"lxc/.+"} / pve_memory_size_bytes{id=~"lxc/.+"}) * 100
+```
+
+### Tips
+
+Some tips when creating new alert rules:
+
+* Use the `Run queries` button to preview the results of the PromQL query.
+* Use the `Preview alert rule condition` to preview the alert rule firing (if the condition is met).
+* It is to our convenience for the evaluation interval to be close to the scrape interval defined in Prometheus. In our case, because our scrape interval is 15s and the evaluation interval needs to be a multiple of 10s, we set it to 30s.
+* Keep the summary of the notification concise and easily scannable.
+* Use the description field only if you do not have an external runbook URL to link to.
 
 ## System load
 
-We want to compute system load percentage per instance. The Node Exporter dashboard uses the `node_load1` metric via the following [PromQL]({{<relref "posts/grafana/promql/">}}) query:
+Once we have configured a basic set of alarm rules over our guests, let's delve into more complex queries. Let's say that we now want to compute system load percentage per VM instance. The Node Exporter dashboard uses the `node_load1` metric via the following [PromQL]({{<relref "posts/grafana/promql/">}}) query:
 
 ```promql
 scalar(node_load1{instance="$node",job="$job"}) * 100
@@ -333,6 +382,8 @@ count(
   count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)
 )
 ```
+
+> PVE Exporter neither exports the system load of nodes nor guests.
 
 This query expresses the *system load* as a *percentage of total CPU capacity*, using `node_load1` normalized by number of CPU cores. Before delving into the query, some context:
 
@@ -358,7 +409,7 @@ So, roughly:
 
 Let's now break down how this query does it:
 
-1. The metric `node_load1` comes from the `node_exporter` and reports the 1-minute system load average (the same value shown by the `uptime` or `top` commands). It measures how many processes are *actively running or waiting for CPU* in the last minute.
+1. The metric `node_load1` reports the 1-minute system load average (the same value shown by the `uptime` or `top` commands). It measures how many processes are *actively running or waiting for CPU* in the last minute.
 2. The sub-query `node_cpu_seconds_total{instance="$node",job="$job"}` returns the total seconds of CPU time spent by each core, labeled by `cpu` and `mode`, and is only used to count *how many CPU cores* the guest has.
 3. The double `count` used in `count(count(..) by (cpu))` means *the number of CPU cores on this node*. It is a common idiom used to count *unique CPU labels per instance*:
    * The inner `count(.. by (cpu))` removes all labels except `cpu`, giving us one time series per instance, so we can count how many `cpu` labels exist.
@@ -374,7 +425,7 @@ count(count(node_cpu_seconds_total) by (instance, cpu)) by (instance)
 > 85
 ```
 
-This query calculates the 5-minute average system load as a percentage, and it triggers when it exceeds `100%`. You can try this expression on the Prometheus UI.
+This query calculates the 5-minute average system load as a percentage, and it triggers when it exceeds `85%`. You can try this expression on the Prometheus UI.
 
 Note that, on the one hand, `node_load1` is already an exponentially decaying average (1-minute), computed by the kernel, and that there also exist `node_load5` and `node_load15` metrics for 5 and 15-minute averages. And, on the other hand, unlike CPU usage, which uses `rate()` to compute a trend from raw counters, the `node_load` metrics are already smoothed over time.
 
@@ -386,36 +437,19 @@ However, there are three time-based controls we can use for alerting:
 
 The table next helps illustrate how we can adjust this alert rule to find what is best for our system:
 
-| Use case             | Metric       | Condition | For | Purpose               |
-|----------------------|:------------:|:---------:|:---:|---------------------|
-| Immediate alert      | `node_load1` | `> 150%`  | 2m  | Catch short, critical spikes that may impact responsiveness of interactive services            |
-| Typical load warning | `node_load5` | `> 85%`   | 2m  | Alert when average load is approaching total CPU capacity; early warning before saturation |
-| Sustained overload   | `node_load5` | `> 150%`  | 5m  | Detect chronic overload or resource contention, common with batch jobs or scaling issues    |
+| Use case             | Metric       | Condition | For | Purpose                                                 |
+|----------------------|:------------:|:---------:|:---:|---------------------------------------------------------|
+| Immediate alert      | `node_load1` | `> 150%`  | 2m  | Catch short, critical spikes that impact responsiveness |
+| Typical load warning | `node_load5` | `> 85%`   | 2m  | Early warning before saturation                         |
+| Sustained overload   | `node_load5` | `> 150%`  | 5m  | Detect chronic overload or resource contention          |
 
-> For database servers, spikes during checkpoints may be expected, but sustained load often indicates inefficient queries or insufficient CPUs. For shared virtual machines, temporary contention is okay, but if load stays high the hypervisor may be oversubscribed.
-
-Finally, let's configure the alert rule via the `New alert rule` form:
-
-* Name: High system load
-* Data source: Prometheus
-* Query: The query above, without the condition and the threshold.
-* Alert condition: When query `is above` `85`.
-* Folder: Create or reuse an `Infrastructure` folder.
-* Labels: Create or reuse a label `severity` with value `warning`.
-* Evaluation group: Create or reuse a `default` evalution group, with an evaluation interval of `30s`.
-* Pending period: `2m`.
-* Keep firing for: `None`.
-* Contact point: `Slack`.
-* Optionally, set a summary, e.g., "System load has exceeded 85% for the last 5 minutes".
-* Optionally, set a description, e.g., "The system load on this guest has exceeded 85% over the last 5 minutes. Grafana evaluated this condition continuously for 2 minutes before firing the alert."
-* Runbook URL: a link to your knowledge base page explaining what to do when this alert rule triggers.
+For database servers, spikes during checkpoints may be expected, but sustained load often indicates inefficient queries or insufficient CPUs. For shared virtual machines, temporary contention is okay, but if load stays high the hypervisor may be oversubscribed.
 
 > You can safely ignore the "Selected metric is a counter. Consider calculating rate of counter by adding rate()." warning. It is hint, not a functional error.
 
-## Folders and tags
+## Folders and labels
 
-On the one hand, folders in Grafana Alerting are primarily for organizing and scoping alert rules. They behave similarly to dashboard On the one hand, folders, that is, they control permissions, visibility, and namespacing.
-On the one hand, fHow you organise your folders depends on your needs, but common strategies are:
+Folders in Grafana Alerting are primarily for organizing and scoping alert rules. They control permissions, visibility, and namespacing. How you organise your folders depends on your needs, but common strategies are:
 
 | Strategy       | Example folder names                     | When                                  |
 |----------------|------------------------------------------|---------------------------------------|
@@ -424,24 +458,8 @@ On the one hand, fHow you organise your folders depends on your needs, but commo
 | By team        | `backend`, `frontend`, `dba`             | Clear team ownership                  |
 | By service     | `pve`, `web`, `backoffice`, `api`, `dns` | Each service has several nodes/alerts |
 
-In my case, I am using this structure:
 
-```
-Alerts/
-├── infrastructure/
-│   ├── cluster/
-│   ├── dns/
-│   ├── node-exporter/
-│   └── network/
-└── services/
-    ├── webapp/
-    ├── backoffice/
-    ├── api/
-    ├── databases/
-    └── webservers/
-```
-
-On the other hand, tags in Grafana Alerting are lightweight, but extremely helpful for filtering and routing. They do not affect logic, but they let you:
+Labels in Grafana Alerting are extremely helpful for filtering and routing. They do not affect logic, but they let you:
 
 * Filter alert lists in Grafana's "Alert rules" view.
 * Route alerts by tag in contact point policies.
@@ -449,25 +467,15 @@ On the other hand, tags in Grafana Alerting are lightweight, but extremely helpf
 
 Common tagging practices are:
 
-| Tag key       | Example value                      | Purpose                                   |
-|:-------------:|------------------------------------| ------------------------------------------|
-| `environment` | `production`, `staging`            | Routing, severity and silences            |
-| `service`     | `webapp`, `pdns`, `nginx`          | Which service generated the alert         |
-| `team`        | `dba`, `backoffice`, `website`     | Ownership and routing                     |
-| `severity`    | `warning`, `error`, `critical`     | Escalation policies                       |
-| `category`    | `cpu`, `memory`, `disk`, `network` | Filter alerts by resource type            |
-| `job`         | `node_exporter`, `promtail`        | Link to Prometheus job or exporter type   |
-| `cluster`     | `hetzner`, `ovh`, `pve-bcn`        | Distinguish infra segments or datacenters |
-
-In my case, I am using the following tags:
-
-| Tag           | Value                                        |
-| ------------- | ---------------------------------------------|
-| `service`     | `node_exporter`, `nginx`, `pdns`, `postgres` |
-| `category`    | `cpu`, `ram`, `disk`                         |
-| `environment` | `production`, `staging`                      |
-| `severity`    | `p0`, `p1`, `p2`, `p3`                       |
-| `cluster`     | `FAL`, `HEL`, `RBX`                          |
+| Tag key       | Example value                   | Purpose                             |
+|:-------------:|---------------------------------| ------------------------------------|
+| `environment` | `production`, `staging`         | Routing, severity and silences      |
+| `service`     | `webapp`, `pdns`, `nginx`       | Which service generated the alert   |
+| `team`        | `dba`, `backoffice`, `website`  | Ownership and routing               |
+| `severity`    | `warning`, `critical`           | Escalation policies                 |
+| `category`    | `cpu`, `ram`, `disk`, `network` | Filter alerts by resource type      |
+| `job`         | `node_exporter`, `promtail`     | Source of information               |
+| `cluster`     | `hetzner`, `ovh`, `pve-bcn`     | Distinguish segments or datacenters |
 
 ## Severity and routing
 
@@ -479,84 +487,4 @@ It is common practice to define a number of severity levels, so they are handled
 | `warning`  | Needs attention but not urgent |
 | `critical` | Service or user impact likely  |
 
-Then, severity would be set via tags or rule labels, which would be used in the notification policy. A tool such as [Grafana OnCall](https://grafana.com/oss/oncall/) could come in handy.
-
-For a small to medium-sized company, you could do well with the following:
-
-| Severity   | Meaning                                         | Action        |
-|------------|-------------------------------------------------|---------------|
-| `warning`  | Not urgent, check when possible                 | Slack channel |
-| `error`    | Needs attention, does not affect whole platform | Slack channel |
-| `critical` | Urgent, major service or platform is down       | Phone call    |
-
-
--------------------------------------------------
-
-The architecture of Grafana Alerting unifies alerting across multiple data sources, allowing teams to create consistent alert definitions regardless of whether the underlying metrics come from Prometheus, InfluxDB, or other supported backends. This unified approach simplifies multi-source monitoring environments by providing a single pane of glass for alert definition, evaluation, and notification. Each alert can trigger customizable notifications through various channels, with rich context including relevant graphs and annotations to speed troubleshooting.
-
-Grafana Alerting emphasizes usability through its visual rule editor, which helps users construct alert conditions using the same query builder they use for dashboard creation. This visual approach makes alert definition more accessible to team members without deep query language expertise. The system also includes built-in features for alert history tracking, providing valuable insights into past incidents and alert behavior patterns over time. With support for contact points, notification policies, and alert grouping, Grafana Alerting provides comprehensive alert management capabilities directly integrated with visualization workflows.
-
-### The Loki Ruler
-
-The Loki Ruler continuously evaluates Prometheus‑style recording and alerting rules against your log data, then:
-
-* Generates new series (recording rules) back into Loki for fast dashboards.
-* Fires alerts (alerting rules) via Alertmanager when log‑based conditions occur.
-* Persists evaluation state (WAL) so “for:” durations survive restarts.
-
-It can run locally (inside the same process) or remotely (in separate workers). For a single‑instance install, `local` mode is simplest and most reliable.
-
-
-```yaml
-ruler:
-  # Enable the ruler API for Grafana and Alertmanager,
-  # which exposes the "Manage Alert Rules" endpoints.
-  enable_api: true
-  # Public URL of the Grafana instance
-  external_url: https://grafana.publicdomain.com
-  # Datasource UID for the dashboard
-  datasource_uid: loki-ds
-
-  # Evaluate recording rules locally every minute
-  evaluation:
-    mode: local
-    evaluation_interval: 1m
-    # Spread start times
-    max_jitter: 15s
-
-  # Re-scan rule‑file directory every minute
-  poll_interval: 1m
-
-  # Re-scan rule‑file directory every minute
-  poll_interval: 1m
-
-  # In-memory hashing ring
-  ring:
-    kvstore:
-      store: inmemory             # no external KV for single instance :contentReference[oaicite:10]{index=10}:contentReference[oaicite:11]{index=11}
-    heartbeat_period: 5s
-    heartbeat_timeout: 1m
-
-  #— WAL so “for:” durations survive restarts --------------------------------
-  wal:
-    dir: /var/lib/loki/ruler-wal
-    truncate_frequency: 1h
-    min_age: 5m
-
-  #— metrics & labels --------------------------------------------------------
-  query_stats_enabled: true
-  disable_rule_group_label: false
-
-  #— tenant filtering (empty = all) ------------------------------------------
-  enabled_tenants: ""
-  disabled_tenants: ""
-
-```
-
-Why these settings
-
-* Filesystem rule storage keeps things simple—rule files live on your ZFS dataset with compression.
-* Local evaluation avoids extra network hops and dependencies.
-* Jitter staggers rule‑evaluation start times to smooth CPU usage.
-* WAL ensures alert “for:” timers aren’t lost if the container restarts.
-* In‑memory ring is sufficient when there’s only one ruler; no external KV is needed.
+Then, severity would be set via rule labels, which would be used in the notification policy. A tool such as [Grafana OnCall](https://grafana.com/oss/oncall/) could come in handy.
