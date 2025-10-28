@@ -376,19 +376,23 @@ Some tips when creating new alert rules:
 Once we have configured a basic set of alarm rules over our guests, let's delve into more complex queries. Let's say that we now want to compute system load percentage per VM instance. The Node Exporter dashboard uses the `node_load1` metric via the following [PromQL]({{<relref "posts/grafana/promql/">}}) query:
 
 ```promql
-scalar(node_load1{instance="$node",job="$job"}) * 100
+scalar(
+  node_load1{instance="$node",job="$job"}
+) * 100
 /
 count(
-  count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)
+  count(
+    node_cpu_seconds_total{instance="$node",job="$job"}
+  ) by (cpu)
 )
 ```
 
 > PVE Exporter neither exports the system load of nodes nor guests.
 
-This query expresses the *system load* as a *percentage of total CPU capacity*, using `node_load1` normalized by number of CPU cores. Before delving into the query, some context:
+This query expresses the *system load* as a *percentage of total CPU capacity*, using `node_load1` normalized by number of CPU cores. Before diving into the query, some context:
 
 | Cores | Load | Load % | Interpretation                 |
-|:-----:|:----:|--------|--------------------------------|
+|:-----:|:----:|:------:|--------------------------------|
 | 1     | 1    | 100%   | Fully loaded                   |
 | 2     | 1    | 50%    | Half-loaded                    |
 | 2     | 2    | 100%   | Fully loaded                   |
@@ -404,36 +408,43 @@ This query expresses the *system load* as a *percentage of total CPU capacity*, 
 So, roughly:
 
 * Less than `100%` means it is running comfortably.
-* `100%` means that the number of runnable processes aproximately equals the number of cores.
+* `100%` means that the number of runnable processes approximately equals the number of cores.
 * Greater than `100%` means that the system is busier than the CPU can handle (context switching, waiting).
 
-Let's now break down how this query does it:
-
-1. The metric `node_load1` reports the 1-minute system load average (the same value shown by the `uptime` or `top` commands). It measures how many processes are *actively running or waiting for CPU* in the last minute.
-2. The sub-query `node_cpu_seconds_total{instance="$node",job="$job"}` returns the total seconds of CPU time spent by each core, labeled by `cpu` and `mode`, and is only used to count *how many CPU cores* the guest has.
-3. The double `count` used in `count(count(..) by (cpu))` means *the number of CPU cores on this node*. It is a common idiom used to count *unique CPU labels per instance*:
-   * The inner `count(.. by (cpu))` removes all labels except `cpu`, giving us one time series per instance, so we can count how many `cpu` labels exist.
-   * The outer `count(..)` collapses that to a single scalar number representing the *number of CPU cores*.
-4. The expression `scalar(node_load1) * 100 / <num_cpus>` converts system load, which is processed per core, into a percentage of total CPU capacity.
-
-This formula is designed for a single host, because the dashboard variable `$node` filters to one instance. If we consider a 5-minute average window our target, we can rewrite it as follows:
+The query above is designed for a single host, because the dashboard variable `$node` filters to one instance. If we consider a 5-minute average window our target, we can rewrite it as follows:
 
 ```promql
 100 * avg(node_load5) by (instance)
 /
-count(count(node_cpu_seconds_total) by (instance, cpu)) by (instance)
+count(
+  count(node_cpu_seconds_total) by (instance, cpu)
+) by (instance)
 > 85
 ```
 
-This query calculates the 5-minute average system load as a percentage, and it triggers when it exceeds `85%`. You can try this expression on the Prometheus UI.
+This query calculates the 5-minute average system load as a percentage, and it triggers when it exceeds `85%`. You can try this expression on the Prometheus UI. Let's break it down, for reference:
 
-Note that, on the one hand, `node_load1` is already an exponentially decaying average (1-minute), computed by the kernel, and that there also exist `node_load5` and `node_load15` metrics for 5 and 15-minute averages. And, on the other hand, unlike CPU usage, which uses `rate()` to compute a trend from raw counters, the `node_load` metrics are already smoothed over time.
+* `node_load5` returns the 5-minute average number of runnable processes[^4], i.e., those either using or waiting for CPU. It is not normalized by CPU count, e.g., a 4-core VM with `node_load5 = 4` is fully loaded (`100%`), while a 1-core VM with `node_load5 = 4` is overloaded (`400%`).
+* `node_cpu_seconds_total` has one time series per CPU core and per mode. Counting distinct `cpu` labels gives the total number of logical cores.
 
-However, there are three time-based controls we can use for alerting:
+[^4]: The same value shown by the `uptime` or `top` commands.
+
+Regarding the denominator:
+
+* `instance` is each unique target scraped by Prometheus, typically a hostname and port pair.
+* `cpu` is the logical CPU core number within each instance, e.g., `cpu="0"`, `cpu="1"`, etc. Each instance has multiple time series with different `cpu` values.
+
+That is why the denominator uses `count(count(node_cpu_seconds_total) by (instance, cpu)) by (instance)` to count how many CPU cores belong to each instance.
+
+Furthermore, note that the metrics `node_load1`, `node_load5`, and `node_load15` are exponentially decaying averages computed by the kernel[^5] over 1, 5, and 15 minutes, respectively. Unlike CPU usage, which Prometheus derives using `rate()` on raw counters, these load averages are already smoothed over time by the kernel.
+
+[^5]: The kernel indeed computes them using an exponential decay formula, not a simple arithmetic mean. Also called exponential moving average, or EMA, this formula gives more weight to recent samples and less weight to older ones, but never discards them entirely. The contribution of an old sample decays exponentially with time.
+
+Therefore, there are three time-based controls we can use for alerting:
 
 1. The buit-in load average, which can be shorter or longer (from 1 to 15 minutes average).
-2. The threshold that will trigger the alert rule (`100%` in the example above).
-3. The pending period of the alert rule. For the example above, we will be using a 0-minute pending period.
+2. The threshold that will trigger the alert rule (`85%` in the example above).
+3. The pending period of the alert rule. For the example above, we will be using a 2-minute pending period.
 
 The table next helps illustrate how we can adjust this alert rule to find what is best for our system:
 
@@ -445,8 +456,6 @@ The table next helps illustrate how we can adjust this alert rule to find what i
 
 For database servers, spikes during checkpoints may be expected, but sustained load often indicates inefficient queries or insufficient CPUs. For shared virtual machines, temporary contention is okay, but if load stays high the hypervisor may be oversubscribed.
 
-> You can safely ignore the "Selected metric is a counter. Consider calculating rate of counter by adding rate()." warning. It is hint, not a functional error.
-
 ## Folders and labels
 
 Folders in Grafana Alerting are primarily for organizing and scoping alert rules. They control permissions, visibility, and namespacing. How you organise your folders depends on your needs, but common strategies are:
@@ -457,7 +466,6 @@ Folders in Grafana Alerting are primarily for organizing and scoping alert rules
 | By environment | `production`, `staging`, `developmnet`   | Different risk levels                 |
 | By team        | `backend`, `frontend`, `dba`             | Clear team ownership                  |
 | By service     | `pve`, `web`, `backoffice`, `api`, `dns` | Each service has several nodes/alerts |
-
 
 Labels in Grafana Alerting are extremely helpful for filtering and routing. They do not affect logic, but they let you:
 
