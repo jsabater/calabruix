@@ -1,7 +1,7 @@
 ---
 title: "Storing metric data with Prometheus"
 date: 2024-09-24
-lastmod: 2025-03-26
+lastmod: 2025-10-30
 description: "Collect and store metric data using Prometheus."
 summary: "Collect and store metric data using Prometheus."
 categories: ["infrastructure"]
@@ -291,7 +291,7 @@ Managing the local storage involves configuring retention policies to control di
 
 When disk size is a factor, we can use the `storage.tsdb.retention.size` flag to limit storage size. In such case, it is advisable to set this value to 80-85% of the allocated disk space for Prometheus. This buffer ensures that older entries are removed before the disk becomes full, preventing potential data ingestion issues.
 
-To address scalability and durability limitations of local storage, Prometheus provides interfaces for integrating with remote storage systems, support:ing remote writes (i.e., sending ingested samples to a remote endpoint) and remote reads ​(i.e., retrieving sample data from a remote endpoint). These integrations use a snappy-compressed protocol buffer encoding over HTTP.
+To address scalability and durability limitations of local storage, Prometheus provides interfaces for integrating with remote storage systems, supporting remote writes (i.e., sending ingested samples to a remote endpoint) and remote reads ​(i.e., retrieving sample data from a remote endpoint). These integrations use a snappy-compressed protocol buffer encoding over HTTP.
 
 [Grafana Mimir](https://grafana.com/oss/mimir/) is an open source, horizontally scalable, highly available, multi-tenant TSDB for long-term storage for Prometheus developed by Grafana Labs. If you have a very large installation and very long retention periods, with hundreds of thousands of active series, it is worth exploring.
 
