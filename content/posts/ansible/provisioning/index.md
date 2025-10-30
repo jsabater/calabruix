@@ -1,8 +1,8 @@
 ---
-title: "Ansible playbook to provision LXC in Proxmox"
+title: "Ansible playbook to provision guests in Proxmox"
 date: 2024-07-30
-description: "How to provision LinuX Containers in Proxmox using Ansible."
-summary: "How to provision LinuX Containers in Proxmox using an Ansible playbook, including firewall rules."
+description: "How to provision containters and virtual machines in Proxmox using Ansible"
+summary: "How to provision LXC and VM in Proxmox using an Ansible playbook, including firewall rules."
 categories: ["automation"]
 tags: ["proxmox", "pve", "ansible"]
 draft: true
