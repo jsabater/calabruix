@@ -1,7 +1,7 @@
 ---
 title: "Gathering cluster-wide metrics with Proxmox VE Exporter"
 date: 2025-10-27
-lastmod: 2025-10-28
+lastmod: 2025-10-29
 description: "Install and configure PVE Exporter for Prometheus to gather metrics from a Proxmox cluster"
 summary: "Collect metric data from the cluster, its nodes and all its guests using PVE Exporter."
 categories: ["infrastructure"]
@@ -138,7 +138,7 @@ ARGS="--config.file='/etc/prometheus/pve_exporter.yml' \
       --server.certfile='/etc/ssl/certs/localdomain.com.crt'"
 ```
 
-> The certificate in the example is a wildcard certificate for the local domain of the cluster, managed internally via PowerDNS, and issued via Let's Encrypt. Adapt it to your scenario.
+> The `localdomain.com` certificate in the example is a wildcard certificate for the local domain of the cluster, managed internally via PowerDNS, and issued via Let's Encrypt. Adapt it to your scenario.
 
 ### Main options
 
