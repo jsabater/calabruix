@@ -496,3 +496,35 @@ It is common practice to define a number of severity levels, so they are handled
 | `critical` | Service or user impact likely  |
 
 Then, severity would be set via rule labels, which would be used in the notification policy. A tool such as [Grafana OnCall](https://grafana.com/oss/oncall/) could come in handy.
+
+## Status monitoring
+
+In order to monitor whether hosts are up and running, we will be using data from the Node Exporter for our VMs and nodes, and data from the PVE Exporter for all our guests and nodes.
+
+For hosts with Node Exporter, use the standard `up` metric. An alert rule will fire if the target is unreachable.
+
+```yaml
+- alert: InstanceDown
+  expr: up == 0
+  for: 2m
+  labels:
+    severity: critical
+  annotations:
+    summary: "Instance {{ $labels.instance }} down"
+    description: "{{ $labels.job }} instance {{ $labels.instance }} has been down for more than 2 minutes."
+```
+
+The PVE Exporter provides a `pve_up` metric for Proxmox nodes and guests (VMs and LXCs). To alert on any guest being down, we will use a `join` with `pve_guest_info`.
+
+```yaml
+- alert: ProxmoxGuestDown
+  expr: (pve_guest_info * on(id) group_left(name) pve_up) == 0
+  for: 5m
+  labels:
+    severity: critical
+  annotations:
+    summary: "Proxmox guest {{ $labels.name }} down"
+    description: "Guest {{ $labels.name }} (ID: {{ $labels.id }}) on node {{ $labels.instance }} has been down for more than 5 minutes."
+```
+
+This rule multiplies `pve_guest_info` (which has a constant value of 1 for every guest) with `pve_up` (1 if up, 0 if down), joining on the guest ID. When a guest is down, the result is 0, triggering the alert. Using `pve_guest_info` in combination with `pve_up` provides enriched labels like `name`, `tags`, and `type` in the alert. 
