@@ -1,7 +1,7 @@
 ---
 title: "Extend virtual disks and ZVOLs on Proxmox"
 date: 2025-07-19
-lastmod: 2025-08-19
+lastmod: 2025-11-17
 description: "Extend the virtual disks and ZVOLs used in a Proxmox VM without data loss, whether it has a partition table or not"
 summary: "Extend the virtual disks and ZVOLs of your VM running an NFS server without data loss"
 categories: ["virtualisation"]
@@ -85,8 +85,10 @@ If you now log into the VM via SSH, you can use `lsblk` to realise that the new 
 ```console
 # lsblk /dev/sda
 NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS
-sda      8:0    0   4G  0 disk 
-└─sda1   8:1    0   3G  0 part /
+sda       8:0    0    4G  0 disk 
+├─sda1    8:1    0  2.9G  0 part /
+├─sda14   8:14   0    3M  0 part 
+└─sda15   8:15   0  124M  0 part /boot/efi
 ```
 
 Use `growpart` in the console of the VM to resize the partition:
@@ -99,9 +101,10 @@ We can now see the changes in the partition using `lsblk`:
 
 ```console
 # lsblk /dev/sdb
-NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS
-sda      8:16   0   4G  0 disk 
-└─sda1   8:17   0   4G  0 part /
+sda       8:0    0    4G  0 disk 
+├─sda1    8:1    0  3.9G  0 part /
+├─sda14   8:14   0    3M  0 part 
+└─sda15   8:15   0  124M  0 part /boot/efi
 ```
 
 However, the filesystem still shows the previous value:
@@ -109,7 +112,7 @@ However, the filesystem still shows the previous value:
 ```console
 # df -h /
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1       2.9G  1.4G  1.5G  48% /
+/dev/sda1       2.8G  2.0G  629M  77% /
 ```
 
 Therefore, all that is left is to use the EXT4 resizer to resize the filesystem:
@@ -123,7 +126,7 @@ And verify the results:
 ```console
 # df -h /
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1       3.9G  1.4G  2.5G  36% /
+/dev/sda1       3.8G  2.0G  1.6G  57% /
 ```
 
 > You can also perform the procedure using `fdisk` and `sfdisk`, but it is more error-prone and cannot be automated.
