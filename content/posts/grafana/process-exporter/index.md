@@ -1,14 +1,13 @@
 ---
 title: "Gathering process metrics with Process Exporter"
-date: 2025-10-30
-lastmod: 2025-10-30
+date: 2025-11-18
+lastmod: 2025-11-18
 description: "Install and configure Process Exporter for Prometheus"
 summary: "Collect process metric data as using Prometheus Process Exporter"
 categories: ["infrastructure"]
 tags: ["monitoring", "grafana", "prometheus"]
 series: ["Grafana"]
 series_order: 10
-draft: true
 ---
 
 When monitoring Linux systems with Prometheus, [Node Exporter]({{< relref "/posts/grafana/node-exporter/" >}}) provides essential hardware and OS-level metrics, like overall CPU and memory usage.
@@ -43,7 +42,7 @@ systemctl start prometheus-process-exporter
 
 ## Configuration
 
-The configuration of the Process Exporter requires three files. Begin by editing the configuration file `/etc/prometheus/process_exporter.yml`, which contains the web configuration for the exporter.
+The configuration of the Process Exporter requires three files. Let's begin by editing the file `/etc/prometheus/process_exporter.yml`, which contains the web configuration for the exporter.
 
 ```yaml
 # Prometheus Process Exporter configuration
@@ -60,9 +59,9 @@ http_server_config:
   http2: true
 ```
 
-> The `localdomain.com` certificate in the example is a wildcard certificate for the local domain of the cluster, managed internally via PowerDNS, and issued via Let's Encrypt. Adapt it to your scenario.
+> The `localdomain.com` certificate in the example is a wildcard certificate for the local domain of the [Proxmox VE cluster]({{< relref "/posts/proxmox/pve/">}}), managed internally via PowerDNS, and issued via Let's Encrypt. Adapt it to your scenario.
 
-Continue with the `/etc/default/prometheus-process-exporter` file, that contains the the command-line arguments given to the binary:
+Let's continue with the `/etc/default/prometheus-process-exporter` file, that contains the the command-line arguments passed to the binary:
 
 ```ini
 # Set the command-line arguments to pass to the server.
@@ -70,11 +69,10 @@ ARGS="--web.config.file /etc/prometheus/process_exporter.yml \
       --web.listen-address ':9256' \
       --web.telemetry-path '/metrics' \
       --config.path /etc/prometheus/process_mappings.yml \
-      --recheck-with-time-limit 3s \
-      --threads"
+      --recheck-with-time-limit 3s"
 ```
 
-> In Gos `flag` library, duration flags expect values like `30s`, `5m`, `1h`, etc.
+> In Go's `flag` library, duration flags expect values like `30s`, `5m`, `1h`, etc.
 
 One last file is required, the mappings file where we will specify the processes we want to monitor.
 
@@ -86,21 +84,13 @@ The contents of this file will vary depending on what processes we want to captu
 
 ### Groups
 
-A Group is a collection of one or more running processes that the exporter monitors and reports on under a common metric label.
+A group is a collection of one or more running processes that the exporter monitors and reports on under a common metric label.
 
-Named groups are the entries you define under the `process_names` key in the YAML configuration. Each entry provides a `name` (the group name) and a matching rule (`comm`, `exe`, or `cmdline`).
+The goal of a good Process Exporter configuration is to explicitly monitor only the high-value application processes (e.g., Gunicorn workers, databases, agents) and ignore the rest to keep the metrics endpoint clean.
 
-********** REFACTOR *****************
+For that purpose, named groups are the entries you define under the `process_names` key in the YAML configuration. Each entry provides a `name` (the group name) and a matching rule (`comm`, `exe`, or `cmdline`).
 
-The <default> group is a special, implicit catch-all group that is automatically created by the Process Exporter.
-
-    Purpose: Any process running on the system that does not match any of the named groups defined in your process_names list is automatically placed into the <default> group.
-
-    The Problem: By default, the <default> group's metrics will be labeled with the raw process command name (e.g., sshd, cron, systemd). If you have a large number of unique, low-value processes (like temporary shell scripts or various background services), the <default> group can quickly generate a huge number of time series (high cardinality), overwhelming your Prometheus server and database.
-
-    Best Practice: The goal of a good Process Exporter configuration is to explicitly monitor only the high-value application processes (like your Gunicorn workers, databases, agents) and exclude/ignore the rest to keep the metrics endpoint clean.
-
-********** REFACTOR *****************
+A process may only belong to one group, the first one listen, even if multiple items would match.
 
 ### Gunicorn
 
@@ -111,11 +101,11 @@ process_names:
 
   # Gunicorn master process
   - name: gunicorn_master
-    cmdline: 'gunicorn: master .*'
+    cmdline: 'gunicorn: master \[.+\]'
 
   # Gunicorn worker processes
   - name: gunicorn_worker
-    cmdline: 'gunicorn: worker .*'
+    cmdline: 'gunicorn: worker \[.+\]'
 ```
 
 > We are defining two named groups in this configuration.
@@ -124,62 +114,46 @@ Key takeaways for this setup:
 
 * The `gunicorn_master` entry explicitly targets the single master process using the full command line text.
 * The `gunicorn_worker` group explicitly targets all workers.
-* The `.*` expression (any character, zero or more times) matches the variable customer code that is part of the process name, making the group code-agnostic.
-* We use `cmdline` for because it contains the descriptive parts (master, worker, `[code]`). The `comm` field is just the executable name, i.e.,`gunicorn`, which is too general for distinguishing master from worker.
+* The `\[.+\]` expression (any character, one or more times, inside square brackets) matches the variable `proc_name` in the `config.py` used to in the systemd service file, or its `--name` equivalent parametre, which helps identify different Gunicorn servers running in the same guest.
+* We use `cmdline` for because it contains the descriptive parts (master, worker, `[proc_name]`). The `comm` field is just the executable name, i.e.,`gunicorn`, which is too general for distinguishing master from worker.
 
-Let's say that we customised the command-line arguments of our Gunicorn systemd service file, or the `config.py` file in our project, and we included the app name in the process. Let's also say that we want to return the environment. We would, then, modify the `process_mappings.yml` file as follows:
+Adapt this to your needs. When you are done, restart the exporter:
+
+```bash
+systemctl restart prometheus-process-exporter.service
+```
+
+We still need to configure our Prometheus server to pull metrics from the exporter.
+
+### Additional labels
+
+Let's say that we want to include more labels in our metrics. Process Exporter does not allow adding additional labels to series it exports, so we will have to resort to including them in the group name. We could modify the `process_mappings.yml` file as follows:
 
 ```yaml
 process_names:
 
-  - name: gunicorn_master
+  # My web project: Gunicorn master
+  - name: "gunicorn_master;environment=production;service_name=webapp"
     cmdline:
       - 'gunicorn: master \[webapp\]'
-    labels:
-      environment: "production"
-      service_name: "webapp"
-      app: "webapp1"
 
-  # Black Pearl Gunicorn worker
-  - name: gunicorn_worker
+  # My web project: Gunicorn worker
+  - name: "gunicorn_worker;environment=production;service_name=webapp"
     cmdline:
       - 'gunicorn: worker \[webapp\]'
-    labels:
-      environment: "production"
-      service_name: "webapp"
-      app: "webapp1"
 ```
 
-We could also include labels such as `role: "frontend"` or similar. There is more than one way to skin a cat, they say.
-
-After restart, this configuration would provide the following metrics in Prometheus, among others:
-
-* Number of workers: `namedprocess_namegroup_num_procs{groupname="gunicorn_worker"}`
-* Resident RAM usage of workers: `namedprocess_namegroup_memory_bytes{groupname="gunicorn_worker",memtype="resident"}`
-* Number of zombie processes: `namedprocess_namegroup_states{state="Zombie"}`
-
-When configuring alerts, the expression `namedprocess_namegroup_num_procs{groupname="gunicorn_master"} == 0` would indicate that the master process is stopped, and the expression `namedprocess_namegroup_num_procs{groupname="gunicorn_worker"} < X` would indicate that there are less worker processes than intended, where `X` corresponds to the value of the `--workers` parametre in your systemd service file, or `config.py` file.
-
-## Prometheus
-
-Test connectivity and find out the available metrics:
+We could also include labels such as `role=frontend` or similar. Adapt this to your needs. When you are done, restart the exporter:
 
 ```bash
-curl -k https://webapp1.localdomain.com:9256/metrics
+systemctl restart prometheus-process-exporter.service
 ```
 
-`/etc/prometheus/file_sd_configs/process_exporter.yml`
+Anyhow, this will require using the `metric_relabel_configs` in our `scrape_config` in the Prometheus, which we will do in the next section.
 
-```yaml
-- targets:
-  - 'webapp1.localdomain.com:9256'
-  - 'webapp2.localdomain.com:9256'
-  - 'webapp3.localdomain.com:9256'
-  labels:
-    group: 'webapp'
-```
+### Prometheus server
 
-`/etc/prometheus/prometheus.yml`
+In our Prometheus server, we need to configure a new job in our scrape configuration, such as:
 
 ```yaml
 scrape_configs:
@@ -194,7 +168,7 @@ scrape_configs:
       insecure_skip_verify: false
     file_sd_configs:
       - files:
-        - file_sd_configs/process_exporter.yml
+        - file_sd_configs/process_exporter/webapp.yml
     relabel_configs:
       - source_labels: [__address__]
         regex: '(\w+)\.localdomain\.com:.*'
@@ -202,42 +176,64 @@ scrape_configs:
         replacement: '$1'
 ```
 
-Good observability practice: choose a consistent label schema early
-like host, service, app, job, env, cluster.
+We have taken the chance to add a new `host` label, which includes the subdomain of the FQDN of our guest, useful to filter for all the metrics concerning a specific guest in the cluster. Finally, the `/etc/prometheus/file_sd_configs/process_exporter/webapp.yml` file with all the targets:
 
-We are adding the host label to almost every exporter[^4] because, in our scenario, usually there are multple services per guest (e.g., Gunicorn and Redis), so there are more than exporter per guest. This is exactly the case where the host label helps, as the `instance` label includes different ports, so the `host` label makes it easier to group metrics per guest.
+```yaml
+- targets:
+  - 'webapp1.localdomain.com:9256'
+  - 'webapp2.localdomain.com:9256'
+  - 'webapp3.localdomain.com:9256'
+  labels:
+    group: 'mywebproject'
+```
 
-[^4]: Prometheus itself and the PVE Exporter are excluded.
+If we decided to add additional semicolon-separated labels to the group name, we will need additional configuration:
 
-Reload Prometheus for the changes to take effect:
+```yaml
+scrape_configs:
+
+  # Process Exporter
+  - job_name: 'process_exporter'
+    [..]
+
+    # Extract env/service from groupname (semicolon-separated)
+    metric_relabel_configs:
+      - source_labels: [groupname]
+        regex: '.*;env=([^;]+).*'
+        target_label: environment
+        replacement: '$1'
+      - source_labels: [groupname]
+        regex: '.*;service=([^;]+).*'
+        target_label: service_name
+        replacement: '$1'
+      # Relabeling is sequential, so we perform the cleanup last to
+      # restore the original content of the groupname label
+      - source_labels: [groupname]
+        regex: '^([^;]+);.*'
+        target_label: groupname
+        replacement: '$1'
+```
+
+When done, instruct Prometheus to reload the configuration file:
 
 ```bash
-systemctl reload prometheus
+systemctl reload prometheus.service
 ```
 
-## Heterogeneos guests
+> A good observability practice is to choose a consistent label schema early, e.g. `host`, `service_name`, `job_name`, `environment`, `role`, etc.
 
-Keep in mind that the `process_exporter` mappings cannot be one-size-fits-all if we have a heterogeneous estate. For example:
+This configuration would provide the following metrics in Prometheus, among others:
 
-|
+* Number of workers: `namedprocess_namegroup_num_procs{groupname="gunicorn_worker"}`
+* Resident RAM usage of workers: `namedprocess_namegroup_memory_bytes{groupname="gunicorn_worker",memtype="resident"}`
+* Number of zombie processes: `namedprocess_namegroup_states{state="Zombie"}`
 
-* Multiple LXC running Gunicorn for the same big web application, load balanced. Same service_name, same `app`, different `host`.
-* Multiple LXC running Gunicorn for different web applications.
-* Multiple LXC running Gunicorn for the same application, but for different customers.
+When configuring alerts, the expression `namedprocess_namegroup_num_procs{groupname="gunicorn_master"} == 0` would indicate that the master process is stopped, and the expression `namedprocess_namegroup_num_procs{groupname="gunicorn_worker"} < X` would indicate that there are less worker processes than intended, where `X` corresponds to the value of the `--workers` parametre in your systemd service file, or `config.py` file.
 
-In this scenario.
+> Do not forget to allow traffic to port 9256 of your guests in your firewall.
 
-Moreover, 
+Finally, test connectivity and find out the available metrics:
 
-## PromQL
-
-To discover what labels are being returned and, incidentally, the number of Gunicorn workers in a specific instance, run this directly in Prometheus:
-
-```promql
-namedprocess_namegroup_num_procs{group="webapp",groupname="gunicorn_worker",host="webapp1"}
+```bash
+curl -k https://webapp1.localdomain.com:9256/metrics
 ```
-
-The labels returned should be `group`, `groupname`, `host`, `instance` and `job`. The returned value should match the number of configured Gunicorn workers for that instance.
-
-
-
