@@ -1,7 +1,7 @@
 ---
 title: "Gathering process metrics with Process Exporter"
 date: 2025-11-18
-lastmod: 2025-11-18
+lastmod: 2025-11-19
 description: "Install and configure Process Exporter for Prometheus"
 summary: "Collect process metric data as using Prometheus Process Exporter"
 categories: ["infrastructure"]
@@ -222,6 +222,8 @@ systemctl reload prometheus.service
 
 > A good observability practice is to choose a consistent label schema early, e.g. `host`, `service_name`, `job_name`, `environment`, `role`, etc.
 
+## Available metrics
+
 This configuration would provide the following metrics in Prometheus, among others:
 
 * Number of workers: `namedprocess_namegroup_num_procs{groupname="gunicorn_worker"}`
@@ -232,7 +234,7 @@ When configuring alerts, the expression `namedprocess_namegroup_num_procs{groupn
 
 > Do not forget to allow traffic to port 9256 of your guests in your firewall.
 
-Finally, test connectivity and find out the available metrics:
+You can use `curl` to test connectivity and obtain a list of the available metrics:
 
 ```bash
 curl -k https://webapp1.localdomain.com:9256/metrics
