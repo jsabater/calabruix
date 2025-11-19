@@ -1,14 +1,13 @@
 ---
 title: "Gathering system and hardware metrics with Node Exporter"
-date: 2025-10-29
-lastmod: 2025-10-29
+date: 2025-11-18
+lastmod: 2025-11-18
 description: "Install and configure Prometheus Node Exporter"
 summary: "Collect system and hardware metric data as using Prometheus Node Exporter"
 categories: ["infrastructure"]
 tags: ["monitoring", "grafana", "prometheus"]
 series: ["Grafana"]
-series_order: 10
-draft: true
+series_order: 11
 ---
 
 The [Prometheus Node Exporter](https://github.com/prometheus/node_exporter/) is a fundamental component in any Prometheus monitoring stack, designed specifically to collect and expose a wide array of machine-level and operating system metrics from Linux, forming the backbone for comprehensive infrastructure monitoring and alerting.
@@ -56,7 +55,7 @@ http_server_config:
   http2: true
 ```
 
-> The `localdomain.com` certificate in the example is a wildcard certificate for the local domain of the cluster, managed internally via PowerDNS, and issued via Let's Encrypt. Adapt it to your scenario.
+> The `localdomain.com` certificate is a wildcard certificate for the local domain of the cluster, managed internally via PowerDNS, and issued via Let's Encrypt. Adapt it to your scenario.
 
 And let's finish with the `/etc/default/prometheus-node-exporter` file, that contains the the command-line arguments given to the binary:
 
@@ -74,64 +73,60 @@ systemctl restart prometheus-node-exporter
 systemctl status prometheus-node-exporter
 ```
 
-> You will have to repeat this installation in every VM and node, so you may want to automate it using Ansible.
-
 ## Prometheus
 
 Let's now switch to the LXC holding the Prometheus server. We need to configure it with all the targets where the Node Exporter is being run.
 
-As a first step, if you have not already, create the directories for the file-based discovery configuration files. This 
+As a first step, if you have not already, create the directories for the file-based discovery configuration files: 
 
 ```bash
 mkdir --parents --mode=0755 /etc/prometheus/file_sd_configs
 ```
 
-Prometheus file-based service discovery is a mechanism that allows Prometheus to automatically discover and manage scrape targets by reading target information from files on disk.
+The file-based service discovery is a mechanism that allows Prometheus to automatically discover and manage scrape targets by reading the necessary information from files on disk. Prometheus periodically checks these files for changes, and upon detecting modifications, it updates its list of targets without requiring a restart or reload.
 
-Prometheus periodically checks these files for changes, and upon detecting modifications, it updates its list of targets without requiring a restart or reload.
+This approach is particularly useful for integrating custom or third-party service discovery systems, as it enables external processes, such as configuration management tools, cron jobs, or dedicated sidecar programs, to generate the target files.
 
-This approach is particularly useful for integrating custom or third-party service discovery systems, as it enables external processes—such as configuration management tools, cron jobs, or dedicated sidecar programs—to generate the target files.
+The default refresh interval for file-based discovery is 5 minutes, but this can be configured using the `refresh_interval` parameter in the Prometheus configuration.
 
-The default refresh interval for file-based discovery is 5 minutes, but this can be configured using the refresh_interval parameter in the Prometheus configuration.
+Example `/etc/prometheus/file_sd_configs/node_exporter.yml` file:
 
 ```yaml
 - targets:
-  - 'andronautic.andromedant.com:9100'
-  - 'mongodb1.andromedant.com:9100'
-  - 'mongodb3.andromedant.com:9100'
-  - 'nfs1.andromedant.com:9100'
-  - 'nfs2.andromedant.com:9100'
-  - 'postgresql1.andromedant.com:9100'
-  - 'postgresql6.andromedant.com:9100'
-  - 'nomad1.andromedant.com:9100'
-  - 'storm1.andromedant.com:9100'
-  - 'storm2.andromedant.com:9100'
+  - 'mongodb1.localdomain.com:9100'
+  - 'mongodb2.localdomain.com:9100'
+  - 'nfs1.localdomain.com:9100'
+  - 'nfs2.localdomain.com:9100'
+  - 'postgresql1.localdomain.com:9100'
+  - 'postgresql2.localdomain.com:9100'
   labels:
     group: 'qemu'
 ```
 
-Edit the `/etc/prometheus/prometheus.yml` configuration file in the `prometheus1.localdomain.com` LXC to instruct the Prometheus server to pull metrics from the Node Exporter.
-
-
+We are now ready to edit the `/etc/prometheus/prometheus.yml` configuration file of our Prometheus server to configure the new job under the `scrape_configs` key:
 
 ```yaml
-  # LXC and VM of the Proxmox cluster
+scrape_configs:
+
   - job_name: 'node_exporter'
-    # Encrypt communications between guests
+    scrape_interval: 15s
     scheme: https
-    # Do not use the HTTP proxy for internal communication
-    proxy_from_environment: false
     tls_config:
       ca_file: /etc/ssl/certs/ISRG_Root_X1.pem
-      # Only needed when using self-signed certificates.
-      # server_name: prometheus1.domain.com
       insecure_skip_verify: false
     file_sd_configs:
       - files:
-        - file_sd_configs/node_exporter/grafana.yml
-        - file_sd_configs/node_exporter/loki.yml
-        - file_sd_configs/node_exporter/minio.yml
-        - file_sd_configs/node_exporter/nginx.yml
-        - file_sd_configs/node_exporter/postgresql.yml
-        - file_sd_configs/node_exporter/prometheus.yml
+        - file_sd_configs/node_exporter.yml
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(\w)\.localdomain\.com:.*'
+        target_label: host
+        replacement: '$1'
 ```
+
+Note the following aspects of this configuration file:
+
+* `scrape_interval: 15s`, to increase how often the target is scraped (its default value is `1m`).
+* `scheme: https`, to encrypt communications between the Prometheus server and the Node Exporter daemons.
+* `insecure_skip_verify: false`, the default value, to force Prometheus to perform a full TLS certificate validation.
+* `relabel_configs`, to add the `host` label from the instance. This is done in all the jobs so that we can use it when filtering by all metrics belonging to a host, no matter the exporter that brought them in.
