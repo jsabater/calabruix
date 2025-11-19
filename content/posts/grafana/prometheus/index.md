@@ -1,7 +1,7 @@
 ---
 title: "Storing metric data with Prometheus"
 date: 2024-09-24
-lastmod: 2025-10-30
+lastmod: 2025-11-19
 description: "Collect and store metric data using Prometheus."
 summary: "Collect and store metric data using Prometheus."
 categories: ["infrastructure"]
@@ -141,7 +141,7 @@ Finally, let's proceed to the main configuration file at `/etc/prometheus/promet
 # Set the global defaults
 global:
   # How frequently to scrape targets (default is 1m)
-  scrape_interval: 15s
+  scrape_interval: 30s
   # How long until a scrape request times out (default is 10s)
   scrape_timeout: 10s
 
