@@ -1,0 +1,5 @@
+{{- with .Page.Resources.GetMatch (.Get 0) -}}
+{{ .RelPermalink }}
+{{- else -}}
+{{ errorf "Missing page resource: %q (%s)" (.Get 0) .Page.File.Path }}
+{{- end -}}

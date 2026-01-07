@@ -1,3 +1,20 @@
+{{/* 
+render-link.html
+
+Purpose:
+- Custom Markdown link render hook
+- Added to support glossary links (see glossary section)
+- Resolves relative links to:
+  - pages
+  - page bundle resources
+  - global resources
+- Handles special cases:
+  - "*" glossary shorthand
+  - in-page anchors
+
+Originally added for glossary support.
+Do not remove unless glossary logic is migrated elsewhere.
+*/}}
 {{- $u := urls.Parse .Destination -}}
 {{- $href := $u.String -}}
 
