@@ -61,7 +61,7 @@ forgejoDefaultServer = "https://v8.next.forgejo.org"
   showDateOnlyInArticle = false
   showDateUpdated = true
   showAuthor = true
-  # showAuthorBottom = false
+  showAuthorBottom = false
   showHero = false
   # heroStyle = "basic" # valid options: basic, big, background, thumbAndBackground
   layoutBackgroundBlur = true # only used when heroStyle equals background or thumbAndBackground
@@ -96,7 +96,7 @@ forgejoDefaultServer = "https://v8.next.forgejo.org"
   showLikes = false
   showTableOfContents = false
   showCards = true
-  orderByWeight = false
+  orderByWeight = true
   groupByYear = true
   cardView = true
   cardViewScreenWidth = false
@@ -150,11 +150,11 @@ forgejoDefaultServer = "https://v8.next.forgejo.org"
   # enableTrackEvent = true
 
 [buymeacoffee]
-  identifier = "jsabater"
-  globalWidget = true
+  # identifier = "jsabater"
+  # globalWidget = true
   # globalWidgetMessage = "Hello"
-  globalWidgetColor = "#FFDD00"
-  globalWidgetPosition = "Right"
+  # globalWidgetColor = "#FFDD00"
+  # globalWidgetPosition = "Right"
 
 [verification]
   # google = ""
