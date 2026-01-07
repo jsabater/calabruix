@@ -1,0 +1,117 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { 
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif; 
+    line-height: 1.6; 
+    background: #f4f4f4; 
+    padding: 20px;
+}
+.container { 
+    max-width: 1000px; 
+    margin: 0 auto; 
+    background: white; 
+    padding: 30px; 
+    border-radius: 10px; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+header { 
+    text-align: center; 
+    border-bottom: 3px solid #2c3e50; 
+    padding-bottom: 20px; 
+    margin-bottom: 30px;
+}
+header h1 { color: #2c3e50; font-size: 2em; }
+header .codi { color: #7f8c8d; font-size: 0.9em; }
+header .curs { 
+    background: #3498db; 
+    color: white; 
+    padding: 5px 15px; 
+    border-radius: 20px; 
+    display: inline-block; 
+    margin-top: 10px;
+}
+.resum {
+    display: flex;
+    justify-content: space-around;
+    background: #ecf0f1;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+.resum-item { text-align: center; }
+.resum-item .valor { font-size: 2em; font-weight: bold; color: #2c3e50; }
+.resum-item .etiqueta { color: #7f8c8d; font-size: 0.9em; }
+section { margin-bottom: 30px; }
+section h2 { 
+    color: #2c3e50; 
+    border-bottom: 2px solid #3498db; 
+    padding-bottom: 10px; 
+    margin-bottom: 20px;
+}
+/* Taula d'assignatures */
+table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+th { background: #2c3e50; color: white; }
+tr:hover { background: #f5f5f5; }
+.codi-assig { 
+    background: #27ae60; 
+    color: white; 
+    padding: 3px 8px; 
+    border-radius: 4px; 
+    font-weight: bold;
+    font-size: 0.85em;
+}
+.hores { text-align: right; }
+.hores-alta { color: #c0392b; font-weight: bold; }
+.hores-mitjana { color: #f39c12; }
+.hores-baixa { color: #27ae60; }
+/* Graella d'alumnes */
+.alumnes-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+    gap: 15px;
+}
+.alumne-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-left: 4px solid #3498db;
+    border-radius: 0 8px 8px 0;
+    padding: 15px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.alumne-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.alumne-card .id { 
+    background: #3498db; 
+    color: white; 
+    padding: 2px 8px; 
+    border-radius: 4px; 
+    font-size: 0.75em;
+    float: right;
+}
+.alumne-card .nom-complet { 
+    font-weight: bold; 
+    color: #2c3e50; 
+    font-size: 1.1em;
+    margin-bottom: 5px;
+}
+.alumne-card .email { 
+    color: #3498db; 
+    font-size: 0.9em;
+    text-decoration: none;
+}
+.alumne-card .email:hover { text-decoration: underline; }
+.alumne-card .edat { 
+    color: #7f8c8d; 
+    font-size: 0.85em;
+    margin-top: 5px;
+}
+footer {
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 0.85em;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}

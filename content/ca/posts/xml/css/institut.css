@@ -1,0 +1,233 @@
+/* ----- Estils generals ----- */
+
+institut {
+    display: block;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+/* ----- Capçalera de l'institut ----- */
+
+institut > nom {
+    display: block;
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #1a5276;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+institut > codi {
+    display: block;
+    text-align: center;
+    color: #666;
+    font-size: 0.9em;
+}
+
+institut > codi::before {
+    content: "Codi del centre: ";
+}
+
+institut > any-academic {
+    display: block;
+    text-align: center;
+    font-size: 1.1em;
+    color: #444;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #1a5276;
+}
+
+institut > any-academic::before {
+    content: "Curs acadèmic: ";
+    font-weight: bold;
+}
+
+/* ----- Curs ----- */
+
+curs {
+    display: block;
+}
+
+curs::before {
+    content: attr(nom) " (" attr(id) ")";
+    display: block;
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #1a5276;
+    background-color: #d4e6f1;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+
+/* ----- Assignatures ----- */
+
+assignatures {
+    display: block;
+    margin-bottom: 25px;
+}
+
+assignatures::before {
+    content: "Assignatures";
+    display: block;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #1a5276;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #1a5276;
+}
+
+assignatura {
+    display: block;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-left: 4px solid #2ecc71;
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    border-radius: 0 4px 4px 0;
+}
+
+assignatura::before {
+    content: attr(codi);
+    display: inline-block;
+    background-color: #2ecc71;
+    color: white;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-right: 10px;
+    font-size: 0.85em;
+}
+
+assignatura > nom {
+    display: inline;
+    font-weight: 500;
+}
+
+assignatura > hores {
+    display: inline;
+    float: right;
+    color: #666;
+}
+
+assignatura > hores::before {
+    content: "⏱ ";
+}
+
+assignatura > hores::after {
+    content: " hores";
+}
+
+/* ----- Alumnes ----- */
+
+alumnes {
+    display: block;
+}
+
+alumnes::before {
+    content: "Alumnes matriculats";
+    display: block;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #1a5276;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #1a5276;
+}
+
+alumne {
+    display: block;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 12px 15px;
+    margin-bottom: 6px;
+    border-radius: 4px;
+    transition: box-shadow 0.2s;
+}
+
+alumne:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Efecte zebrat */
+alumne:nth-of-type(odd) {
+    background-color: #fff;
+}
+
+alumne:nth-of-type(even) {
+    background-color: #f8f9fa;
+}
+
+/* Identificador de l'alumne */
+alumne::before {
+    content: attr(id);
+    display: inline-block;
+    background-color: #3498db;
+    color: white;
+    font-size: 0.75em;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-right: 10px;
+}
+
+alumne > nom {
+    display: inline;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+alumne > cognoms {
+    display: inline;
+    color: #2c3e50;
+}
+
+alumne > cognoms::before {
+    content: " ";
+}
+
+alumne > data-naixement {
+    display: none; /* Ocultam la data de naixement */
+}
+
+alumne > email {
+    display: inline;
+    float: right;
+    color: #2980b9;
+    font-size: 0.9em;
+}
+
+alumne > email::before {
+    content: "✉ ";
+}
+
+/* ----- Estils per a impressió ----- */
+
+@media print {
+    institut {
+        border: none;
+        box-shadow: none;
+        max-width: 100%;
+    }
+    
+    alumne:hover {
+        box-shadow: none;
+    }
+    
+    alumne > email {
+        color: #000;
+    }
+    
+    assignatura {
+        border-left-color: #000;
+    }
+}

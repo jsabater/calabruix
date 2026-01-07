@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    
+    <!-- Tipus personalitzats -->
+    <xs:simpleType name="tipusCodiAssignatura">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[A-Z]{2,5}"/>
+        </xs:restriction>
+    </xs:simpleType>
+    
+    <xs:simpleType name="tipusHores">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="1"/>
+            <xs:maxInclusive value="300"/>
+        </xs:restriction>
+    </xs:simpleType>
+    
+    <xs:simpleType name="tipusEmail">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}"/>
+        </xs:restriction>
+    </xs:simpleType>
+    
+    <!-- Element arrel -->
+    <xs:element name="institut">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="nom" type="xs:string"/>
+                <xs:element name="codi" type="xs:string"/>
+                <xs:element name="any-academic" type="xs:string"/>
+                <xs:element name="curs" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="assignatures">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="assignatura" maxOccurs="unbounded">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="nom" type="xs:string"/>
+                                                    <xs:element name="hores" type="tipusHores"/>
+                                                </xs:sequence>
+                                                <xs:attribute name="codi" type="tipusCodiAssignatura" use="required"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="alumnes">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="alumne" maxOccurs="unbounded">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="nom" type="xs:string"/>
+                                                    <xs:element name="cognoms" type="xs:string"/>
+                                                    <xs:element name="data-naixement" type="xs:date"/>
+                                                    <xs:element name="email" type="tipusEmail"/>
+                                                </xs:sequence>
+                                                <xs:attribute name="id" type="xs:ID" use="required"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                        <xs:attribute name="id" type="xs:ID" use="required"/>
+                        <xs:attribute name="nom" type="xs:string" use="required"/>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    
+</xs:schema>

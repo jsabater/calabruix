@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<emp:empresa xmlns:emp="http://exemple.com/empresa"
+             xmlns:rh="http://exemple.com/recursos-humans"
+             xmlns:fin="http://exemple.com/finances"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    
+    <!-- Informació general de l'empresa -->
+    <emp:identificacio>
+        <emp:nom>TechSolutions Balears S.L.</emp:nom>
+        <emp:cif>B07123456</emp:cif>
+        <emp:adreca>
+            <emp:carrer>Carrer de la Tecnologia, 42</emp:carrer>
+            <emp:ciutat>Palma</emp:ciutat>
+            <emp:cp>07001</emp:cp>
+        </emp:adreca>
+        <emp:web>https://www.exemple.com</emp:web>
+    </emp:identificacio>
+    
+    <!-- Departaments -->
+    <emp:departaments>
+        <emp:departament id="DEP001">
+            <emp:nom>Desenvolupament</emp:nom>
+            <emp:ubicacio>Planta 2</emp:ubicacio>
+        </emp:departament>
+        <emp:departament id="DEP002">
+            <emp:nom>Sistemes</emp:nom>
+            <emp:ubicacio>Planta 1</emp:ubicacio>
+        </emp:departament>
+        <emp:departament id="DEP003">
+            <emp:nom>Administració</emp:nom>
+            <emp:ubicacio>Planta baixa</emp:ubicacio>
+        </emp:departament>
+    </emp:departaments>
+    
+    <!-- Recursos humans: empleats -->
+    <rh:plantilla>
+        <rh:empleat id="EMP001" emp:departament-ref="DEP001">
+            <rh:dades-personals>
+                <rh:nom>Catalina</rh:nom>
+                <rh:cognoms>Sureda Vidal</rh:cognoms>
+                <rh:dni>43123456A</rh:dni>
+            </rh:dades-personals>
+            <rh:dades-laborals>
+                <rh:carrec>Cap de Desenvolupament</rh:carrec>
+                <rh:data-alta>2018-03-15</rh:data-alta>
+                <rh:tipus-contracte>Indefinit</rh:tipus-contracte>
+            </rh:dades-laborals>
+            <fin:dades-salarials>
+                <fin:salari-brut moneda="EUR">45000.00</fin:salari-brut>
+                <fin:complements>
+                    <fin:complement tipus="antiguitat">1500.00</fin:complement>
+                    <fin:complement tipus="responsabilitat">3000.00</fin:complement>
+                </fin:complements>
+            </fin:dades-salarials>
+        </rh:empleat>
+        
+        <rh:empleat id="EMP002" emp:departament-ref="DEP001">
+            <rh:dades-personals>
+                <rh:nom>Miquel</rh:nom>
+                <rh:cognoms>Ferrer Mas</rh:cognoms>
+                <rh:dni>43234567B</rh:dni>
+            </rh:dades-personals>
+            <rh:dades-laborals>
+                <rh:carrec>Programador Sènior</rh:carrec>
+                <rh:data-alta>2020-09-01</rh:data-alta>
+                <rh:tipus-contracte>Indefinit</rh:tipus-contracte>
+            </rh:dades-laborals>
+            <fin:dades-salarials>
+                <fin:salari-brut moneda="EUR">38000.00</fin:salari-brut>
+                <fin:complements>
+                    <fin:complement tipus="antiguitat">800.00</fin:complement>
+                </fin:complements>
+            </fin:dades-salarials>
+        </rh:empleat>
+        
+        <rh:empleat id="EMP003" emp:departament-ref="DEP002">
+            <rh:dades-personals>
+                <rh:nom>Aina</rh:nom>
+                <rh:cognoms>Pons Oliver</rh:cognoms>
+                <rh:dni>43345678C</rh:dni>
+            </rh:dades-personals>
+            <rh:dades-laborals>
+                <rh:carrec>Administradora de Sistemes</rh:carrec>
+                <rh:data-alta>2019-01-10</rh:data-alta>
+                <rh:tipus-contracte>Indefinit</rh:tipus-contracte>
+            </rh:dades-laborals>
+            <fin:dades-salarials>
+                <fin:salari-brut moneda="EUR">42000.00</fin:salari-brut>
+                <fin:complements>
+                    <fin:complement tipus="antiguitat">1200.00</fin:complement>
+                    <fin:complement tipus="disponibilitat">2000.00</fin:complement>
+                </fin:complements>
+            </fin:dades-salarials>
+        </rh:empleat>
+        
+        <rh:empleat id="EMP004" emp:departament-ref="DEP003">
+            <rh:dades-personals>
+                <rh:nom>Joana</rh:nom>
+                <rh:cognoms>Riera Crespí</rh:cognoms>
+                <rh:dni>43456789D</rh:dni>
+            </rh:dades-personals>
+            <rh:dades-laborals>
+                <rh:carrec>Responsable d'Administració</rh:carrec>
+                <rh:data-alta>2017-06-20</rh:data-alta>
+                <rh:tipus-contracte>Indefinit</rh:tipus-contracte>
+            </rh:dades-laborals>
+            <fin:dades-salarials>
+                <fin:salari-brut moneda="EUR">35000.00</fin:salari-brut>
+                <fin:complements>
+                    <fin:complement tipus="antiguitat">1800.00</fin:complement>
+                </fin:complements>
+            </fin:dades-salarials>
+        </rh:empleat>
+    </rh:plantilla>
+    
+    <!-- Dades financeres globals -->
+    <fin:resum-financer exercici="2024">
+        <fin:massa-salarial>
+            <fin:total-brut moneda="EUR">160000.00</fin:total-brut>
+            <fin:total-complements moneda="EUR">10300.00</fin:total-complements>
+            <fin:cost-empresa moneda="EUR">204360.00</fin:cost-empresa>
+        </fin:massa-salarial>
+    </fin:resum-financer>
+    
+</emp:empresa>

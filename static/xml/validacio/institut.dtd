@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!ELEMENT institut (nom, codi, any-academic, curs+)>
+
+<!ELEMENT nom (#PCDATA)>
+<!ELEMENT codi (#PCDATA)>
+<!ELEMENT any-academic (#PCDATA)>
+
+<!ELEMENT curs (assignatures, alumnes)>
+<!ATTLIST curs
+    id ID #REQUIRED
+    nom CDATA #REQUIRED
+>
+
+<!ELEMENT assignatures (assignatura+)>
+<!ELEMENT assignatura (nom, hores)>
+<!ATTLIST assignatura
+    codi ID #REQUIRED
+>
+
+<!ELEMENT hores (#PCDATA)>
+
+<!ELEMENT alumnes (alumne+)>
+<!ELEMENT alumne (nom, cognoms, data-naixement, email)>
+<!ATTLIST alumne
+    id ID #REQUIRED
+>
+
+<!ELEMENT cognoms (#PCDATA)>
+<!ELEMENT data-naixement (#PCDATA)>
+<!ELEMENT email (#PCDATA)>
