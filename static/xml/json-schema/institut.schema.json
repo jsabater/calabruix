@@ -1,0 +1,112 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://cifpmoll.eu/schemas/institut.json",
+    "title": "Institut de Formació Professional",
+    "description": "Esquema per validar documents JSON d'instituts de FP",
+    "type": "object",
+    "required": ["institut"],
+    "properties": {
+        "institut": {
+            "type": "object",
+            "required": ["nom", "codi", "anyAcademic", "curs"],
+            "properties": {
+                "nom": {
+                    "type": "string",
+                    "description": "Nom oficial del centre",
+                    "minLength": 1
+                },
+                "codi": {
+                    "type": "string",
+                    "description": "Codi del centre educatiu (8 dígits)",
+                    "pattern": "^[0-9]{8}$"
+                },
+                "anyAcademic": {
+                    "type": "string",
+                    "description": "Any acadèmic en format AAAA-AA",
+                    "pattern": "^[0-9]{4}-[0-9]{2}$"
+                },
+                "curs": {
+                    "$ref": "#/$defs/curs"
+                }
+            }
+        }
+    },
+    "$defs": {
+        "curs": {
+            "type": "object",
+            "required": ["id", "nom", "assignatures", "alumnes"],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Identificador del curs (2-5 lletres majúscules)",
+                    "pattern": "^[A-Z]{2,5}$"
+                },
+                "nom": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "assignatures": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/$defs/assignatura"
+                    }
+                },
+                "alumnes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/alumne"
+                    }
+                }
+            }
+        },
+        "assignatura": {
+            "type": "object",
+            "required": ["codi", "nom", "hores"],
+            "properties": {
+                "codi": {
+                    "type": "string",
+                    "description": "Codi de l'assignatura",
+                    "pattern": "^[A-Z]{2,5}$"
+                },
+                "nom": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "hores": {
+                    "type": "integer",
+                    "description": "Hores lectives totals",
+                    "minimum": 1,
+                    "maximum": 300
+                }
+            }
+        },
+        "alumne": {
+            "type": "object",
+            "required": ["id", "nom", "cognoms", "email"],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Identificador d'alumne (A seguit de 3 dígits)",
+                    "pattern": "^A[0-9]{3}$"
+                },
+                "nom": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "cognoms": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "dataNaixement": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "email": {
+                    "type": "string",
+                    "format": "email"
+                }
+            }
+        }
+    }
+}

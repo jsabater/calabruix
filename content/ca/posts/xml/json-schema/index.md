@@ -10,7 +10,6 @@ series: ["XML"]
 series_order: 12
 weight: 120
 slug: json-schema
-draft: true
 ---
 
 Convertir un document XML a JSON no és un procés mecànic amb una única solució correcta. Ambdós formats tenen estructures i filosofies diferents, i les decisions de conversió afecten com de fàcil serà treballar amb les dades resultants. No existeix un estàndard que defineixi com fer aquesta conversió, sinó que cada desenvolupador o eina pot prendre decisions diferents.
@@ -298,11 +297,9 @@ Per a la majoria de casos (APIs web, aplicacions modernes), l'opció 1 o 3 són 
 
 ## JSON Schema
 
-### Què és i per què és necessari?
+Quan fem feina amb JSON en aplicacions reals, sovint necessitam garantir que les dades tenen l'estructura correcta. Per exemple, si una API rep dades d'un formulari de registre, cal verificar que el camp `email` existeix, que conté un email vàlid, i que `edat` és un número enter positiu. Sense validació, el sistema podria fallar o, pitjor, processar dades incorrectes.
 
-Quan treballem amb JSON en aplicacions reals, sovint necessitem garantir que les dades tenen l'estructura correcta. Per exemple, si una API rep dades d'un formulari de registre, cal verificar que el camp `email` existeix, que conté un email vàlid, i que l'`edat` és un número positiu. Sense validació, el sistema podria fallar o, pitjor, processar dades incorrectes.
-
-JSON Schema és un vocabulari que permet definir l'estructura esperada d'un document JSON i validar-lo automàticament. És l'equivalent a DTD/XSD per a XML, tot i que és més recent (el primer draft és de 2010, amb versions estables a partir de 2019) i encara està en evolució. A diferència de DTD i XSD, JSON Schema s'escriu en el mateix format que valida: JSON.
+JSON Schema és un vocabulari que permet definir l'estructura esperada d'un document JSON i validar-lo automàticament. És l'equivalent a DTD/XSD per a XML, tot i que és més recent (el primer esborrany és de 2010 i la primera versió estable es va publicar el 2019) i encara està en evolució. A diferència de DTD i XSD, JSON Schema s'escriu en el mateix format que valida: JSON.
 
 ### Estructura bàsica
 
@@ -311,41 +308,37 @@ Un esquema JSON Schema és, en si mateix, un document JSON amb una estructura es
 ```json
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://exemple.com/esquema.json",
+    "$id": "https://cifpfbmoll.eu/esquema.json",
     "title": "Títol de l'esquema",
     "description": "Descripció de l'esquema",
     "type": "object",
     "properties": {
-        ...
+        [..]
     }
 }
 ```
 
 Analitzem cada camp:
 
-- **`$schema`**: Indica quina versió de JSON Schema s'utilitza. És important perquè les funcionalitats varien entre versions. La versió `2020-12` és l'última estable.
-
-- **`$id`**: Identificador únic de l'esquema. Normalment és una URL que podria apuntar a on està publicat l'esquema, tot i que no és obligatori que la URL sigui accessible.
-
-- **`title`** i **`description`**: Documentació per a humans. No afecten la validació, però ajuden a entendre què valida l'esquema.
-
-- **`type`**: El tipus de dada esperat a l'arrel del document. Normalment és `object` per a documents JSON complets.
-
-- **`properties`**: Defineix les propietats que pot tenir l'objecte i les seves restriccions.
+* `$schema`: Indica quina versió de JSON Schema s'utilitza. És important perquè les funcionalitats varien entre versions. La versió `2020-12` és l'última estable.
+* `$id`: Identificador únic de l'esquema. Normalment és una URL que podria apuntar a on està publicat l'esquema, tot i que no és obligatori que la URL sigui accessible.
+* `title` i `description`: Documentació per a humans. No afecten la validació, però ajuden a entendre què valida l'esquema.
+* `type`: El tipus de dada esperat a l'arrel del document. Normalment és `object` per a documents JSON complets.
+* `properties`: Defineix les propietats que pot tenir l'objecte i les seves restriccions.
 
 ### Tipus de dades
 
 JSON Schema suporta els mateixos tipus que JSON, amb l'afegit d'`integer` per distingir enters de decimals:
 
-| Tipus | Descripció | Exemple de valor |
-|-------|------------|------------------|
-| `string` | Cadena de text | `"Hola món"` |
-| `number` | Número (enter o decimal) | `3.14`, `42` |
-| `integer` | Només enters | `42`, `-7` |
-| `boolean` | Valor lògic | `true`, `false` |
-| `null` | Valor nul | `null` |
-| `object` | Objecte JSON | `{"clau": "valor"}` |
-| `array` | Array JSON | `[1, 2, 3]` |
+| Tipus     | Descripció               | Exemple de valor    |
+|-----------|--------------------------|---------------------|
+| `string`  | Cadena de text           | `"Hola món"`        |
+| `number`  | Número (enter o decimal) | `3.14`, `42`        |
+| `integer` | Només enters             | `42`, `-7`          |
+| `boolean` | Valor lògic              | `true`, `false`     |
+| `null`    | Valor nul                | `null`              |
+| `object`  | Objecte JSON             | `{"clau": "valor"}` |
+| `array`   | Array JSON               | `[1, 2, 3]`         |
 
 La diferència entre `number` i `integer` és important: `number` accepta `3.14` mentre que `integer` el rebutjaria.
 
@@ -353,7 +346,7 @@ La diferència entre `number` i `integer` és important: `number` accepta `3.14`
 
 JSON Schema permet definir restriccions molt precises per a cada tipus de dada. Vegem les més habituals amb exemples pràctics.
 
-#### Validació de strings
+**Validació de strings**
 
 ```json
 {
@@ -364,10 +357,12 @@ JSON Schema permet definir restriccions molt precises per a cada tipus de dada. 
 }
 ```
 
-- **`minLength`** i **`maxLength`**: Longitud mínima i màxima del text. `minLength: 1` evita strings buits.
-- **`pattern`**: Expressió regular que el valor ha de complir. En aquest exemple, `^[A-Z][a-z]+$` significa "comença amb majúscula seguida d'una o més minúscules" (per exemple, "Maria" seria vàlid, però "maria" o "MARIA" no).
+En aquest cas:
 
-#### Validació de números
+* `minLength` i `maxLength`: Longitud mínima i màxima del text. `minLength: 1` evita strings buits.
+* `pattern`: Expressió regular que el valor ha de complir. En aquest exemple, `^[A-Z][a-z]+$` significa "comença amb majúscula seguida d'una o més minúscules" (per exemple, "Maria" seria vàlid, però "maria" o "MARIA" no).
+
+**Validació de números**
 
 ```json
 {
@@ -377,25 +372,27 @@ JSON Schema permet definir restriccions molt precises per a cada tipus de dada. 
 }
 ```
 
-- **`minimum`** i **`maximum`**: Valor mínim i màxim acceptat (inclosos).
-- També existeixen **`exclusiveMinimum`** i **`exclusiveMaximum`** per a límits no inclosos.
+En aquest cas:
+
+* `minimum` i `maximum`: Valor mínim i màxim acceptat (inclosos).
+* També existeixen `exclusiveMinimum` i `exclusiveMaximum` per a límits no inclosos.
 
 Per exemple, per validar hores d'una assignatura (entre 1 i 300), aquesta restricció rebutjaria valors com `0`, `-5` o `500`.
 
-#### Enumeracions
+**Enumeracions**
 
 Quan un camp només pot tenir uns valors concrets, usem `enum`:
 
 ```json
 {
     "type": "string",
-    "enum": ["LLM", "PPSEG", "DIW", "ASO"]
+    "enum": ["LLM", "FP", "ASIX", "ASO"]
 }
 ```
 
 Qualsevol valor que no sigui exactament un dels llistats serà rebutjat. Això és útil per a codis, estats, categories, etc.
 
-#### Formats predefinits
+**Formats predefinits**
 
 JSON Schema inclou formats predefinits per a tipus de dades comuns:
 
@@ -408,20 +405,20 @@ JSON Schema inclou formats predefinits per a tipus de dades comuns:
 
 Formats disponibles més habituals:
 
-| Format | Descripció | Exemple vàlid |
-|--------|------------|---------------|
-| `email` | Adreça de correu electrònic | `usuari@domini.com` |
-| `date` | Data ISO 8601 | `2025-03-15` |
-| `time` | Hora ISO 8601 | `14:30:00` |
-| `date-time` | Data i hora ISO 8601 | `2025-03-15T14:30:00Z` |
-| `uri` | URL o URI | `https://exemple.com` |
-| `uuid` | Identificador únic universal | `550e8400-e29b-41d4-a716-446655440000` |
-| `ipv4` | Adreça IPv4 | `192.168.1.1` |
-| `ipv6` | Adreça IPv6 | `2001:0db8:85a3::8a2e:0370:7334` |
+| Format      | Descripció                   | Exemple vàlid                          |
+|-------------|------------------------------|----------------------------------------|
+| `email`     | Adreça de correu electrònic  | `usuari@domini.com`                    |
+| `date`      | Data ISO 8601                | `2025-03-15`                           |
+| `time`      | Hora ISO 8601                | `14:30:00`                             |
+| `date-time` | Data i hora ISO 8601         | `2025-03-15T14:30:00Z`                 |
+| `uri`       | URL o URI                    | `https://exemple.com`                  |
+| `uuid`      | Identificador únic universal | `550e8400-e29b-41d4-a716-446655440000` |
+| `ipv4`      | Adreça IPv4                  | `192.168.1.1`                          |
+| `ipv6`      | Adreça IPv6                  | `2001:0db8:85a3::8a2e:0370:7334`       |
 
-Important: no tots els validadors implementen tots els formats. Alguns només comproven el tipus (`string`) però no el format. Cal verificar què suporta l'eina que s'utilitzi.
+> No tots els validadors implementen tots els formats. Alguns només comproven el tipus (`string`) però no el format. Cal verificar què suporta l'eina que s'utilitzi.
 
-#### Validació d'arrays
+**Validació d'arrays**
 
 ```json
 {
@@ -435,11 +432,11 @@ Important: no tots els validadors implementen tots els formats. Alguns només co
 }
 ```
 
-- **`items`**: Defineix l'esquema que han de complir els elements de l'array. En aquest cas, tots han de ser strings.
-- **`minItems`** i **`maxItems`**: Nombre mínim i màxim d'elements.
-- **`uniqueItems`**: Si és `true`, no es permeten elements duplicats.
+* `items`: Defineix l'esquema que han de complir els elements de l'array. En aquest cas, tots han de ser strings.
+* `minItems` i `maxItems`: Nombre mínim i màxim d'elements.
+* `uniqueItems`: Si és `true`, no es permeten elements duplicats.
 
-#### Camps obligatoris i opcionals
+**Camps obligatoris i opcionals**
 
 Per defecte, totes les propietats són opcionals. Per fer-les obligatòries, s'usa `required`:
 
@@ -457,12 +454,12 @@ Per defecte, totes les propietats són opcionals. Per fer-les obligatòries, s'u
 
 En aquest exemple, `nom` i `email` són obligatoris, mentre que `telefon` és opcional (pot no existir).
 
-### Reutilització amb `$ref` i `$defs`
+### Reutilització
 
 Quan un esquema és complex i té estructures que es repeteixen, podem definir-les un cop i referenciar-les. Això fa l'esquema més mantenible i llegible.
 
-- **`$defs`**: Secció on es defineixen subesquemes reutilitzables.
-- **`$ref`**: Referència a un subesquema definit en una altra part.
+* `$defs`: Secció on es defineixen subesquemes reutilitzables.
+* `$ref`: Referència a un subesquema definit en una altra part.
 
 ```json
 {
@@ -484,13 +481,13 @@ Quan un esquema és complex i té estructures que es repeteixen, podem definir-l
 }
 ```
 
-En aquest exemple, definim una vegada l'estructura d'adreça a `$defs` i la reutilitzem per a l'adreça de facturació i la d'enviament. Si més tard cal afegir un camp a les adreces, només cal modificar un lloc.
+En aquest exemple, definim una vegada l'estructura d'adreça a `$defs` i la reutilitzam per a l'adreça de facturació i la d'enviament. Si més tard cal afegir un camp a les adreces, només cal modificar un lloc.
 
 La sintaxi `#/$defs/adreca` significa "dins d'aquest document (`#`), a la secció `$defs`, l'element `adreca`".
 
-### JSON Schema per a l'institut
+### Document de l'institut
 
-Vegem un esquema complet per validar el document JSON de l'institut que hem usat als exemples anteriors. L'esquema defineix l'estructura esperada amb totes les restriccions:
+Vegem un [esquema complet per validar el document JSON de l'institut](/xml/json-schema/institut.schema.json) que hem usat als exemples anteriors. L'esquema defineix l'estructura esperada amb totes les restriccions:
 
 ```json
 {
@@ -616,111 +613,82 @@ Observa com l'esquema:
 
 Si un document JSON no compleix alguna d'aquestes restriccions, el validador indicarà exactament quin camp falla i per què.
 
-### Comparativa DTD/XSD vs JSON Schema
+### Comparativa
 
-| Aspecte | DTD | XSD | JSON Schema |
-|---------|-----|-----|-------------|
-| **Sintaxi** | Pròpia (no XML) | XML | JSON |
-| **Tipus de dades** | Bàsics (10 tipus) | Molt rics (44+ tipus) | Rics (7 tipus + formats) |
-| **Patrons (regex)** | No | Sí | Sí |
-| **Reutilització** | Entitats | Tipus complexos | `$ref` i `$defs` |
-| **Documentació** | Comentaris | `xs:annotation` | `title`, `description` |
-| **Validació en línia** | Dins del document | Fitxer extern | Fitxer extern |
-| **Maduresa** | Molt alta (1998) | Molt alta (2001) | Mitjana-alta (2019) |
-| **Adopció** | Decreixent | Estable | Creixent |
-| **Corba d'aprenentatge** | Baixa | Alta | Mitjana |
+La següent taula inclou una comparativa entre JSON Schema, DTD i XSD:
+
+| Aspecte                  | DTD               | XSD                   | JSON Schema              |
+|--------------------------|-------------------|-----------------------|--------------------------|
+| **Sintaxi**              | Pròpia (no XML)   | XML                   | JSON                     |
+| **Tipus de dades**       | Bàsics (10 tipus) | Molt rics (44+ tipus) | Rics (7 tipus + formats) |
+| **Patrons (regex)**      | No                | Sí                    | Sí                       |
+| **Reutilització**        | Entitats          | Tipus complexos       | `$ref` i `$defs`         |
+| **Documentació**         | Comentaris        | `xs:annotation`       | `title`, `description`   |
+| **Validació en línia**   | Dins del document | Fitxer extern         | Fitxer extern            |
+| **Maduresa**             | Molt alta (1998)  | Molt alta (2001)      | Mitjana-alta (2019)      |
+| **Adopció**              | Decreixent        | Estable               | Creixent                 |
+| **Corba d'aprenentatge** | Baixa             | Alta                  | Mitjana                  |
 
 La principal diferència pràctica és que JSON Schema s'escriu en JSON, cosa que el fa més familiar per a desenvolupadors que ja treballen amb aquest format. XSD, en canvi, requereix conèixer una sintaxi XML específica i bastant verbosa.
 
 ## Eines online
 
-### Validadors JSON
+Les eines online són ideals per a validacions ràpides, proves puntuals i aprenentatge. No requereixen instal·lació i ofereixen resultats immediats, cosa que les fa molt pràctiques durant el desenvolupament.
 
-#### JSONLint
+**Validadors i formatejadors**
 
-**URL:** https://jsonlint.com/
+| Eina                                                                          | Funcionalitats principals                                             |
+|-------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| [JSONLint](https://jsonlint.com/)                                             | Validació de sintaxi, formatació, missatges d'error clars             |
+| [JSON Editor Online](https://jsoneditoronline.org/)                           | Edició visual en arbre, validació en temps real, conversió de formats |
+| [JSON Formatter (Curious Concept)](https://jsonformatter.curiousconcept.com/) | Formatació amb diferents estils d'indentació, minificació             |
+| [Code Beautify JSON Viewer](https://codebeautify.org/jsonviewer)              | Visualització en arbre, conversió JSON ↔ XML, comparació de documents |
 
-Funcionalitats:
-- Validar sintaxi JSON
-- Formatejar (pretty print)
-- Detectar errors amb missatges clars
+**Validadors JSON Schema**
 
-#### JSON Schema Validator
+| Eina                                                                 | Funcionalitats principals                                               |
+|----------------------------------------------------------------------|-------------------------------------------------------------------------|
+| [JSON Schema Validator](https://www.jsonschemavalidator.net/)        | Validació contra JSON Schema, errors detallats                          |
+| [Hyperjump JSON Schema Validator](https://json-schema.hyperjump.io/) | Suport per a múltiples versions de JSON Schema, validació en temps real |
 
-**URL:** https://www.jsonschemavalidator.net/
+Aquestes eines permeten comprovar que un document JSON compleix un esquema sense necessitat d'escriure codi.
 
-Permet:
-- Validar JSON contra un JSON Schema
-- Veure errors de validació detallats
+**Conversors**
 
-#### JSON Editor Online
+| Eina                                                            | Funcionalitats principals |
+|-----------------------------------------------------------------|---------------------------|
+| [Code Beautify XML to JSON](https://codebeautify.org/xmltojson) | Conversió XML → JSON      |
+| [Code Beautify JSON to XML](https://codebeautify.org/jsontoxml) | Conversió JSON → XML      |
 
-**URL:** https://jsoneditoronline.org/
+Útils per comparar estructures entre formats o migrar dades d'un format a l'altre.
 
-Característiques:
-- Edició visual en arbre
-- Validació en temps real
-- Conversió JSON ↔ altres formats
-
-### Formatejadors i visualitzadors
-
-#### JSON Formatter & Validator (Curious Concept)
-
-**URL:** https://jsonformatter.curiousconcept.com/
-
-Opcions:
-- Formatejar amb diferents estils d'indentació
-- Validar sintaxi
-- Comprimir/minificar
-
-#### Code Beautify JSON Viewer
-
-**URL:** https://codebeautify.org/jsonviewer
-
-Funcionalitats:
-- Visualització en arbre
-- Conversió JSON ↔ XML
-- Comparació de documents JSON
-
-### Conversors
-
-#### Code Beautify XML to JSON
-
-**URL:** https://codebeautify.org/xmltojson
-
-Converteix XML a JSON i viceversa. Útil per comparar estructures.
-
----
-
-## Eines de línia de comandes Linux
+## Eines de terminal
 
 ### jq
 
-`jq` és l'eina de referència per processar JSON a la línia de comandes. És com `sed` i `awk` però per a JSON.
-
-#### Instal·lació
+`jq` és l'eina de referència per treballar amb JSON a Linux. És l'equivalent a `xmllint` i `xsltproc` combinats, però per a JSON:
 
 ```bash
-# Debian/Ubuntu
 sudo apt install jq
-
-# Fedora/RHEL
-sudo dnf install jq
-
-# Arch Linux
-sudo pacman -S jq
-
-# macOS
-brew install jq
-```
-
-#### Verificar instal·lació
-
-```bash
 jq --version
 ```
 
-#### Formatejar JSON (pretty print)
+Aquestes són les seves opcions més útils:
+
+| Opció                  | Descripció                                |
+|------------------------|-------------------------------------------|
+| `.`                    | Filtre identitat (formata el document)    |
+| `-r`                   | Raw output (sense cometes en strings)     |
+| `-c`                   | Compacte (una línia, sense formatació)    |
+| `-s`                   | Slurp (llegeix múltiples JSON com array)  |
+| `-e`                   | Exit status segons resultat               |
+| `--arg nom valor`      | Passa variable com a string               |
+| `--argjson nom valor`  | Passa variable com a JSON                 |
+| `--slurpfile nom file` | Carrega fitxer JSON a variable            |
+
+**Format**
+
+Podem usar `jq` per formatejar JSON (pretty print):
 
 ```bash
 # Des de fitxer
@@ -730,26 +698,18 @@ jq '.' document.json
 echo '{"nom":"Maria","edat":19}' | jq '.'
 ```
 
-**Sortida:**
-```json
-{
-  "nom": "Maria",
-  "edat": 19
-}
-```
+**Processament**
 
-#### Extreure valors
+Podem usar `jq` per extreure valors (similar a XPath en XML):
 
 ```bash
 # Valor d'una clau
 jq '.institut.nom' institut.json
-# "CIFP Francesc de Borja Moll"
 
 # Sense cometes (raw output)
 jq -r '.institut.nom' institut.json
-# CIFP Francesc de Borja Moll
 
-# Accedir a arrays
+# Accedir a un element d'un array
 jq '.institut.curs.assignatures[0]' institut.json
 
 # Tots els elements d'un array
@@ -759,7 +719,7 @@ jq '.institut.curs.assignatures[]' institut.json
 jq '.institut.curs.assignatures[].nom' institut.json
 ```
 
-#### Filtrar i seleccionar
+Podem usar `jq` per filtrar i seleccionar dades:
 
 ```bash
 # Seleccionar assignatures amb més de 100 hores
@@ -772,7 +732,7 @@ jq '.institut.curs.assignatures[] | {nom, hores}' institut.json
 jq '.institut.curs.alumnes[] | select(.email | contains("garcia"))' institut.json
 ```
 
-#### Transformar dades
+Podem usar `jq` per transformar dades:
 
 ```bash
 # Crear nou objecte
@@ -780,17 +740,15 @@ jq '.institut.curs.assignatures[] | {codi: .codi, durada: .hores}' institut.json
 
 # Sumar valors
 jq '[.institut.curs.assignatures[].hores] | add' institut.json
-# 320
 
 # Comptar elements
 jq '.institut.curs.alumnes | length' institut.json
-# 10
 
 # Ordenar
 jq '.institut.curs.assignatures | sort_by(.hores) | reverse' institut.json
 ```
 
-#### Modificar JSON
+Podem usar `jq` per modificar documents:
 
 ```bash
 # Afegir camp
@@ -806,18 +764,27 @@ jq 'del(.institut.codi)' institut.json
 jq '.institut.curs.alumnes[].actiu = true' institut.json
 ```
 
-#### Opcions útils de jq
+A continuació es mostren alguns exemples pràctics:
 
-| Opció | Descripció |
-|-------|------------|
-| `-r` | Raw output (sense cometes en strings) |
-| `-c` | Compacte (una línia) |
-| `-s` | Slurp (llegeix tot com un array) |
-| `-e` | Exit status segons resultat |
-| `--arg nom valor` | Passar variable string |
-| `--argjson nom valor` | Passar variable JSON |
+```bash
+$ jq -r '.institut.curs.alumnes[].nom' institut.json
+Maria
+Pere
+Laura
+Jordi
+Anna
 
-#### Exemples avançats
+$ jq -r '.institut.curs.alumnes[0].nom' institut.json
+Maria
+
+$ jq '.institut.curs.alumnes | length' institut.json
+10
+
+$ jq '[.institut.curs.assignatures[].hores] | add' institut.json
+320
+```
+
+Finalment, `jq` permet exportar a formats tabulars:
 
 ```bash
 # Convertir a CSV
@@ -825,86 +792,41 @@ jq -r '.institut.curs.alumnes[] | [.id, .nom, .cognoms, .email] | @csv' institut
 
 # Convertir a TSV
 jq -r '.institut.curs.alumnes[] | [.id, .nom, .email] | @tsv' institut.json
-
-# Passar paràmetres
-jq --arg codi "A001" '.institut.curs.alumnes[] | select(.id == $codi)' institut.json
-
-# Agrupar per camp
-jq '.institut.curs.assignatures | group_by(.hores > 100)' institut.json
 ```
 
-### jsonlint (Python)
+**Validació**
 
-`jsonlint` és un validador JSON simple.
-
-#### Instal·lació
+Per validar sintaxi JSON des de la línia de comandes, la comanda `jq empty` és la manera més ràpida de validar: no produeix sortida si el JSON és vàlid, i mostra un error si no ho és.
 
 ```bash
-pip install jsonlint --break-system-packages
-# O amb demjson3 (més complet)
-pip install demjson3 --break-system-packages
+jq empty institut.json
 ```
 
-#### Ús
+### jsonschema
+
+Per validar documents JSON contra un esquema JSON Schema, l'opció més còmoda que tenim és [check-jsonschema](https://github.com/python-jsonschema/check-jsonschema), car està disponible com a paquet de sitema:
 
 ```bash
-# Validar fitxer (demjson3)
-jsonlint institut.json
-
-# Amb detall d'errors
-jsonlint -v institut.json
+sudo apt install python3-jsonschema
+jsonschema --version
 ```
 
-### python -m json.tool
-
-Python inclou un mòdul per formatejar JSON:
+La seva execució és molt senzilla:
 
 ```bash
-# Formatejar JSON
-python3 -m json.tool institut.json
-
-# Des de pipe
-echo '{"nom":"Maria"}' | python3 -m json.tool
-
-# Ordenar claus
-python3 -m json.tool --sort-keys institut.json
-
-# Compacte
-python3 -m json.tool --compact institut.json
+jsonschema --output pretty --instance institut.json institut.schema.json
 ```
 
-### Validació amb JSON Schema (CLI)
+## Exemple complet
 
-#### ajv-cli
+Amb un simple script de BASH i les eines anteriorment explicades, podem fàcilment generar pipelines de validació de documents JSON, amb o sense JSON Schema.
 
-```bash
-# Instal·lació
-npm install -g ajv-cli
+### jq
 
-# Validar
-ajv validate -s esquema.json -d document.json
-```
-
-#### check-jsonschema (Python)
-
-```bash
-# Instal·lació
-pip install check-jsonschema --break-system-packages
-
-# Validar
-check-jsonschema --schemafile esquema.json document.json
-```
-
----
-
-## Scripts d'exemple
-
-### Validar tots els JSON d'un directori
+El següent exemple valida tots els JSON d'un directori:
 
 ```bash
 #!/bin/bash
-# validar_json.sh
-
 ERRORS=0
 
 for fitxer in *.json; do
@@ -912,7 +834,7 @@ for fitxer in *.json; do
     if jq empty "$fitxer" 2>/dev/null; then
         echo "OK"
     else
-        echo "ERROR"
+        echo "Error!"
         ((ERRORS++))
     fi
 done
@@ -922,65 +844,12 @@ echo "Fitxers amb errors: $ERRORS"
 exit $ERRORS
 ```
 
-### Convertir XML a JSON amb Python
+### jsonschema
 
-```python
-#!/usr/bin/env python3
-# xml_a_json.py
-
-import json
-import sys
-import xmltodict
-
-def convertir(fitxer_xml):
-    with open(fitxer_xml, 'r', encoding='utf-8') as f:
-        xml_contingut = f.read()
-    
-    diccionari = xmltodict.parse(xml_contingut)
-    json_contingut = json.dumps(diccionari, indent=2, ensure_ascii=False)
-    
-    fitxer_json = fitxer_xml.rsplit('.', 1)[0] + '.json'
-    with open(fitxer_json, 'w', encoding='utf-8') as f:
-        f.write(json_contingut)
-    
-    print(f"Convertit: {fitxer_xml} → {fitxer_json}")
-
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Ús: python xml_a_json.py fitxer.xml")
-        sys.exit(1)
-    convertir(sys.argv[1])
-```
-
-Requereix: `pip install xmltodict --break-system-packages`
-
-### Extreure dades i generar informe
+I el següent exemple fa la validació amb esquema:
 
 ```bash
 #!/bin/bash
-# informe_alumnes.sh
-
-FITXER="institut.json"
-
-echo "=== INFORME D'ALUMNES ==="
-echo ""
-echo "Centre: $(jq -r '.institut.nom' $FITXER)"
-echo "Curs: $(jq -r '.institut.curs.id' $FITXER)"
-echo ""
-echo "Total alumnes: $(jq '.institut.curs.alumnes | length' $FITXER)"
-echo "Total assignatures: $(jq '.institut.curs.assignatures | length' $FITXER)"
-echo "Total hores: $(jq '[.institut.curs.assignatures[].hores] | add' $FITXER)"
-echo ""
-echo "=== LLISTAT D'ALUMNES ==="
-jq -r '.institut.curs.alumnes[] | "\(.id): \(.cognoms), \(.nom) - \(.email)"' $FITXER
-```
-
-### Pipeline de validació amb esquema
-
-```bash
-#!/bin/bash
-# validar_amb_esquema.sh
-
 JSON="$1"
 SCHEMA="institut-schema.json"
 
@@ -991,33 +860,58 @@ fi
 
 echo "1. Comprovant sintaxi JSON..."
 if ! jq empty "$JSON" 2>&1; then
-    echo "ERROR: JSON mal format"
+    echo "Error: JSON mal format!"
     exit 1
 fi
-echo "   OK"
 
 echo "2. Validant contra esquema..."
-if check-jsonschema --schemafile "$SCHEMA" "$JSON" 2>&1; then
-    echo "   OK: Document vàlid"
+if jsonschema --instance "$JSON" "$SCHEMA" 2>&1; then
+    echo "OK: Document vàlid."
 else
-    echo "   ERROR: Document no vàlid"
+    echo "Error: Document no vàlid!"
     exit 2
 fi
 ```
 
----
+### Equivalències
 
-## Resum d'eines
+Equivalències de comandes entre les eines XML i les eines JSON:
 
-| Eina | Tipus | Funció principal |
-|------|-------|------------------|
-| jq | Consola | Consulta, transformació, edició |
-| python -m json.tool | Consola | Formatació bàsica |
-| jsonlint | Consola | Validació sintàctica |
-| check-jsonschema | Consola | Validació amb esquema |
-| ajv-cli | Consola | Validació amb esquema |
-| JSONLint.com | Online | Validació i format |
-| jsonschemavalidator.net | Online | Validació amb esquema |
-| jsoneditoronline.org | Online | Edició visual |
+| Funció                | XML                                         | JSON                                              |
+|-----------------------|---------------------------------------------|---------------------------------------------------|
+| Comprovar format      | `xmllint --noout fitxer.xml`                | `jq empty fitxer.json`                            |
+| Formatejar            | `xmllint --format fitxer.xml`               | `jq '.' fitxer.json`                              |
+| Compactar             | `xmllint --noblanks fitxer.xml`             | `jq -c '.' fitxer.json`                           |
+| Validar amb esquema   | `xmllint --schema esquema.xsd fitxer.xml`   | `jsonschema --instance fitxer.json esquema.json`  |
+| Seleccionar amb query | `xmllint --xpath "//alumne/nom" fitxer.xml` | `jq '.alumnes[].nom' fitxer.json`                 |
+| Comptar elements      | `xmllint --xpath "count(//alumne)" f.xml`   | `jq '.alumnes \| length' fitxer.json`             |
+| Sumar valors          | `xmllint --xpath "sum(//hores)" f.xml`      | `jq '[.assignatures[].hores] \| add' fitxer.json` |
 
-Per a estudiants d'ASIX, `jq` és l'eina essencial per dominar. La seva versatilitat per processar JSON a la línia de comandes és comparable a la de `xmllint` i `xsltproc` per a XML.
+> La conversió entre formats XML i JSON i l'extracció de dades de documents JSON no són operacions habituals a la línia de comandes, sinó que solen fer-se des de codi (Python, Java, JavaScript).
+
+## Extensions
+
+Si uses [VSCodium](https://vscodium.com/) o [VSCode](https://code.visualstudio.com/) per a desenvolupar, el suport per a JSON ja ve integrat. Per a funcionalitats addicionals, les extensions recomanades són:
+
+| Extensió              | Funcionalitats                      | VSCode                                                                                      | VSCodium                                                            |
+|-----------------------|-------------------------------------|---------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| **JSON Tools**        | Formatació, minificació, escapat    | [Marketplace](https://marketplace.visualstudio.com/items?itemName=eriklynd.json-tools)      | [Open VSX](https://open-vsx.org/extension/eriklynd/json-tools)      |
+| **JSON Schema Store** | Autocompletat amb esquemes populars | [Marketplace](https://marketplace.visualstudio.com/items?itemName=remcohaszing.schemastore) | [Open VSX](https://open-vsx.org/extension/remcohaszing/schemastore) |
+
+I si uses Vim o Neovim, et recoman les següents instruccions al teu fitxer `~/.vimrc`:
+
+```vim
+" Formatejar JSON amb jq
+command! JSONFormat %!jq '.'
+
+" Compactar JSON
+command! JSONCompact %!jq -c '.'
+
+" Validar JSON
+command! JSONValidate !jq empty %
+
+" Mapeig de tecles
+nnoremap <leader>jf :JSONFormat<CR>
+nnoremap <leader>jc :JSONCompact<CR>
+nnoremap <leader>jv :JSONValidate<CR>
+```

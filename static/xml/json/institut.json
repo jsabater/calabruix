@@ -1,0 +1,100 @@
+{
+    "institut": {
+        "nom": "CIFP Francesc de Borja Moll",
+        "codi": "08012345",
+        "anyAcademic": "2025-26",
+        "curs": {
+            "id": "ASIX",
+            "nom": "Administració de Sistemes Informàtics en Xarxa",
+            "assignatures": [
+                {
+                    "codi": "LLM",
+                    "nom": "Llenguatges de Marques i Sistemes de Gestió d'Informació",
+                    "hores": 128
+                },
+                {
+                    "codi": "FP",
+                    "nom": "Fonaments de Programació",
+                    "hores": 66
+                },
+                {
+                    "codi": "ASO",
+                    "nom": "Administració de Sistemes Operatius",
+                    "hores": 126
+                }
+            ],
+            "alumnes": [
+                {
+                    "id": "A001",
+                    "nom": "Maria",
+                    "cognoms": "García López",
+                    "dataNaixement": "2005-03-15",
+                    "email": "maria.garcia@cifpmoll.eu"
+                },
+                {
+                    "id": "A002",
+                    "nom": "Pere",
+                    "cognoms": "Martínez Soler",
+                    "dataNaixement": "2004-07-22",
+                    "email": "pere.martinez@cifpmoll.eu"
+                },
+                {
+                    "id": "A003",
+                    "nom": "Laura",
+                    "cognoms": "Vidal Mas",
+                    "dataNaixement": "2005-01-08",
+                    "email": "laura.vidal@cifpmoll.eu"
+                },
+                {
+                    "id": "A004",
+                    "nom": "Jordi",
+                    "cognoms": "Pons Ferrer",
+                    "dataNaixement": "2004-11-30",
+                    "email": "jordi.pons@cifpmoll.eu"
+                },
+                {
+                    "id": "A005",
+                    "nom": "Anna",
+                    "cognoms": "Serra Riera",
+                    "dataNaixement": "2005-06-12",
+                    "email": "anna.serra@cifpmoll.eu"
+                },
+                {
+                    "id": "A006",
+                    "nom": "Marc",
+                    "cognoms": "Oliver Tous",
+                    "dataNaixement": "2004-09-03",
+                    "email": "marc.oliver@cifpmoll.eu"
+                },
+                {
+                    "id": "A007",
+                    "nom": "Carla",
+                    "cognoms": "Munar Cifre",
+                    "dataNaixement": "2005-04-25",
+                    "email": "carla.munar@cifpmoll.eu"
+                },
+                {
+                    "id": "A008",
+                    "nom": "Tomeu",
+                    "cognoms": "Amengual Reus",
+                    "dataNaixement": "2004-12-18",
+                    "email": "tomeu.amengual@cifpmoll.eu"
+                },
+                {
+                    "id": "A009",
+                    "nom": "Aina",
+                    "cognoms": "Crespí Bonnín",
+                    "dataNaixement": "2005-08-07",
+                    "email": "aina.crespi@cifpmoll.eu"
+                },
+                {
+                    "id": "A010",
+                    "nom": "Miquel",
+                    "cognoms": "Fiol Pascual",
+                    "dataNaixement": "2004-05-14",
+                    "email": "miquel.fiol@cifpmoll.eu"
+                }
+            ]
+        }
+    }
+}
