@@ -402,9 +402,8 @@ Donat el [document XML d'una botiga de música](/xml/eines/botiga-musica.xml), e
 6. Comptar el nombre total de discos.
 7. Calcular la suma total de l'estoc (unitats disponibles).
 8. Obtenir els discos amb preu superior a 30€.
-9. Llistar els discos anteriors a 1970 (ordenats pel document, no per XPath).
+9. Llistar els discos anteriors a 1970 (ordenats pel document, no per `XPath`).
 10. Obtenir els discos sense estoc (estoc = 0).
-
 
 Validació: Executa cada comanda i verifica que el resultat és correcte.
 
