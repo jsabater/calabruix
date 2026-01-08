@@ -1,7 +1,7 @@
 ---
 title: "Validació documents XML"
 date: 2026-01-03
-lastmod: 2026-01-03
+lastmod: 2026-01-08
 description: "Validació de documents XML amb DTD i XSD. Sintaxi de DTD, introducció a XML Schema i comparativa entre ambdós sistemes."
 summary: "Esquemes de validació XML: DTD complet, introducció a XSD i exemples pràctics."
 categories: ["ensenyament"]
@@ -517,3 +517,128 @@ La següent taula comparativa pot servir com a referència:
 ## Resum
 
 La validació és essencial per garantir la qualitat i consistència dels documents XML. Les DTD ofereixen una solució senzilla i àmpliament suportada, mentre que XSD proporciona un control molt més fi sobre l'estructura i els tipus de dades. En projectes moderns, XSD és l'opció preferida, però conèixer DTD continua sent important per treballar amb sistemes existents i entendre els fonaments de la validació XML.
+
+## Exercicis pràctics
+
+Es proposen tres exercicis pràctics per facilitar l'aprenentatge progressiu.
+
+### Exercici 1
+
+**Creació d'una DTD**
+
+Crea una DTD per validar documents XML que representin una **carta de restaurant**. El [document XML ja està definit](/xml/validacio/carta-restaurant.xml); la teva tasca és escriure la DTD que el validi correctament.
+
+Requisits de la DTD:
+
+1. L'element `<carta>` ha de tenir els atributs `restaurant` (obligatori) i `data-actualitzacio` (opcional).
+2. Una carta conté una o més seccions.
+3. Cada `<seccio>` té un atribut `nom` obligatori i conté un o més plats.
+4. Cada `<plat>` té un `id` únic (tipus ID), un atribut `vegetaria` amb valors `si` o `no` (per defecte `no`).
+5. Un plat conté: `nom` (obligatori), `descripcio` (opcional), `preu` (obligatori) i `alergens` (obligatori, pot estar buit).
+6. L'element `<preu>` té un atribut `moneda` amb valor fix `EUR`.
+7. L'element `<alergens>` pot contenir zero o més elements `<alergen>`.
+
+El fitxer a crear haurà de tenir el nom `carta-restaurant.dtd`.
+
+Validació: Comprova que el document és ben format i vàlid amb `xmllint` o [XML Validation](https://www.xmlvalidation.com/).
+
+### Exercici 2
+
+**Creació d'un XML Schema (XSD)**
+
+Crea un XML Schema per validar documents XML que representin un **catàleg de productes** d'una botiga d'electrònica. A diferència de l'exercici anterior, aquí has de dissenyar tant l'XSD com un document XML d'exemple.
+
+Requisits de l'esquema:
+
+1. **Element arrel `<cataleg>`** amb atributs:
+   * `botiga`: nom de la botiga (obligatori).
+   * `actualitzat`: data d'actualització (tipus `xs:date`, obligatori).
+
+2. **Categories de productes:** El catàleg conté una o més categories, cadascuna amb:
+   * Atribut `id` (tipus ID, obligatori).
+   * Atribut `nom` (obligatori).
+   * Un o més productes.
+
+3. **Productes:** Cada producte ha de tenir:
+   * Atribut `sku` (codi únic, patró: 3 lletres majúscules + 4 dígits, ex: `TEL1234`).
+   * Atribut `disponible` (booleà, per defecte `true`).
+   * Element `nom` (string, obligatori).
+   * Element `marca` (string, obligatori).
+   * Element `preu` (decimal amb exactament 2 decimals, entre 0.01 i 99999.99).
+   * Element `estoc` (enter, mínim 0).
+   * Element `descripcio` (string, opcional, màxim 500 caràcters).
+   * Element `garantia` (enter, opcional, en mesos, entre 1 i 60).
+
+4. **Tipus personalitzats a definir:**
+   * `tipusSKU`: patró `[A-Z]{3}[0-9]{4}`.
+   * `tipusPreu`: decimal amb restriccions de rang.
+   * `tipusDescripcio`: string amb longitud màxima.
+
+El lliurament de l'exercici són dos fitxers:
+
+1. Fitxer `cataleg.xsd` amb l'esquema complet.
+2. Fitxer `cataleg.xml` amb almenys 2 categories i 3 productes per categoria.
+
+Validació: Comprova que el document és ben format i vàlid amb `xmllint` o [XML Validation](https://www.xmlvalidation.com/).
+
+### Exercici 3
+
+**De DTD a XSD**
+
+Converteix la següent DTD a un XML Schema equivalent, aprofitant les capacitats addicionals d'XSD per millorar la validació.
+
+```dtd
+<!ELEMENT biblioteca (llibre+)>
+<!ATTLIST biblioteca
+    nom CDATA #REQUIRED
+>
+
+<!ELEMENT llibre (titol, autor+, any, genere, isbn, pagines?, disponible)>
+<!ATTLIST llibre
+    id ID #REQUIRED
+>
+
+<!ELEMENT titol (#PCDATA)>
+<!ELEMENT autor (#PCDATA)>
+<!ELEMENT any (#PCDATA)>
+<!ELEMENT genere (#PCDATA)>
+<!ELEMENT isbn (#PCDATA)>
+<!ELEMENT pagines (#PCDATA)>
+<!ELEMENT disponible (#PCDATA)>
+```
+
+Millores a incorporar amb XSD:
+
+1. **`any`**: Tipus enter, entre 1450 (impremta de Gutenberg) i l'any actual.
+2. **`genere`**: Enumeració amb valors: `Novel·la`, `Poesia`, `Assaig`, `Teatre`, `Ciència-ficció`, `Fantasia`, `Biografia`, `Història`.
+3. **`isbn`**: Patró per ISBN-13 (13 dígits, pot incloure guions): `[0-9]{3}-?[0-9]{1,5}-?[0-9]{1,7}-?[0-9]{1,7}-?[0-9]`
+4. **`pagines`**: Enter positiu, mínim 1, màxim 10000.
+5. **`disponible`**: Booleà (`true`/`false`).
+
+**Lliurament:**
+
+1. Fitxer `biblioteca.xsd` amb l'esquema millorat.
+2. Fitxer `biblioteca.xml` amb almenys 4 llibres de gèneres diferents.
+3. Breu explicació (en comentaris XML o document apart) de les millores que aporta XSD respecte a la DTD original.
+
+Validació: Comprova que el document és ben format i vàlid amb `xmllint` o [XML Validation](https://www.xmlvalidation.com/).
+
+### Eines de validació
+
+Per validar amb DTD des de la línia de comandes:
+
+```bash
+# DTD referenciada dins el document XML
+xmllint --valid --noout document.xml
+
+# DTD externa específica
+xmllint --dtdvalid esquema.dtd --noout document.xml
+```
+
+Per validar amb XSD des de la línia de comandes:
+
+```bash
+xmllint --schema esquema.xsd --noout document.xml
+```
+
+Per a validació online, [XML Validation](https://www.xmlvalidation.com/) suporta tant DTD com XSD, però també pots usar [Free Online XML Validator (XSD)](https://www.liquid-technologies.com/online-xsd-validator).

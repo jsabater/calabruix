@@ -1,7 +1,7 @@
 ---
 title: "Transformacions XSLT"
 date: 2026-01-03
-lastmod: 2026-01-03
+lastmod: 2026-01-08
 description: "Transformacions XSLT per convertir documents XML a HTML, text o altres formats XML. Plantilles, XPath, iteracions, condicions i exemple complet amb l'XML de l'institut."
 summary: "Plantilles, expressions XPath, estructures de control i transformació d'XML a HTML."
 categories: ["ensenyament"]
@@ -1159,3 +1159,254 @@ Els navegadors web suporten plenament la versió 1.0, però no les següents ver
 ## Resum
 
 XSLT és un llenguatge potent per transformar documents XML. Combinant plantilles, XPath i estructures de control, permet convertir dades XML en qualsevol format de sortida desitjat. Tot i tenir una corba d'aprenentatge costeruda, XSLT continua sent una eina valuosa en entorns empresarials i de publicació on XML és prevalent.
+
+## Exercicis pràctics
+
+Es proposen tres exercicis pràctics per facilitar l'aprenentatge progressiu.
+
+### Exercici 1
+
+**Transformació bàsica a HTML**
+
+Crea un full XSLT per transformar el següent document XML `cinema.xml` d'una **programació de cinema** a una pàgina HTML.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="cinema.xsl"?>
+<cinema nom="Cines Ocimax" ciutat="Palma">
+    <sala id="S1" capacitat="200">
+        <sessio hora="16:00">
+            <pelicula id="P001">
+                <titol>Dune: Part Two</titol>
+                <director>Denis Villeneuve</director>
+                <durada>166</durada>
+                <classificacio>12</classificacio>
+            </pelicula>
+        </sessio>
+        <sessio hora="19:30">
+            <pelicula id="P002">
+                <titol>Oppenheimer</titol>
+                <director>Christopher Nolan</director>
+                <durada>180</durada>
+                <classificacio>12</classificacio>
+            </pelicula>
+        </sessio>
+    </sala>
+    <sala id="S2" capacitat="150">
+        <sessio hora="17:00">
+            <pelicula id="P003">
+                <titol>Inside Out 2</titol>
+                <director>Kelsey Mann</director>
+                <durada>96</durada>
+                <classificacio>TP</classificacio>
+            </pelicula>
+        </sessio>
+        <sessio hora="20:00">
+            <pelicula id="P001">
+                <titol>Dune: Part Two</titol>
+                <director>Denis Villeneuve</director>
+                <durada>166</durada>
+                <classificacio>12</classificacio>
+            </pelicula>
+        </sessio>
+    </sala>
+</cinema>
+```
+
+Requisits del full XSLT:
+
+1. **Estructura HTML completa** amb `<html>`, `<head>` (amb títol dinàmic usant el nom del cinema) i `<body>`.
+2. **Capçalera** amb el nom del cinema i la ciutat.
+3. **Una secció per a cada sala** que mostri:
+   * Identificador i capacitat de la sala.
+   * Llista de sessions amb hora i títol de la pel·lícula.
+4. **Usa `<xsl:value-of>`** per extreure valors.
+5. **Usa `<xsl:for-each>`** per iterar sobre sales i sessions.
+6. **Usa `<xsl:apply-templates>`** almanco una vegada.
+
+Estructura de sortida esperada:
+
+```html
+<html>
+<head><title>Programació - Cines Ocimax</title></head>
+<body>
+    <h1>Cines Ocimax</h1>
+    <p>Ciutat: Palma</p>
+    
+    <section class="sala">
+        <h2>Sala S1 (200 places)</h2>
+        <ul>
+            <li>16:00 - Dune: Part Two (166 min)</li>
+            <li>19:30 - Oppenheimer (180 min)</li>
+        </ul>
+    </section>
+    <!-- més sales... -->
+</body>
+</html>
+```
+
+Una vegada resolt l'exercici hauries de tenir els fitxers `cinema.xml`, `cinema.xsl` i `cinema.html`.
+
+Validació: Comprova que el document és ben format amb `xmllint` o [XML Validation](https://www.xmlvalidation.com/). Obre el fitxer HTML resultant al navegador per verificar la transformació.
+
+### Exercici 2
+
+**Ordenació, condicions i càlculs**
+
+Partint del document XML de l'exercici anterior, crea un nou full XSLT (`cinema-avancat.xsl`) amb les funcionalitats següents:
+
+1. **Ordenació:**
+   * Les sessions de cada sala han d'aparèixer ordenades per hora.
+   * Afegeix una secció "Totes les pel·lícules" al final amb les pel·lícules ordenades alfabèticament per títol (sense repeticions — pots mostrar-les totes, les repeticions no es penalitzaran).
+
+2. **Condicions amb `<xsl:if>`:**
+   * Mostra un avís "🎬 Sessió llarga" al costat de les pel·lícules que durin més de 150 minuts.
+   * Mostra la classificació amb un estil diferent si és "TP" (tots els públics).
+
+3. **Condicions amb `<xsl:choose>`:** Classifica cada pel·lícula segons la durada:
+   * Menys de 100 min: "Curta".
+   * Entre 100 i 150 min: "Estàndard".
+   * Més de 150 min: "Llarga".
+
+4. **Càlculs amb variables:** Crea les següents variables globals i mostra aquestes estadístiques en un resum a la capçalera:
+   * Total de sessions (`count()`).
+   * Durada mitjana de les pel·lícules (`sum()` dividit per `count()`).
+
+5. **Attribute Value Templates:** Usa `{}` per generar atributs dinàmics (per exemple, `class="{@id}"` o `id="sala-{@id}"`).
+
+Estructura de sortida esperada (parcial):
+
+```html
+<div class="resum">
+    <p>Total sessions: 4</p>
+    <p>Durada mitjana: 152 minuts</p>
+</div>
+
+<section class="sala" id="sala-S1">
+    <h2>Sala S1</h2>
+    <div class="sessio">
+        <span class="hora">16:00</span>
+        <span class="titol">Dune: Part Two</span>
+        <span class="durada categoria-llarga">166 min (Llarga) 🎬 Sessió llarga</span>
+    </div>
+    <!-- ... -->
+</section>
+```
+
+Validació: Obre el fitxer XML, modificat per usar el nou XSL `cinema-avancat.xsl`, al navegador.
+
+### Exercici 3
+
+**Transformació completa amb múltiples plantilles**
+
+Crea un sistema complet de transformació XSLT per a un **catàleg de receptes de cuina**. Aquest exercici requereix dissenyar tant l'XML com l'XSLT.
+
+Requisits del document XML (`receptes.xml`):
+
+1. Element arrel `<receptari>` amb atribut `autor`.
+2. Almenys 4 receptes amb:
+   * Atributs: `id`, `dificultat` ("fàcil", "mitjana", "difícil"), `temps` (en minuts).
+   * Elements: `nom`, `categoria` (primers, segons, postres), `ingredients` (amb múltiples `ingredient`), `passos` (amb múltiples `pas`), `calories` (opcional).
+
+Requisits del full XSLT (`receptes.xsl`):
+
+1. **Plantilles separades** per a:
+   * `/` (arrel): estructura HTML general.
+   * `receptari`: capçalera i navegació.
+   * `recepta`: targeta de cada recepta.
+   * `ingredients`: llista d'ingredients.
+   * `passos`: llista numerada de passos.
+
+2. **Navegació per categories:**
+   * Genera un índex a la capçalera amb enllaços a cada categoria.
+   * Agrupa les receptes per categoria usant predicats XPath (`recepta[categoria='primers']`).
+
+3. **Ordenació:** Receptes ordenades per temps de preparació dins de cada categoria.
+
+4. **Condicions:**
+   * Icona 🌱 si la recepta té manco de 300 calories.
+   * Color diferent segons la dificultat.
+   * Avís si el temps supera els 60 minuts.
+
+5. **Variables:**
+   * Variable global amb el total de receptes.
+   * Variable local dins de cada recepta per calcular temps en hores i minuts si supera 60 min.
+
+6. **Funcions XPath:**
+   * Usa `count()` per mostrar el nombre d'ingredients.
+   * Usa `concat()` per generar el text "Recepta X de Y".
+   * Usa `position()` per numerar els passos.
+
+Estructura de plantilles suggerida:
+
+```xml
+<!-- Plantilla arrel -->
+<xsl:template match="/">
+    <html>
+        <head>...</head>
+        <body>
+            <xsl:apply-templates select="receptari"/>
+        </body>
+    </html>
+</xsl:template>
+
+<!-- Plantilla receptari -->
+<xsl:template match="receptari">
+    <header>...</header>
+    <nav><!-- Índex per categories --></nav>
+    
+    <section id="primers">
+        <h2>Primers plats</h2>
+        <xsl:apply-templates select="recepta[categoria='primers']">
+            <xsl:sort select="@temps" data-type="number"/>
+        </xsl:apply-templates>
+    </section>
+    <!-- Més categories... -->
+</xsl:template>
+
+<!-- Plantilla recepta -->
+<xsl:template match="recepta">
+    <article class="recepta dificultat-{@dificultat}" id="{@id}">
+        <h3><xsl:value-of select="nom"/></h3>
+        <xsl:apply-templates select="ingredients"/>
+        <xsl:apply-templates select="passos"/>
+    </article>
+</xsl:template>
+
+<!-- Plantilla ingredients -->
+<xsl:template match="ingredients">
+    <div class="ingredients">
+        <h4>Ingredients (<xsl:value-of select="count(ingredient)"/>)</h4>
+        <ul>
+            <xsl:for-each select="ingredient">
+                <li><xsl:value-of select="."/></li>
+            </xsl:for-each>
+        </ul>
+    </div>
+</xsl:template>
+
+<!-- Plantilla passos -->
+<xsl:template match="passos">
+    ...
+</xsl:template>
+```
+
+Validació: Obre el fitxer XML al navegador per verificar la transformació completa.
+
+### Execució
+
+Per executar transformacions XSLT des de la línia de comandes:
+
+```bash
+# Amb xsltproc (XSLT 1.0)
+xsltproc fitxer.xsl fitxer.xml > fitxer.html
+
+# Obrir el resultat
+firefox fitxer.html
+```
+
+Per provar directament al navegador, assegura't que el fitxer XML conté la instrucció de processament:
+
+```xml
+<?xml-stylesheet type="text/xsl" href="fitxer.xsl"?>
+```

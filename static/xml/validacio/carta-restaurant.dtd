@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!ELEMENT carta (seccio+)>
+<!ATTLIST carta
+    restaurant CDATA #REQUIRED
+    data-actualitzacio CDATA #IMPLIED
+>
+
+<!ELEMENT seccio (plat+)>
+<!ATTLIST seccio
+    nom CDATA #REQUIRED
+>
+
+<!ELEMENT plat (nom, descripcio?, preu, alergens)>
+<!ATTLIST plat
+    id ID #REQUIRED
+    vegetaria (si|no) "no"
+>
+
+<!ELEMENT nom (#PCDATA)>
+<!ELEMENT descripcio (#PCDATA)>
+
+<!ELEMENT preu (#PCDATA)>
+<!ATTLIST preu
+    moneda CDATA #FIXED "EUR"
+>
+
+<!ELEMENT alergens (alergen*)>
+<!ELEMENT alergen (#PCDATA)>
+
+<!--
+| Element/Atribut            | Declaració                           | Justificació                                 |
+|----------------------------|--------------------------------------|----------------------------------------------|
+| `carta`                    | `(seccio+)`                          | Una o més seccions                           |
+| `carta@restaurant`         | `CDATA #REQUIRED`                    | Nom obligatori                               |
+| `carta@data-actualitzacio` | `CDATA #IMPLIED`                     | Data opcional                                |
+| `seccio`                   | `(plat+)`                            | Una o més plats per secció                   |
+| `seccio@nom`               | `CDATA #REQUIRED`                    | Nom de secció obligatori                     |
+| `plat`                     | `(nom, descripcio?, preu, alergens)` | Seqüència amb descripcio opcional            |
+| `plat@id`                  | `ID #REQUIRED`                       | Identificador únic obligatori                |
+| `plat@vegetaria`           | `(si\|no) "no"`                      | Enumeració amb valor per defecte             |
+| `preu@moneda`              | `CDATA #FIXED "EUR"`                 | Valor fix                                    |
+| `alergens`                 | `(alergen*)`                         | Zero o més al·lèrgens (permet `<alergens/>`) |
+-->

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE carta SYSTEM "carta-restaurant.dtd">
+<carta restaurant="Can Tomeu" data-actualitzacio="2025-01-15">
+    <seccio nom="Entrants">
+        <plat id="E001" vegetaria="si">
+            <nom>Amanida mediterrània</nom>
+            <descripcio>Tomàquet, ceba, olives i formatge fresc</descripcio>
+            <preu moneda="EUR">8.50</preu>
+            <alergens>
+                <alergen>Lactis</alergen>
+            </alergens>
+        </plat>
+        <plat id="E002" vegetaria="no">
+            <nom>Croquetes de pernil</nom>
+            <descripcio>Croquetes casolanes amb pernil ibèric</descripcio>
+            <preu moneda="EUR">9.00</preu>
+            <alergens>
+                <alergen>Gluten</alergen>
+                <alergen>Lactis</alergen>
+            </alergens>
+        </plat>
+    </seccio>
+    <seccio nom="Principals">
+        <plat id="P001" vegetaria="no">
+            <nom>Arròs brut</nom>
+            <descripcio>Arròs tradicional mallorquí amb carn i bolets</descripcio>
+            <preu moneda="EUR">14.50</preu>
+            <alergens/>
+        </plat>
+    </seccio>
+    <seccio nom="Postres">
+        <plat id="D001" vegetaria="si">
+            <nom>Gató d'ametlla</nom>
+            <preu moneda="EUR">6.00</preu>
+            <alergens>
+                <alergen>Fruits secs</alergen>
+                <alergen>Ous</alergen>
+            </alergens>
+        </plat>
+    </seccio>
+</carta>
