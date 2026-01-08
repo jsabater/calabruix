@@ -1,7 +1,7 @@
 ---
 title: "Atributs reservats XML"
 date: 2026-01-03
-lastmod: 2026-01-03
+lastmod: 2026-01-08
 description: "Atributs reservats de l'especificació XML per a l'idioma, per al tractament d'espais en blanc i per a URIs base. Propòsit i exemples pràctics."
 summary: "Atributs especials d'idioma, espais en blanc i URIs base: propòsit i exemples pràctics."
 categories: ["ensenyament"]
@@ -268,3 +268,143 @@ Interessada en:
 | `xml:base`  | URI base per a enllaços | Sí (acumulatiu) | Qualsevol URI vàlida  |
 
 Aquests atributs són opcionals però molt útils per crear documents XML més expressius i fàcils de processar correctament per diferents aplicacions.
+
+## Exercicis pràctics
+
+Es proposen tres exercicis pràctics per facilitar l'aprenentatge progressiu.
+
+### Exercici 1
+
+**Document multilingüe**
+
+Crea un document XML per a un **fullet turístic d'un monument o lloc d'interès** de les Illes Balears (o del teu lloc d'origen). El fullet ha d'estar disponible en tres idiomes.
+
+Requisits:
+
+1. L'idioma principal del document ha de ser el català (`xml:lang="ca"` a l'element arrel).
+2. Ha de contenir almenys les seccions següents, cadascuna amb contingut en els tres idiomes (català, castellà i anglès):
+   * Nom del monument.
+   * Descripció breu (2-3 frases).
+   * Horari de visites.
+   * Informació pràctica (preu, accessibilitat, etc.).
+3. Usa l'herència de `xml:lang` de manera eficient: no repeteixis l'atribut si ja s'hereta del pare.
+4. Inclou almenys una cita o frase cèlebre relacionada amb el lloc en el seu idioma original (per exemple, una cita en llatí, àrab o un altre idioma).
+
+**Estructura suggerida:**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<fullet xml:lang="ca">
+    <monument>
+        <nom>Catedral de Mallorca</nom>
+        <nom xml:lang="es">Catedral de Mallorca</nom>
+        <nom xml:lang="en">Mallorca Cathedral</nom>
+        
+        <descripcio>
+            <text>La Seu és un dels temples gòtics...</text>
+            <text xml:lang="es">La Seu es uno de los templos góticos...</text>
+            <text xml:lang="en">La Seu is one of the Gothic temples...</text>
+        </descripcio>
+        
+        <!-- Continua amb horaris, informació pràctica, etc. -->
+    </monument>
+</fullet>
+```
+
+Validació: Comprova que el document és ben format amb `xmllint` o [XML Validation](https://www.xmlvalidation.com/).
+
+### Exercici 2
+
+**Preservació d'espais en blanc**
+
+Crea un document XML per a un **recull de poemes o cançons tradicionals**. El document ha de demostrar l'ús correcte de `xml:space="preserve"`.
+
+Requisits:
+
+1. Inclou almenys 3 poemes o fragments de cançons.
+2. Cada poema ha de mantenir el seu format original (versos, estrofes, indentació si n'hi ha).
+3. Indica l'idioma de cada poema amb `xml:lang`.
+4. Afegeix metadades per a cada poema: títol, autor, any (si es coneix), i origen/tipus (popular, culte, etc.).
+
+Repte addicional: Inclou un poema visual o cal·ligrama on la disposició dels espais sigui essencial per al significat.
+
+Estructura suggerida:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<recull xml:lang="ca">
+    <poema id="P001">
+        <titol>La Balanguera</titol>
+        <autor>Joan Alcover</autor>
+        <any>1903</any>
+        <tipus>Himne</tipus>
+        <text xml:space="preserve">
+La Balanguera misteriosa
+com una aranya d'art subtil,
+buida que buida sa filosa,
+de nostra vida treu lo fil.
+        </text>
+    </poema>
+    
+    <!-- Més poemes... -->
+</recull>
+```
+
+Pregunta de reflexió: Per què és important usar `xml:space="preserve"` en aquest context i no simplement confiar en el comportament per defecte del parser?
+
+### Exercici 3
+
+**Repositori de recursos amb URIs**
+
+Crea un document XML per a un **repositori de recursos educatius** d'un mòdul formatiu. El document ha de fer un ús eficient de `xml:base` per evitar repetir URIs.
+
+Requisits:
+
+1. Defineix una URI base a l'element arrel (pot ser fictícia, com `https://cifpmoll.eu/asix/llm/`).
+2. Organitza els recursos en categories (apunts, exercicis, exemples, eines).
+3. Cada categoria pot tenir la seva pròpia sub-base relativa.
+4. Inclou almenys 10 recursos amb els atributs:
+   * `href`: URI relativa al recurs.
+   * `tipus`: Tipus de fitxer (pdf, xml, html, zip...).
+   * `mida`: Mida aproximada (opcional).
+5. Inclou almenys 2 recursos externs amb URI absoluta (que ignorin `xml:base`).
+
+Estructura suggerida:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<repositori xml:base="https://cifpmoll.eu/asix/llm/" xml:lang="ca">
+    <modul nom="Llenguatges de Marques">
+    
+        <categoria nom="Apunts" xml:base="apunts/">
+            <recurs href="tema1-introduccio.pdf" tipus="pdf" mida="2.5MB">
+                <titol>Tema 1: Introducció a XML</titol>
+            </recurs>
+            <!-- La URI completa seria: https://cifpmoll.eu/asix/llm/apunts/tema1-introduccio.pdf -->
+            
+            <!-- Més recursos... -->
+        </categoria>
+        
+        <categoria nom="Exercicis" xml:base="exercicis/">
+            <!-- Recursos d'exercicis... -->
+        </categoria>
+        
+        <categoria nom="Eines externes">
+            <!-- Aquests usen URI absoluta -->
+            <recurs href="https://jsonlint.com/" tipus="web">
+                <titol>JSONLint - Validador JSON online</titol>
+            </recurs>
+        </categoria>
+        
+    </modul>
+</repositori>
+```
+
+Tasca addicional: Afegeix una taula al final del document, com a comentari XML, que mostri la URI completa resultant de cada recurs, seguint les regles de resolució de `xml:base`.
+
+| Recurs | URI relativa            | URI base aplicada                      | URI completa resultant                                      |
+|--------|-------------------------|----------------------------------------|-------------------------------------------------------------|
+| Tema 1 | `tema1-introduccio.pdf` | `https://cifpmoll.eu/asix/llm/apunts/` | `https://cifpmoll.eu/asix/llm/apunts/tema1-introduccio.pdf` |
+| ...    | ...                     | ...                                    | ...                                                         |
+
+Validació: Comprova que el document és ben format amb `xmllint` o [XML Validation](https://www.xmlvalidation.com/).
