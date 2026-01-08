@@ -1,7 +1,7 @@
 ---
 title: "Eines de feina XML"
 date: 2026-01-03
-lastmod: 2026-01-03
+lastmod: 2026-01-08
 description: "Eines en línia i de terminal de comandes per a treballar amb documents XML: validadors, formatejadors i transformadors, amb exemples pràctics."
 summary: "Eines en línia i de terminal de comandes per a validar, formatejar i transformar documents XML."
 categories: ["ensenyament"]
@@ -382,4 +382,340 @@ command! XMLValidate !xmllint --noout %
 " Mapeig de tecles
 nnoremap <leader>xf :XMLFormat<CR>
 nnoremap <leader>xv :XMLValidate<CR>
+```
+
+## Exercicis pràctics
+
+Es proposen tres exercicis pràctics per facilitar l'aprenentatge progressiu, més un quart exercici avançat.
+
+### Exercici 1
+
+**Consultes `XPath` amb `xmllint`**
+
+Donat el [document XML d'una botiga de música](/xml/eines/botiga-musica.xml), escriu les expressions `XPath` necessàries per obtenir la informació sol·licitada i la comanda `xmllint` completa per a cada consulta:
+
+1. Obtenir el nom de la botiga (atribut de l'element arrel).
+2. Llistar tots els títols dels discos.
+3. Obtenir el títol i l'artista del disc amb id "D003".
+4. Llistar els títols dels discos en format vinil.
+5. Obtenir els discos de Jazz (tots els fills de l'element `<disc>`).
+6. Comptar el nombre total de discos.
+7. Calcular la suma total de l'estoc (unitats disponibles).
+8. Obtenir els discos amb preu superior a 30€.
+9. Llistar els discos anteriors a 1970 (ordenats pel document, no per XPath).
+10. Obtenir els discos sense estoc (estoc = 0).
+
+
+Validació: Executa cada comanda i verifica que el resultat és correcte.
+
+### Exercici 2
+
+**Edició i selecció amb `xmlstarlet`**
+
+Usant el mateix document `botiga-musica.xml` de l'exercici 1, realitza les següents operacions amb `xmlstarlet`.
+
+**Part A: Selecció amb format personalitzat**
+
+Escriu les comandes `xmlstarlet sel` per obtenir:
+
+1. Un llistat amb format `ARTISTA - TITOL (ANY)` per a cada disc.
+2. Un llistat dels discos de vinil amb format `[ID] TITOL: PREU €`.
+3. La suma total del valor de l'inventari (preu × estoc per a cada disc, sumat).
+
+Pista per al punt 3: `xmlstarlet` no pot fer càlculs complexos directament, però pots extreure les dades i processar-les amb `awk`. L'estratègia és:
+
+```bash
+# 1. Extreure preu i estoc de cada disc, separats per espai
+xmlstarlet sel -t -m "//disc" -v "preu" -o " " -v "estoc" -n fitxer.xml
+# Sortida:
+# 32.99 5
+# 15.99 12
+# ...
+
+# 2. Usar awk per multiplicar i sumar
+# awk '{suma += $1 * $2} END {print suma}'
+# On $1 és el preu i $2 és l'estoc de cada línia
+
+# 3. Combinar amb pipe
+xmlstarlet sel -t -m "//disc" -v "preu" -o " " -v "estoc" -n fitxer.xml | \
+    awk '{suma += $1 * $2} END {printf "Valor total inventari: %.2f €\n", suma}'
+```
+
+**Part B: Edició de documents**
+
+Escriu les comandes `xmlstarlet ed` per:
+
+4. Afegir un atribut `disponible="true"` a tots els discos amb estoc > 0.
+5. Afegir un atribut `disponible="false"` als discos amb estoc = 0.
+6. Canviar el preu del disc "D004" a 10.99.
+7. Afegir un nou element `<ubicacio>Secció Rock</ubicacio>` a tots els discos de gènere "Rock".
+8. Eliminar l'element `<estoc>` de tots els discos (simulant que no volem mostrar aquesta informació).
+
+**Part C: Altres operacions**
+
+9. Mostra l'estructura d'elements del document (sense valors) amb `xmlstarlet el`.
+10. Formata el document amb `xmlstarlet fo` i guarda'l com a `botiga-formatejada.xml`.
+
+### Exercici 3
+
+**Script de processament XML**
+
+Tens un directori amb múltiples fitxers XML de comandes d'una botiga online, on cada fitxer segueix aquesta estructura:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<comanda id="COM-2025-001" data="2025-01-15">
+    <client>
+        <nom>Maria García</nom>
+        <email>maria@example.com</email>
+    </client>
+    <productes>
+        <producte codi="PROD001" quantitat="2">
+            <nom>Teclat mecànic</nom>
+            <preu>89.99</preu>
+        </producte>
+        <producte codi="PROD002" quantitat="1">
+            <nom>Ratolí ergonòmic</nom>
+            <preu>45.00</preu>
+        </producte>
+    </productes>
+    <estat>pendent</estat>
+</comanda>
+```
+
+Genera al manco tres fitxers de comandes, anomenats `comanda-COM-2025-001.xml`, `comanda-COM-2025-002.xml`, etc, seguint aquest format. Llavors, combinant l'ús de `xmllint`, `xsltproc` i/o `xmlstarlet`, crea un script de Bash `processa-comandes.sh` que processi la col·lecció de fitxers XML i generi un informe.
+
+Requisits de l'script:
+
+1. **Validació:** Per a cada fitxer XML del directori:
+   * Comprova que és ben format.
+   * Mostra un missatge d'error si no ho és i continua amb el següent.
+
+2. **Extracció de dades:** Per a cada comanda vàlida, extreu:
+   * ID de la comanda.
+   * Data.
+   * Nom del client.
+   * Nombre de productes.
+   * Total de la comanda (suma de preu × quantitat).
+
+3. **Informe:** Genera un fitxer `informe.txt` amb:
+   * Capçalera amb data de generació.
+   * Llistat de comandes processades amb les dades extretes.
+   * Resum final: total de comandes, comandes pendents, import total.
+
+4. **Opcions de l'script:**
+   * `-d directori`: Directori amb els fitxers XML (per defecte: directori actual).
+   * `-o fitxer`: Fitxer de sortida (per defecte: `informe.txt`).
+   * `-v`: Mode verbose (mostra informació de progrés).
+   * `-h`: Mostra ajuda.
+
+Estructura suggerida:
+
+```bash
+#!/bin/bash
+
+# Valors per defecte
+DIRECTORI="."
+SORTIDA="informe.txt"
+VERBOSE=false
+
+# Variables per al resum
+TOTAL_COMANDES=0
+TOTAL_PENDENTS=0
+IMPORT_TOTAL=0
+
+# Funció d'ajuda
+mostrar_ajuda() {
+    echo "Ús: $0 [-d directori] [-o fitxer] [-v] [-h]"
+    echo "  -d directori  Directori amb fitxers XML (defecte: .)"
+    echo "  -o fitxer     Fitxer de sortida (defecte: informe.txt)"
+    echo "  -v            Mode verbose"
+    echo "  -h            Mostra aquesta ajuda"
+}
+
+# Processar arguments
+while getopts "d:o:vh" opt; do
+    case $opt in
+        d) DIRECTORI="$OPTARG" ;;
+        o) SORTIDA="$OPTARG" ;;
+        v) VERBOSE=true ;;
+        h) mostrar_ajuda; exit 0 ;;
+        *) exit 1 ;;
+    esac
+done
+
+# Iniciar fitxer d'informe (sobreescriu si existeix)
+{
+    echo "========================================"
+    echo "INFORME DE COMANDES"
+    echo "Data: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "========================================"
+    echo ""
+} > "$SORTIDA"
+
+# Funció per processar una comanda
+processar_comanda() {
+    local fitxer="$1"
+    
+    # Extreure dades amb xmllint o xmlstarlet
+    local id=$(xmllint --xpath "string(/comanda/@id)" "$fitxer" 2>/dev/null)
+    local data=$(xmllint --xpath "string(/comanda/@data)" "$fitxer" 2>/dev/null)
+    local client=$(xmllint --xpath "string(//client/nom)" "$fitxer" 2>/dev/null)
+    local num_productes=$(xmllint --xpath "count(//producte)" "$fitxer" 2>/dev/null)
+    local estat=$(xmllint --xpath "string(//estat)" "$fitxer" 2>/dev/null)
+    
+    # TODO: Calcular total (preu × quantitat per cada producte)
+    local total=0
+    
+    # Escriure al fitxer d'informe (afegeix al final)
+    {
+        echo "Comanda: $id"
+        echo "  Data: $data"
+        echo "  Client: $client"
+        echo "  Productes: $num_productes"
+        echo "  Total: $total €"
+        echo "  Estat: $estat"
+        echo ""
+    } >> "$SORTIDA"
+    
+    # Actualitzar comptadors globals
+    ((TOTAL_COMANDES++))
+    if [ "$estat" = "pendent" ]; then
+        ((TOTAL_PENDENTS++))
+    fi
+    # TODO: Acumular import total
+}
+
+# Bucle principal
+for xml in "$DIRECTORI"/*.xml; do
+    # Comprovar que existeixen fitxers
+    [ -e "$xml" ] || continue
+    
+    if $VERBOSE; then
+        echo "Processant: $xml"
+    fi
+    
+    # Validar document
+    if ! xmllint --noout "$xml" 2>/dev/null; then
+        echo "AVÍS: $xml no és un XML vàlid, s'omet." >&2
+        continue
+    fi
+    
+    # Processar comanda
+    processar_comanda "$xml"
+done
+
+# Afegir resum al final de l'informe
+{
+    echo "========================================"
+    echo "RESUM"
+    echo "========================================"
+    echo "Total comandes processades: $TOTAL_COMANDES"
+    echo "Comandes pendents: $TOTAL_PENDENTS"
+    echo "Import total: $IMPORT_TOTAL €"
+} >> "$SORTIDA"
+
+# Missatge final
+echo "Informe generat a: $SORTIDA"
+```
+
+Validació: L'script ha de funcionar correctament amb els fitxers de prova, generant la sortida esperada amb els valors correctes.
+
+### Exercici 4
+
+**XSLT 2.0 amb agrupació (avançat)**
+
+Aquest exercici requereix usar [XSLTFiddle](https://xsltfiddle.liberty-development.net/) online o instal·lar Saxon localment.
+
+L'objectiu de l'exercici és transformar el document `botiga-musica.xml` de l'exercici 1 a HTML agrupant els discos per gènere, usant `<xsl:for-each-group>` d'XSLT 2.0.
+
+Requisits de la transformació:
+
+1. Agrupa els discos per gènere usant `<xsl:for-each-group>`.
+2. Per a cada gènere, mostra:
+   * Nom del gènere com a títol.
+   * Nombre de discos d'aquest gènere.
+   * Llistat dels discos ordenats per any (ascendent).
+3. Dins de cada disc, mostra:
+   * Títol i artista.
+   * Any i format.
+   * Preu (formatejat amb 2 decimals usant `format-number()`).
+4. Al final, mostra estadístiques generals:
+   * Total de gèneres diferents.
+   * Disc més antic (usa `min()` sobre els anys).
+   * Disc més recent (usa `max()`).
+   * Preu mitjà (usa `avg()`).
+
+Estructura XSLT 2.0 suggerida del fitxer `botiga-generes.xsl`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="2.0" 
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+    
+    <xsl:output method="html" encoding="UTF-8" indent="yes"/>
+    
+    <xsl:template match="/">
+        <html>
+            <head><title>Catàleg per gènere</title></head>
+            <body>
+                <h1>Catàleg de <xsl:value-of select="/botiga/@nom"/></h1>
+                
+                <!-- Agrupació per gènere -->
+                <xsl:for-each-group select="//disc" group-by="genere">
+                    <xsl:sort select="current-grouping-key()"/>
+                    
+                    <section>
+                        <h2><xsl:value-of select="current-grouping-key()"/></h2>
+                        <p>(<xsl:value-of select="count(current-group())"/> discos)</p>
+                        
+                        <ul>
+                            <xsl:for-each select="current-group()">
+                                <xsl:sort select="any" data-type="number"/>
+                                <li>
+                                    <!-- TODO: Mostrar informació del disc -->
+                                </li>
+                            </xsl:for-each>
+                        </ul>
+                    </section>
+                </xsl:for-each-group>
+                
+                <!-- Estadístiques -->
+                <footer>
+                    <h2>Estadístiques</h2>
+                    <!-- TODO: Implementar amb min(), max(), avg() -->
+                </footer>
+            </body>
+        </html>
+    </xsl:template>
+    
+</xsl:stylesheet>
+```
+
+Comparació opcional amb XSLT 1.0: Com a part de l'exercici, intenta implementar la mateixa agrupació usant el mètode Muenchian d'XSLT 1.0 (amb `<xsl:key>`), en un fitxer que anomenaríem `botiga-generes-1.0.xsl`. Compara:
+
+* Nombre de línies de codi.
+* Llegibilitat.
+* Facilitat de manteniment.
+
+**Execució**
+
+Amb XSLTFiddle:
+
+1. Ves al web d'[XSLTFiddle](https://xsltfiddle.liberty-development.net/).
+2. Enganxa l'XML a la secció "XML Input".
+3. Enganxa l'XSLT a la secció "XSLT".
+4. Selecciona "Saxon-HE" o "Saxon-JS" com a processador.
+5. Fes clic a "Run".
+
+Amb Saxon, localment, primer l'haurem d'instal·lar:
+
+```bash
+sudo apt install libsaxonb-java
+```
+
+I llavors podrem executar la transformació:
+
+```bash
+saxonb-xslt -s:botiga-musica.xml -xsl:botiga-generes.xsl -o:resultat.html
 ```

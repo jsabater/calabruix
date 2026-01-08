@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<botiga nom="Discos Moll" ciutat="Palma">
+    <cataleg>
+        <disc id="D001" format="vinil">
+            <titol>OK Computer</titol>
+            <artista>Radiohead</artista>
+            <any>1997</any>
+            <genere>Rock alternatiu</genere>
+            <preu>32.99</preu>
+            <estoc>5</estoc>
+        </disc>
+        <disc id="D002" format="cd">
+            <titol>Kind of Blue</titol>
+            <artista>Miles Davis</artista>
+            <any>1959</any>
+            <genere>Jazz</genere>
+            <preu>15.99</preu>
+            <estoc>12</estoc>
+        </disc>
+        <disc id="D003" format="vinil">
+            <titol>The Dark Side of the Moon</titol>
+            <artista>Pink Floyd</artista>
+            <any>1973</any>
+            <genere>Rock progressiu</genere>
+            <preu>45.00</preu>
+            <estoc>3</estoc>
+        </disc>
+        <disc id="D004" format="cd">
+            <titol>Rumours</titol>
+            <artista>Fleetwood Mac</artista>
+            <any>1977</any>
+            <genere>Rock</genere>
+            <preu>12.99</preu>
+            <estoc>8</estoc>
+        </disc>
+        <disc id="D005" format="vinil">
+            <titol>A Love Supreme</titol>
+            <artista>John Coltrane</artista>
+            <any>1965</any>
+            <genere>Jazz</genere>
+            <preu>38.50</preu>
+            <estoc>2</estoc>
+        </disc>
+        <disc id="D006" format="cd">
+            <titol>Abbey Road</titol>
+            <artista>The Beatles</artista>
+            <any>1969</any>
+            <genere>Rock</genere>
+            <preu>14.99</preu>
+            <estoc>0</estoc>
+        </disc>
+    </cataleg>
+</botiga>
