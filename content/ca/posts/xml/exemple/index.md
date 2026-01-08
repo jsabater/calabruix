@@ -265,7 +265,7 @@ element-arrel
 └── altre-element
 ```
 
-En un comentari al principi del document, justifica les decisions de disseny en format taula, de forma similar a la que trobaràs a la secció [Anàlisi del document](#anàlisi-del-document). Així mateix, incorpora-hi un llista de, al manco, quatre bones pràctiques aplicades.
+En un comentari al principi del document, justifica les decisions de disseny en format taula, de forma similar a la que trobaràs a la secció [Anàlisi del document](#an%c3%a0lisi-del-document). Així mateix, incorpora-hi un llista de, al manco, quatre bones pràctiques aplicades.
 
 Validació: Comprova que el document és ben format amb `xmllint` o [XML Validation](https://www.xmlvalidation.com/).
 
