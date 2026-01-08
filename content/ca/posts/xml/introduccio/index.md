@@ -1,7 +1,7 @@
 ---
 title: "Origen i sintaxi de l'XML"
 date: 2026-01-03
-lastmod: 2026-01-07
+lastmod: 2026-01-08
 description: "Origen i context històric de l'XML. Sintaxi bàsica: nodes, etiquetes, atributs, entitats, seccions CDATA, documents ben formats i vàlids."
 summary: "Història i elements fonamentals: etiquetes, atributs, entitats i estructura de documents."
 categories: ["ensenyament"]
@@ -382,3 +382,109 @@ Tot document vàlid és necessàriament ben format, però un document ben format
 ```
 
 L'especificació XML permet espais en blanc opcionals abans de `/>` i `?>` (és una qüestió d'estil), però no permet espai entre `<?` i el nom de la instrucció de processament.
+
+## Exercicis pràctics
+
+Es proposen tres exercicis pràctics per facilitar l'aprenentatge progressiu.
+
+### Exercici 1
+
+**Disseny d'un vocabulari XML**
+
+Tria un dels contextos següents (o proposa'n un de propi) i dissenya un vocabulari XML per representar-ne les dades. El document ha de ser **ben format**.
+
+Contextos proposats:
+
+* Una col·lecció de videojocs (títol, plataforma, gènere, any, puntuació...).
+* Un menú de restaurant (plats, preus, ingredients, al·lèrgens...).
+* Una llista de reproducció musical (cançons, artistes, durada, àlbum...).
+* Un catàleg de pel·lícules (títol, director, any, actors, sinopsi...).
+* Una agenda de contactes (nom, telèfon, email, adreça...).
+
+Requisits:
+
+1. El document ha de tenir declaració XML amb versió i codificació.
+2. Ha de tenir exactament un element arrel amb un nom significatiu.
+3. Ha de contenir almenys 3 elements diferents amb contingut textual.
+4. Ha de incloure almenys 2 atributs (per exemple, identificadors o metadades).
+5. Ha de tenir almenys 3 registres (3 videojocs, 3 plats, 3 cançons...).
+6. Ha d'incloure almenys un element buit amb atributs.
+
+Exemple de lliurament (no copiïs aquest, crea el teu propi):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<biblioteca>
+    <llibre id="L001" disponible="true">
+        <titol>1984</titol>
+        <autor>George Orwell</autor>
+        <any>1949</any>
+        <genere>Distopia</genere>
+        <prestec/>
+    </llibre>
+    <!-- més llibres... -->
+</biblioteca>
+```
+
+Validació: Comprova que el document és ben format amb `xmllint` o [XML Validation](https://www.xmlvalidation.com/).
+
+### Exercici 2
+
+**Correcció d'errors**
+
+El següent document XML conté **6 errors** que el fan mal format. Identifica'ls i corregeix-los. Explica breument cada error.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<receptes>
+    <recepta id=001 dificultat="fàcil">
+        <nom>Ensalada mediterrània</nom>
+        <temps>15 minuts<temps>
+        <ingredients>
+            <ingredient>Tomàquet
+            <ingredient>Ceba</ingredient>
+            <ingredient>Olives</ingredient>
+        <calories>250</calories>
+    </recepta>
+    <recepta id="002">
+        <nom>Truita de patates</nom>
+        <temps>30 minuts</temps>
+        <ingredients>
+            <ingredient>Patates</ingredient>
+            <ingredient>Ous</ingredient>
+        </ingredients>
+        <!-- Recepta clàssica -- molt bona -->
+        <calories>450</calories>
+    </recepta>
+<receptes>
+```
+
+Validació: Comprova que el document és ben format amb `xmllint` o [XML Validation](https://www.xmlvalidation.com/).
+
+### Exercici 3
+
+**Entitats i CDATA**
+
+Crea un document XML per a una pàgina de **preguntes freqüents (FAQ)** d'una botiga online. El document ha de demostrar l'ús correcte d'entitats predefinides i seccions CDATA.
+
+Requisits:
+
+1. Almenys 3 preguntes amb les seves respostes.
+2. Una resposta ha de contenir una comparació matemàtica (per exemple, "si el preu < 50€..."). Usa entitats.
+3. Una resposta ha de contenir codi HTML d'exemple (per exemple, explicant com incrustar un widget). Usa una secció CDATA.
+4. Una resposta ha de contenir el caràcter `&` en un context natural (per exemple, "termes & condicions"). Usa l'entitat corresponent.
+
+Estructura suggerida:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<faq>
+    <pregunta id="Q001">
+        <text>Com puc fer una devolució?</text>
+        <resposta>...</resposta>
+    </pregunta>
+    <!-- més preguntes... -->
+</faq>
+```
+
+Validació: Comprova que el document és ben format amb `xmllint` o [XML Validation](https://www.xmlvalidation.com/).
