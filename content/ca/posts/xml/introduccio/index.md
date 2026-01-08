@@ -1,7 +1,7 @@
 ---
 title: "Origen i sintaxi de l'XML"
 date: 2026-01-03
-lastmod: 2026-01-03
+lastmod: 2026-01-07
 description: "Origen i context històric de l'XML. Sintaxi bàsica: nodes, etiquetes, atributs, entitats, seccions CDATA, documents ben formats i vàlids."
 summary: "Història i elements fonamentals: etiquetes, atributs, entitats i estructura de documents."
 categories: ["ensenyament"]
@@ -312,7 +312,7 @@ Un document XML és **ben format** si compleix les regles sintàctiques bàsique
 * Els valors dels atributs van entre cometes.
 * No hi ha atributs duplicats en un mateix element.
 
-Exemple de document mal format, amb etiquetes creuades i valors sense cometes:
+Exemple de document mal format, amb etiquetes creuades i valors d'atributs sense cometes:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -323,6 +323,22 @@ Exemple de document mal format, amb etiquetes creuades i valors sense cometes:
     </alumne>
     <alumne id=002>
         <nom>Anna</nom>
+    </alumne>
+</alumnes>
+```
+
+El document anterior passaria a ser ben format amb les següents modificacions:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<alumnes>
+    <alumne id="001">
+        <nom>Pere</nom>
+        <cognom>Mas</cognom>
+    </alumne>
+    <alumne id="002">
+        <nom>Anna</nom>
+        <cognom>Miralles</cognom>
     </alumne>
 </alumnes>
 ```
