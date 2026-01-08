@@ -459,6 +459,19 @@ El següent document XML conté **6 errors** que el fan mal format. Identifica'l
 <receptes>
 ```
 
+{{< details summary="Respostes" >}}
+
+| #  | Explicació                              |
+|:--:|-----------------------------------------|
+| 1  | Valor d'atribut sense cometes           |
+| 2  | Etiqueta mal tancada                    |
+| 3  | Element sense tancar                    |
+| 4  | Element mal imbricat                    |
+| 5  | Comentari amb `--` al mig               |
+| 6  | Etiqueta de tancament arrel mal escrita |
+
+{{< /details >}}
+
 Validació: Comprova que el document és ben format amb `xmllint` o [XML Validation](https://www.xmlvalidation.com/).
 
 ### Exercici 3
