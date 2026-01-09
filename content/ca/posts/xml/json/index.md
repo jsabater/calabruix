@@ -1,7 +1,7 @@
 ---
 title: "Origen de JSON i comparativa amb XML"
 date: 2026-01-03
-lastmod: 2026-01-03
+lastmod: 2026-01-09
 description: "Origen i evolució del format JSON. Comparativa detallada amb XML: sintaxi, tipus de dades, validació, rendiment i casos d'ús. Avantatges i limitacions de JSON."
 summary: "Història de JSON, comparativa amb XML i anàlisi d'avantatges, limitacions i casos d'ús."
 categories: ["ensenyament"]
@@ -452,3 +452,245 @@ Qualsevol és vàlid per a:
 JSON va néixer com una alternativa lleugera a XML per a aplicacions web. La seva senzillesa i integració nativa amb JavaScript l'han convertit en l'estàndard per a APIs modernes. No obstant això, XML continua sent essencial en àmbits que requereixen validació estricta, transformacions complexes o interoperabilitat amb sistemes empresarials.
 
 No es tracta de formats rivals sinó complementaris: cada un excel·leix en contextos diferents. Un bon desenvolupador ha de dominar ambdós per triar l'adequat a cada situació.
+
+## Exercicis pràctics
+
+Es proposen tres exercicis pràctics per facilitar l'aprenentatge progressiu.
+
+### Exercici 1
+
+**Sintaxi JSON i correcció d'errors**
+
+**Part A: Identificació d'errors**
+
+Els següents fragments JSON contenen errors sintàctics. Identifica cada error, explica per què és incorrecte i proporciona la versió corregida.
+
+Fragment 1:
+
+```json
+{
+    nom: "Maria",
+    "edat": 19
+}
+```
+
+Fragment 2:
+
+```json
+{
+    "producte": 'Teclat mecànic',
+    "preu": 89.99
+}
+```
+
+Fragment 3:
+
+```json
+{
+    "codi": 007,
+    "nom": "James Bond"
+}
+```
+
+Fragment 4:
+
+```json
+{
+    "usuari": "admin",
+    "permisos": ["lectura", "escriptura",]
+}
+```
+
+Fragment 5:
+
+```json
+{
+    "config": {
+        "port": 8080,
+        // Port del servidor
+        "host": "localhost"
+    }
+}
+```
+
+Fragment 6:
+```json
+{
+    "nom": "Maria",
+    "nom": "Pere",
+    "edat": 25
+}
+```
+
+{{< details summary="Respostes" >}}
+
+| # | Error                  | Explicació                                                         | Correcció                                                |
+|:-:|------------------------|--------------------------------------------------------------------|----------------------------------------------------------|
+| 1 | Clau sense cometes     | Les claus JSON sempre requereixen cometes dobles                   | `"nom": "Maria"`                                         |
+| 2 | Cometes simples        | JSON només accepta cometes dobles per a strings                    | `"producte": "Teclat mecànic"`                           |
+| 3 | Zero inicial en número | Els números JSON no poden tenir zeros a l'esquerra (excepte `0.x`) | `"codi": 7` o `"codi": "007"` si cal preservar el format |
+| 4 | Coma final             | JSON no permet comes després de l'últim element                    | `["lectura", "escriptura"]`                              |
+| 5 | Comentari              | JSON no admet comentaris de cap tipus                              | Eliminar la línia `// Port del servidor`                 |
+| 6 | Claus duplicades       | L'especificació recomana claus úniques (comportament és indefinit) | Eliminar una de les claus `"nom"` o renomenar-la         |
+
+{{< /details >}}
+
+**Part B: Creació de JSON**
+
+Crea un document JSON vàlid que representi un **sistema de gestió de biblioteca** amb:
+
+1. Informació de la biblioteca (nom, adreça, telèfon)
+2. Almenys 4 llibres amb: ISBN, títol, autor(s) (array), any de publicació, disponible (booleà), préstecs actuals (número o null si no n'hi ha)
+3. Almenys 2 usuaris amb: ID, nom complet, email, llibres en préstec (array de ISBNs, pot ser buit)
+
+Assegura't d'usar correctament els 6 tipus de dades JSON: `string`, `number`, `boolean`, `null`, `object` i `array`.
+
+Validació: Comprova que el document és vàlid amb `jq` o [JSONLint](https://jsonlint.com/).
+
+### Exercici 2
+
+**Conversió XML ↔ JSON**
+
+En aquest exercici practicarem la conversió de documents XML a documents JSON, i viceversa.
+
+**Part A: De XML a JSON**
+
+Converteix el següent document XML `empresa.xml` a JSON `empresa.json`, prenent decisions de disseny adequades.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<empresa nif="B07123456" sector="tecnologia">
+    <nom>TechBalears S.L.</nom>
+    <fundacio>2015</fundacio>
+    <activa>true</activa>
+    <departaments>
+        <departament id="D001">
+            <nom>Desenvolupament</nom>
+            <empleats>12</empleats>
+            <responsable ref="E001"/>
+        </departament>
+        <departament id="D002">
+            <nom>Sistemes</nom>
+            <empleats>5</empleats>
+            <responsable ref="E002"/>
+        </departament>
+    </departaments>
+    <empleats>
+        <empleat id="E001" departament="D001">
+            <nom>Catalina Vidal</nom>
+            <carrec>CTO</carrec>
+            <email>[email protected]</email>
+            <salari moneda="EUR">55000</salari>
+        </empleat>
+        <empleat id="E002" departament="D002">
+            <nom>Miquel Ferrer</nom>
+            <carrec>SysAdmin Senior</carrec>
+            <email>[email protected]</email>
+            <salari moneda="EUR">42000</salari>
+        </empleat>
+    </empleats>
+</empresa>
+```
+
+Decisions a documentar:
+
+1. Com tractes els atributs XML (`nif`, `sector`, `id`, `ref`, `moneda`)?
+2. Com converteixes el valor `true` de `<activa>` (text o booleà)?
+3. Com representes les referències (`ref="E001"`, `departament="D001"`)?
+4. Mantens l'estructura de contenidors (`<departaments>`, `<empleats>`) o l'aplanes?
+
+**Part B: De JSON a XML**
+
+Converteix el següent document JSON `playlist.json` a XML `playlist.xml`, prenent decisions de disseny adequades.
+
+```json
+{
+    "playlist": {
+        "nom": "Rock Clàssic",
+        "creador": "jaume",
+        "publica": true,
+        "duracio_total": 7845,
+        "cançons": [
+            {
+                "titol": "Stairway to Heaven",
+                "artista": "Led Zeppelin",
+                "album": "Led Zeppelin IV",
+                "any": 1971,
+                "durada": 482,
+                "valoracio": 5
+            },
+            {
+                "titol": "Bohemian Rhapsody",
+                "artista": "Queen",
+                "album": "A Night at the Opera",
+                "any": 1975,
+                "durada": 354,
+                "valoracio": 5
+            },
+            {
+                "titol": "Hotel California",
+                "artista": "Eagles",
+                "album": "Hotel California",
+                "any": 1977,
+                "durada": 391,
+                "valoracio": null
+            }
+        ],
+        "etiquetes": ["rock", "70s", "classics"]
+    }
+}
+```
+
+Decisions a documentar:
+
+1. Quins camps converteixes a atributs i quins a elements?
+2. Com representes el valor `null` de `valoracio`?
+3. Com representes l'array `etiquetes`?
+4. Afegeixes un element contenidor per a les cançons?
+
+Validació: Comprova que el document XML és ben format amb `xmllint`.
+
+### Exercici 3
+
+**Anàlisi i decisió de format**
+
+Treballes com a consultor per a diferents projectes i has de recomanar l'ús d'XML o JSON segons el cas. Per a cada escenari, justifica la teva elecció basant-te en els criteris de l'article: verbositat, tipus de dades, validació, transformacions, namespaces, rendiment, etc.
+
+**Escenari 1: API per a aplicació mòbil de meteorologia**
+
+Una startup vol crear una app de meteorologia per a iOS i Android. L'API ha de retornar dades de temperatura, humitat, previsió per hores, etc. Es preveuen 50.000 peticions diàries des de dispositius mòbils amb connexions variables (4G, WiFi, 3G).
+
+**Escenari 2: Sistema d'intercanvi de factures electròniques**
+
+Una empresa de software comptable vol implementar l'exportació de factures per intercanviar amb altres sistemes. Les factures han de complir la normativa fiscal espanyola i han de poder ser signades digitalment. Els receptors poden ser altres empreses o l'Administració pública.
+
+**Escenari 3: Fitxer de configuració per a servidor web**
+
+Estàs desenvolupant un servidor web en Node.js i necessites un fitxer de configuració que contingui: port, host, rutes d'endpoints, credencials de base de dades, i paràmetres de cache. L'equip de desenvolupament vol poder afegir comentaris explicatius.
+
+> Per aquest exercici, pots considerar alternatives com YAML o TOML si ho justifiques adequadament.
+
+**Escenari 4: Feed de notícies per a lector RSS**
+
+Un mitjà de comunicació vol oferir els seus continguts en format sindicat perquè els usuaris es puguin subscriure amb lectors de feeds. El feed ha d'incloure títol, resum, data de publicació, autor i categories per a cada notícia.
+
+**Escenari 5: Informe financer anual per a la CNMV**
+
+Una empresa cotitzada en borsa ha de presentar el seu informe financer anual al regulador (CNMV). L'informe ha d'incloure balanç, compte de resultats, fluxos d'efectiu, i ha de poder ser processat automàticament per comparar-lo amb altres empreses del sector.
+
+**Escenari 6: Emmagatzematge de partides guardades en un videojoc**
+
+Un estudi de videojocs necessita guardar l'estat del joc: posició del jugador, inventari, missions completades, estadístiques, configuració de controls. Les partides es guarden localment al dispositiu i es poden sincronitzar amb el núvol.
+
+{{< details summary="Respostes" >}}
+
+| Escenari                  | Recomanació | Justificació (3-4 raons principals) |
+|---------------------------|:-----------:|-------------------------------------|
+| 1. API mòbil meteorologia | `JSON`        | 1. Menor mida (estalvi d'ample de banda en connexions mòbils).<br/>2. Parseig ràpid i nadiu tant en `iOS` com `Android`.<br/>3. Tipus de dades nadius (temperatura com a número, pluja com a booleà).<br/>4. Estàndard de facto per a APIs REST modernes. |
+| 2. Factures electròniques | `XML`         | 1. Obligatori per normativa espanyola (format `Factura-e` per a Administració pública).<br/>2. Suport natiu per a signatura digital (`XMLDSig`).<br/>3. Validació estricta amb `XSD` per garantir integritat fiscal.<br/>4. Interoperabilitat amb sistemes empresarials i governamentals existents. |
+| 3. Configuració servidor  | `YAML`/`TOML` | 1. JSON no admet comentaris, essencials per documentar configuracions.<br/>2. YAML i TOML són llegibles, admeten comentaris i són estàndards per a configuració.<br/>3. `XML` seria massa verbós per a aquest ús. |
+| 4. Feed de notícies       | `XML`         | 1. `RSS` i `Atom` són estàndards `XML` consolidats per a sindicació.<br/>2. Tots els lectors de feeds esperen `XML` (compatibilitat universal).<br/>3. Suport per a metadades riques (categories, autor, dates) amb estructura estandarditzada.<br/>4. Validació amb esquemes existents. |
+| 5. Informe financer CNMV  | `XML`         | 1. `XBRL` (basat en `XML`) és l'estàndard obligatori per a informes financers regulats.<br/>2. Validació estricta amb taxonomies per garantir comparabilitat entre empreses.<br/>3. Contextos (període, moneda) integrats en l'estructura.<br/>4. Processament automatitzat per part del regulador. |
+| 6. Partides de videojoc   | `JSON`        | 1. Senzill i lleuger per a dades que canvien freqüentment.<br/>2. Parseig ràpid (important per a càrrega de partides).<br/>3. Fàcil manipulació programàtica des de qualsevol motor de joc.<br/>4. No cal validació estricta ni interoperabilitat externa. |
+
+{{< /details >}}
