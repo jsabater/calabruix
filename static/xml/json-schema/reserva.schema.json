@@ -1,0 +1,154 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://exemple.com/schemas/reserva.json",
+    "title": "Reserva d'Hotel",
+    "description": "Esquema per validar documents JSON de reserves d'hotel",
+    "type": "object",
+    "required": ["reserva"],
+    "properties": {
+        "reserva": {
+            "type": "object",
+            "required": ["id", "hotel", "client", "estada", "total", "dataReserva"],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Identificador de reserva (RES-AAAA-NNNNNN)",
+                    "pattern": "^RES-[0-9]{4}-[0-9]{6}$"
+                },
+                "hotel": {
+                    "type": "object",
+                    "required": ["nom", "estrelles"],
+                    "properties": {
+                        "nom": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "estrelles": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 5
+                        },
+                        "adreca": {
+                            "$ref": "#/$defs/adreca"
+                        }
+                    }
+                },
+                "client": {
+                    "$ref": "#/$defs/client"
+                },
+                "estada": {
+                    "type": "object",
+                    "required": ["dataEntrada", "dataSortida", "habitacions"],
+                    "properties": {
+                        "dataEntrada": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "dataSortida": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "habitacions": {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                                "$ref": "#/$defs/habitacio"
+                            }
+                        },
+                        "pensio": {
+                            "type": "string",
+                            "enum": ["sense", "esmorzar", "mitja", "completa"]
+                        },
+                        "observacions": {
+                            "type": ["string", "null"]
+                        }
+                    }
+                },
+                "total": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "pagat": {
+                    "type": "boolean"
+                },
+                "dataReserva": {
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }
+        }
+    },
+    "$defs": {
+        "adreca": {
+            "type": "object",
+            "properties": {
+                "carrer": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "ciutat": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "codiPostal": {
+                    "type": "string",
+                    "description": "Codi postal de 5 dígits",
+                    "pattern": "^[0-9]{5}$"
+                },
+                "pais": {
+                    "type": "string",
+                    "description": "Codi ISO 3166-1 alpha-2",
+                    "pattern": "^[A-Z]{2}$"
+                }
+            }
+        },
+        "client": {
+            "type": "object",
+            "required": ["nom", "email"],
+            "properties": {
+                "nom": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "email": {
+                    "type": "string",
+                    "format": "email"
+                },
+                "telefon": {
+                    "type": "string",
+                    "description": "Telèfon internacional (+XX...)",
+                    "pattern": "^\\+[0-9]{9,15}$"
+                },
+                "dni": {
+                    "type": "string",
+                    "description": "DNI espanyol (8 dígits + lletra)",
+                    "pattern": "^[0-9]{8}[A-Z]$"
+                }
+            }
+        },
+        "habitacio": {
+            "type": "object",
+            "required": ["tipus", "preu"],
+            "properties": {
+                "tipus": {
+                    "type": "string",
+                    "enum": ["individual", "doble", "suite", "familiar"]
+                },
+                "preu": {
+                    "type": "number",
+                    "description": "Preu per nit en euros",
+                    "exclusiveMinimum": 0
+                },
+                "hostes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 6
+                },
+                "vistes": {
+                    "type": "boolean",
+                    "description": "Indica si l'habitació té vistes al pis"
+                }
+            }
+        }
+    }
+}

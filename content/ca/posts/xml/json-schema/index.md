@@ -1,7 +1,7 @@
 ---
 title: "Equivalències entre JSON i XML i JSON Schema"
 date: 2026-01-03
-lastmod: 2026-01-03
+lastmod: 2026-01-09
 description: "Conversió d'exemples XML a JSON. Introducció a JSON Schema per validar documents JSON. Eines online i de terminal Linux per a fer feina amb JSON."
 summary: "Conversió XML a JSON, validació amb JSON Schema i eines de feina de terminal Linux i enn línia."
 categories: ["ensenyament"]
@@ -914,4 +914,371 @@ command! JSONValidate !jq empty %
 nnoremap <leader>jf :JSONFormat<CR>
 nnoremap <leader>jc :JSONCompact<CR>
 nnoremap <leader>jv :JSONValidate<CR>
+```
+
+## Exercicis pràctics
+
+Es proposen tres exercicis pràctics per facilitar l'aprenentatge progressiu.
+
+### Exercici 1
+
+**Creació d'un JSON Schema**
+
+Crea un JSON Schema `reserva.schema.json` complet per validar documents JSON que representin reserves d'hotel. Estructura del document JSON `reserva.json` a validar:
+
+```json
+{
+    "reserva": {
+        "id": "RES-2025-001234",
+        "hotel": {
+            "nom": "Hotel Playa de Palma",
+            "estrelles": 4,
+            "adreca": {
+                "carrer": "Carrer de la Mar, 15",
+                "ciutat": "Palma",
+                "codiPostal": "07610",
+                "pais": "ES"
+            }
+        },
+        "client": {
+            "nom": "Maria García López",
+            "email": "maria.garcia@example.com",
+            "telefon": "+34612345678",
+            "dni": "12345678A"
+        },
+        "estada": {
+            "dataEntrada": "2025-07-15",
+            "dataSortida": "2025-07-22",
+            "habitacions": [
+                {
+                    "tipus": "doble",
+                    "preu": 120.00,
+                    "hostes": 2,
+                    "vistes": false
+                }
+            ],
+            "pensio": "mitja",
+            "observacions": null
+        },
+        "total": 840.00,
+        "pagat": false,
+        "dataReserva": "2025-03-15T10:30:00Z"
+    }
+}
+```
+
+Requisits del JSON Schema:
+
+1. **Estructura general:**
+   * L'arrel ha de ser un objecte amb la propietat `reserva` obligatòria.
+   * Usa `$defs` per definir tipus reutilitzables: `adreca`, `client`, `habitacio`.
+
+2. **Validacions específiques:** Aplica les següents:
+   * `id`: Patró `^RES-[0-9]{4}-[0-9]{6}$`.
+   * `estrelles`: Enter entre 1 i 5.
+   * `codiPostal`: Exactament 5 dígits.
+   * `pais`: Codi ISO de 2 lletres majúscules.
+   * `email`: Format email.
+   * `telefon`: Patró per a telèfons internacionals (comença amb `+`, seguit de 9-15 dígits).
+   * `dni`: Patró `^[0-9]{8}[A-Z]$`.
+   * `dataEntrada`, `dataSortida`, `dataReserva`: Format date o date-time segons correspongui.
+   * `tipus` habitació: Enumeració (`individual`, `doble`, `suite`, `familiar`).
+   * `pensio`: Enumeració (`sense`, `esmorzar`, `mitja`, `completa`).
+   * `preu`: Número positiu.
+   * `hostes`: Enter entre 1 i 6.
+   * `total`: Número positiu.
+   * `observacions`: String o null.
+
+3. **Camps obligatoris:** La resta són opcionals:
+   * `reserva`: `id`, `hotel`, `client`, `estada`, `total`, `dataReserva`.
+   * `hotel`: `nom`, `estrelles`.
+   * `client`: `nom`, `email`.
+   * `estada`: `dataEntrada`, `dataSortida`, `habitacions`.
+   * `habitacio`: `tipus`, `preu`.
+
+Validació: Usa [JSON Schema Validator](https://www.jsonschemavalidator.net/) o `jsonschema`. Prova de modificar el document d'exemple per provocar errors i verifica que el validador els detecta.
+
+### Exercici 2
+
+**Consultes i transformacions amb `jq`**
+
+Donat el següent document JSON `cursos.json` d'una plataforma de cursos online, escriu les comandes `jq` necessàries per obtenir la informació sol·licitada:
+
+```json
+{
+    "plataforma": {
+        "nom": "TechLearn",
+        "cursos": [
+            {
+                "id": "C001",
+                "titol": "Introducció a Python",
+                "instructor": "Anna Vidal",
+                "preu": 49.99,
+                "hores": 20,
+                "categoria": "programacio",
+                "alumnes": 1250,
+                "valoracio": 4.8,
+                "publicat": true
+            },
+            {
+                "id": "C002",
+                "titol": "Docker i Kubernetes",
+                "instructor": "Miquel Ferrer",
+                "preu": 79.99,
+                "hores": 35,
+                "categoria": "devops",
+                "alumnes": 820,
+                "valoracio": 4.6,
+                "publicat": true
+            },
+            {
+                "id": "C003",
+                "titol": "Machine Learning Bàsic",
+                "instructor": "Anna Vidal",
+                "preu": 99.99,
+                "hores": 45,
+                "categoria": "ia",
+                "alumnes": 650,
+                "valoracio": 4.9,
+                "publicat": true
+            },
+            {
+                "id": "C004",
+                "titol": "Administració de Sistemes Linux",
+                "instructor": "Pere Soler",
+                "preu": 59.99,
+                "hores": 30,
+                "categoria": "sistemes",
+                "alumnes": 430,
+                "valoracio": 4.5,
+                "publicat": true
+            },
+            {
+                "id": "C005",
+                "titol": "Ciberseguretat Avançada",
+                "instructor": "Laura Costa",
+                "preu": 129.99,
+                "hores": 50,
+                "categoria": "seguretat",
+                "alumnes": 280,
+                "valoracio": 4.7,
+                "publicat": false
+            },
+            {
+                "id": "C006",
+                "titol": "JavaScript Modern",
+                "instructor": "Miquel Ferrer",
+                "preu": 69.99,
+                "hores": 25,
+                "categoria": "programacio",
+                "alumnes": 980,
+                "valoracio": 4.4,
+                "publicat": true
+            }
+        ]
+    }
+}
+```
+
+Consultes a realitzar:
+
+1. Obtenir el nom de la plataforma.
+2. Llistar tots els títols dels cursos.
+3. Obtenir el curs amb id "C003" (tot l'objecte).
+4. Llistar els cursos publicats (només títol i preu).
+5. Comptar el nombre total de cursos.
+6. Calcular la suma total d'alumnes de tots els cursos.
+7. Obtenir els cursos amb valoració superior a 4.7.
+8. Llistar els cursos ordenats per preu (de menor a major).
+9. Obtenir els cursos de la categoria "programacio".
+10. Calcular el preu mitjà de tots els cursos.
+11. Obtenir els cursos de l'instructora "Anna Vidal" (només títol i categoria).
+12. Llistar les categories úniques (sense repeticions).
+13. Obtenir el curs amb més alumnes.
+14. Crear un array amb objectes `{titol, instructor, hores}` de tots els cursos.
+15. Exportar els cursos publicats a format CSV amb columnes: id, titol, preu.
+
+{{< details summary="Respostes" >}}
+
+| #  | Descripció                         | Comanda `jq`                                                                                          |
+|:--:|------------------------------------|-------------------------------------------------------------------------------------------------------|
+| 1  | Nom plataforma                     | `jq -r '.plataforma.nom' cursos.json`                                                                 |
+| 2  | Tots els títols                    | `jq -r '.plataforma.cursos[].titol' cursos.json`                                                      |
+| 3  | Curs amb id "C003"                 | `jq '.plataforma.cursos[] \| select(.id == "C003")' cursos.json`                                      |
+| 4  | Cursos publicats (títol i preu)    | `jq '.plataforma.cursos[] \| select(.publicat) \| {titol, preu}' cursos.json`                         |
+| 5  | Nombre total de cursos             | `jq '.plataforma.cursos \| length' cursos.json`                                                       |
+| 6  | Suma total d'alumnes               | `jq '[.plataforma.cursos[].alumnes] \| add' cursos.json`                                              |
+| 7  | Cursos amb valoració > 4.7         | `jq '.plataforma.cursos[] \| select(.valoracio > 4.7)' cursos.json`                                   |
+| 8  | Cursos ordenats per preu           | `jq '.plataforma.cursos \| sort_by(.preu)' cursos.json`                                               |
+| 9  | Cursos categoria "programacio"     | `jq '.plataforma.cursos[] \| select(.categoria == "programacio")' cursos.json`                        |
+| 10 | Preu mitjà                         | `jq '[.plataforma.cursos[].preu] \| add / length' cursos.json`                                        |
+| 11 | Cursos d'Anna Vidal                | `jq '.plataforma.cursos[] \| select(.instructor == "Anna Vidal") \| {titol, categoria}' cursos.json`  |
+| 12 | Categories úniques                 | `jq '[.plataforma.cursos[].categoria] \| unique' cursos.json`                                         |
+| 13 | Curs amb més alumnes               | `jq '.plataforma.cursos \| max_by(.alumnes)' cursos.json`                                             |
+| 14 | Array amb titol, instructor, hores | `jq '[.plataforma.cursos[] \| {titol, instructor, hores}]' cursos.json`                               |
+| 15 | Exportar a CSV                     | `jq -r '.plataforma.cursos[] \| select(.publicat) \| [.id, .titol, .preu] \| @csv' cursos.json`       |
+
+{{< /details >}}
+
+Validació: Executa cada comanda i verifica el resultat.
+
+### Exercici 3
+
+**Script de validació i informe JSON**
+
+Crea un script de Bash `analitza-comandes.sh` que validi una col·lecció de fitxers JSON contra un esquema `comanda.schema.json` i generi un informe amb estadístiques extretes amb `jq`. 
+
+Per fer aquest exercici, tens un directori amb fitxers JSON de comandes d'una botiga (al manco 5 comandes), cadascun seguint aquesta estructura:
+
+```json
+{
+    "comanda": {
+        "id": "ORD-2025-000001",
+        "data": "2025-01-15",
+        "client": {
+            "nom": "Maria García",
+            "email": "maria@example.com"
+        },
+        "productes": [
+            {
+                "sku": "PROD001",
+                "nom": "Teclat mecànic",
+                "quantitat": 1,
+                "preu": 89.99
+            },
+            {
+                "sku": "PROD002",
+                "nom": "Ratolí ergonòmic",
+                "quantitat": 2,
+                "preu": 45.00
+            }
+        ],
+        "subtotal": 179.99,
+        "iva": 37.80,
+        "total": 217.79,
+        "estat": "enviat"
+    }
+}
+```
+
+Genera almanco 4 fitxers adicionals, seguint el format de nom que consideris oportú, però assegura't de que tenguin l'extensió `.json`.
+
+Requisits de l'script:
+
+1. **Paràmetres:**
+   * `-d directori`: Directori amb els fitxers JSON (per defecte: `.`).
+   * `-s esquema`: Fitxer JSON Schema per validar (opcional).
+   * `-o fitxer`: Fitxer de sortida per a l'informe (per defecte: `informe.txt`).
+   * `-h`: Mostra ajuda.
+
+2. **Validació:**
+   * Comprova que cada fitxer és JSON vàlid amb `jq empty`.
+   * Si s'ha proporcionat esquema, valida contra ell.
+   * Mostra errors però continua processant.
+
+3. **Estadístiques a extreure:**
+   * Total de comandes processades.
+   * Suma total de vendes (camp `total`).
+   * Comanda amb import més alt.
+   * Nombre de comandes per estat (pendents, enviades, etc.).
+   * Mitjana d'articles per comanda.
+   * Client amb més comandes (si n'hi ha repetits).
+
+4. **Informe de sortida:**
+
+   ```
+   ==========================================
+   INFORME DE COMANDES
+   Data: 2025-01-15 14:30:00
+   ==========================================
+   
+   VALIDACIÓ
+   ---------
+   Fitxers processats: 15
+   Fitxers vàlids: 14
+   Fitxers amb errors: 1
+     - comanda-corrupta.json: JSON mal format
+   
+   ESTADÍSTIQUES
+   -------------
+   Total vendes: 4.523,45 €
+   Comanda més alta: ORD-2025-000023 (312,50 €)
+   Mitjana per comanda: 301,56 €
+   Mitjana articles/comanda: 3.2
+   
+   ESTAT DE COMANDES
+   -----------------
+     pendents: 3
+     enviades: 8
+     entregades: 3
+   
+   ==========================================
+   ```
+
+5. **Estructura suggerida:**
+
+   ```bash
+   #!/bin/bash
+   
+   # Funcions auxiliars
+   mostrar_ajuda() {
+       echo "Ús: $0 [-d directori] [-s esquema] [-o fitxer] [-h]"
+       # ...
+   }
+   
+   validar_json() {
+       local fitxer="$1"
+       jq empty "$fitxer" 2>/dev/null
+   }
+   
+   extreure_total() {
+       local fitxer="$1"
+       jq -r '.comanda.total' "$fitxer"
+   }
+   
+   # Processar arguments amb getopts
+   # ...
+   
+   # Variables per a estadístiques
+   TOTAL_VENDES=0
+   declare -A ESTATS  # Array associatiu per comptar estats
+   
+   # Iniciar informe
+   {
+       echo "=========================================="
+       echo "INFORME DE COMANDES"
+       echo "Data: $(date '+%Y-%m-%d %H:%M:%S')"
+       echo "=========================================="
+       echo ""
+   } > "$SORTIDA"
+   
+   # Bucle principal
+   for json in "$DIRECTORI"/*.json; do
+       [ -e "$json" ] || continue
+       
+       if validar_json "$json"; then
+           # Extreure dades amb jq
+           total=$(extreure_total "$json")
+           estat=$(jq -r '.comanda.estat' "$json")
+           
+           # Acumular estadístiques
+           TOTAL_VENDES=$(echo "$TOTAL_VENDES + $total" | bc)
+           ((ESTATS[$estat]++))
+           
+           # ...
+       fi
+   done
+   
+   # Afegir estadístiques a l'informe
+   # ...
+   ```
+
+Nota: Per a càlculs amb decimals en Bash, usa `bc`:
+
+```bash
+# Suma
+echo "10.5 + 20.3" | bc
+
+# Divisió amb decimals
+echo "scale=2; 100 / 3" | bc
 ```
