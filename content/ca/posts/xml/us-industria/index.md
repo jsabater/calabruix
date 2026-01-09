@@ -1,7 +1,7 @@
 ---
 title: "XML a la indústria"
 date: 2026-01-03
-lastmod: 2026-01-03
+lastmod: 2026-01-08
 description: "Usos actuals de l'XML en diferents indústries i sectors, amb exemples realistes de formats XML en configuració de sistemes, intercanvi de dades, documents ofimàtics, serveis web i estàndards sectorials."
 summary: "Casos d'ús reals de l'XML: configuració, intercanvi de dades, documents i estàndards sectorials."
 categories: ["ensenyament"]
@@ -460,3 +460,267 @@ Per què es tria XML en aquests casos i no en altres? La resposta té a veure am
 5. **Longevitat:** Aquests documents s'han de conservar durant anys (les factures, 4 anys per Hisenda; els historials clínics, fins a 15 anys o més). XML, com a format de text pla basat en estàndards oberts, garanteix que els documents seran llegibles dins de dècades.
 
 L'XML no és la solució per a tot, però continua sent l'opció preferida quan cal robustesa, validació i interoperabilitat en entorns on els errors tenen conseqüències greus.
+
+## Exercicis pràctics
+
+Es proposen tres exercicis pràctics per facilitar l'aprenentatge progressiu.
+
+### Exercici 1
+
+**Creació d'un feed Atom**
+
+Crea un feed Atom per a un **blog personal o de projectes** que pugui ser consumit per lectors de feeds com [Feedly](https://feedly.com/) o [Thunderbird](https://www.thunderbird.net/).
+
+Requisits del feed `blog.atom` o `feed.atom`:
+
+1. **Metadades del feed:**
+   * Títol del blog.
+   * Enllaç a la pàgina principal.
+   * Enllaç al propi feed (amb `rel="self"`).
+   * Identificador únic (URN).
+   * Data d'última actualització.
+   * Informació de l'autor (nom i email opcional).
+
+2. **Almanco 4 entrades** amb:
+   * Títol.
+   * Enllaç a l'article complet.
+   * Identificador únic.
+   * Data de publicació.
+   * Data d'actualització (si és diferent).
+   * Resum o contingut (pots usar `<summary>` o `<content>`).
+   * Almenys una entrada amb categories (`<category term="..."/>`).
+
+3. **Bones pràctiques:**
+   * Usa dates en format ISO 8601 amb zona horària (`2025-01-15T10:30:00+01:00`).
+   * Els identificadors han de ser permanents (no canviar si l'URL canvia).
+   * Inclou el namespace correcte: `xmlns="http://www.w3.org/2005/Atom"`.
+
+Estructura de referència:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title>...</title>
+    <link href="https://..."/>
+    <link rel="self" href="https://.../feed.atom"/>
+    <id>urn:uuid:...</id>
+    <updated>...</updated>
+    <author>
+        <name>...</name>
+    </author>
+    
+    <entry>
+        <title>...</title>
+        <link href="https://..."/>
+        <id>urn:uuid:...</id>
+        <updated>...</updated>
+        <summary>...</summary>
+        <category term="..."/>
+    </entry>
+    
+    <!-- més entrades... -->
+</feed>
+```
+
+Validació:
+
+* Comprova que el feed és ben format amb `xmllint`.
+* Valida el feed amb el [W3C Feed Validation Service](https://validator.w3.org/feed/).
+* Prova d'importar-lo a un lector de feeds (Thunderbird permet afegir feeds locals).
+
+### Exercici 2
+
+**Gràfic SVG des de zero**
+
+Crea un gràfic SVG `infografia.svg` que representi una **infografia senzilla amb dades estadístiques**. El gràfic ha de ser completament escrit a mà (sense eines de disseny) per entendre l'estructura XML.
+
+**Opció A: Gràfic de barres**
+
+Crea un gràfic de barres horitzontal o vertical que mostri dades comparatives (per exemple: llenguatges de programació més usats, vendes per trimestre, notes d'assignatures...).
+
+Requisits:
+
+* Almenys 5 barres.
+* Etiquetes de text per a cada barra.
+* Títol del gràfic.
+* Colors diferents per a cada barra o categoria.
+* Eixos amb línies (`<line>`).
+
+**Opció B: Diagrama simple**
+
+Crea un diagrama que representi un concepte (per exemple: cicle de vida del software, estructura d'una xarxa, components d'un sistema...).
+
+Requisits:
+
+* Almenys 5 formes (`<rect>`, `<circle>`, `<ellipse>`).
+* Connexions entre elements (`<line>` o `<path>`).
+* Text explicatiu.
+* Ús de colors amb significat.
+
+**Elements SVG a utilitzar:**
+
+| Element    | Ús                   | Exemple                                                          |
+|------------|----------------------|------------------------------------------------------------------|
+| `<svg>`    | Contenidor principal | `<svg width="400" height="300" viewBox="0 0 400 300">`           |
+| `<rect>`   | Rectangles i barres  | `<rect x="10" y="20" width="100" height="30" fill="#3498db"/>` |
+| `<circle>` | Cercles              | `<circle cx="50" cy="50" r="40" fill="#e74c3c"/>`              |
+| `<line>`   | Línies               | `<line x1="0" y1="0" x2="100" y2="100" stroke="black"/>`         |
+| `<text>`   | Text                 | `<text x="50" y="30" font-size="14">Etiqueta</text>`             |
+| `<g>`      | Agrupació            | `<g transform="translate(10,10)">...</g>`                        |
+
+**Exemple de barra amb etiqueta:**
+
+```xml
+<!-- Una barra del gràfic -->
+<g>
+    <!-- Barra -->
+    <rect x="50" y="30" width="150" height="25" fill="#3498db"/>
+    <!-- Etiqueta esquerra -->
+    <text x="45" y="47" text-anchor="end" font-size="12">Python</text>
+    <!-- Valor dreta -->
+    <text x="205" y="47" font-size="12">75%</text>
+</g>
+```
+
+**Validació:** Obre el fitxer directament al navegador per veure el resultat. Els SVG són XML, per tant també pots validar amb `xmllint`.
+
+
+### Exercici 3
+
+**Transformació de dades a SVG amb XSLT**
+
+Crea un sistema que transformi dades XML en un gràfic SVG usant XSLT. Això demostra com es poden generar visualitzacions dinàmiques a partir de dades estructurades.
+
+Aquest és el fitxer XML amb dades `dades-vendes.xml`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="vendes-a-svg.xsl"?>
+<informe>
+    <titol>Vendes trimestrals 2024</titol>
+    <trimestres>
+        <trimestre id="Q1" nom="Gen-Mar">
+            <vendes>45000</vendes>
+        </trimestre>
+        <trimestre id="Q2" nom="Abr-Jun">
+            <vendes>62000</vendes>
+        </trimestre>
+        <trimestre id="Q3" nom="Jul-Set">
+            <vendes>58000</vendes>
+        </trimestre>
+        <trimestre id="Q4" nom="Oct-Des">
+            <vendes>71000</vendes>
+        </trimestre>
+    </trimestres>
+    <objectiu>60000</objectiu>
+</informe>
+```
+
+Requisits del full XSLT `vendes-a-svg.xsl`:
+
+1. **Genera un SVG vàlid** `dades-vendes.svg` amb l'element arrel `<svg>` i el namespace correcte.
+
+2. **Gràfic de barres verticals:**
+   * Una barra per cada trimestre.
+   * L'alçada de la barra ha de ser proporcional al valor de vendes.
+   * Color diferent si supera l'objectiu (verd) o no (vermell).
+
+3. **Elements del gràfic:**
+   * Títol (extret de `<titol>`).
+   * Eix horitzontal amb etiquetes dels trimestres.
+   * Línia horitzontal que marqui l'objectiu.
+   * Valor numèric sobre cada barra.
+
+4. **Tècniques XSLT a usar:**
+   * `<xsl:for-each>` per iterar els trimestres.
+   * `position()` per calcular la posició X de cada barra.
+   * `<xsl:choose>` per decidir el color segons si supera l'objectiu.
+   * Variables per a l'escala (per exemple: 1000€ = 1px d'alçada).
+
+Estructura XSLT suggerida:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0" 
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns="http://www.w3.org/2000/svg">
+    
+    <xsl:output method="xml" indent="yes"/>
+    
+    <!-- Variables globals -->
+    <xsl:variable name="ample-barra" select="60"/>
+    <xsl:variable name="espai-barres" select="80"/>
+    <xsl:variable name="escala" select="0.002"/>  <!-- Pixels per euro -->
+    <xsl:variable name="altura-maxima" select="200"/>
+    <xsl:variable name="marge-esquerre" select="50"/>
+    <xsl:variable name="marge-superior" select="50"/>
+    
+    <xsl:template match="/">
+        <svg width="500" height="350" viewBox="0 0 500 350">
+            <!-- Fons -->
+            <rect width="100%" height="100%" fill="#f9f9f9"/>
+            
+            <!-- Títol -->
+            <text x="250" y="30" text-anchor="middle" font-size="18" font-weight="bold">
+                <xsl:value-of select="informe/titol"/>
+            </text>
+            
+            <!-- Línia d'objectiu -->
+            <xsl:variable name="y-objectiu" 
+                select="$marge-superior + $altura-maxima - (informe/objectiu * $escala)"/>
+            <line x1="{$marge-esquerre}" y1="{$y-objectiu}" 
+                  x2="450" y2="{$y-objectiu}" 
+                  stroke="#e67e22" stroke-width="2" stroke-dasharray="5,5"/>
+            <text x="455" y="{$y-objectiu + 4}" font-size="10" fill="#e67e22">
+                Objectiu
+            </text>
+            
+            <!-- Barres -->
+            <xsl:for-each select="informe/trimestres/trimestre">
+                <xsl:variable name="x" 
+                    select="$marge-esquerre + (position() - 1) * $espai-barres + 20"/>
+                <xsl:variable name="altura" select="vendes * $escala"/>
+                <xsl:variable name="y" 
+                    select="$marge-superior + $altura-maxima - $altura"/>
+                
+                <!-- Barra -->
+                <rect x="{$x}" y="{$y}" width="{$ample-barra}" height="{$altura}">
+                    <xsl:attribute name="fill">
+                        <xsl:choose>
+                            <xsl:when test="vendes >= /informe/objectiu">#27ae60</xsl:when>
+                            <xsl:otherwise>#e74c3c</xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:attribute>
+                </rect>
+                
+                <!-- Valor sobre la barra -->
+                <text x="{$x + $ample-barra div 2}" y="{$y - 5}" 
+                      text-anchor="middle" font-size="11">
+                    <xsl:value-of select="format-number(vendes, '#,###')"/>€
+                </text>
+                
+                <!-- Etiqueta del trimestre -->
+                <text x="{$x + $ample-barra div 2}" 
+                      y="{$marge-superior + $altura-maxima + 20}" 
+                      text-anchor="middle" font-size="12">
+                    <xsl:value-of select="@nom"/>
+                </text>
+            </xsl:for-each>
+            
+            <!-- Eix horitzontal -->
+            <line x1="{$marge-esquerre}" y1="{$marge-superior + $altura-maxima}" 
+                  x2="450" y2="{$marge-superior + $altura-maxima}" 
+                  stroke="black" stroke-width="1"/>
+        </svg>
+    </xsl:template>
+    
+</xsl:stylesheet>
+```
+
+Validació: Pots obrir el fitxer XML al navegador per veure la transformació o, alternativament, utilitza `xsltproc` per a generar el fitxer SVG:
+
+```bash
+xsltproc vendes-a-svg.xsl dades-vendes.xml > dades-vendes.svg
+```
+
+Extensió opcional: Modifica el sistema per acceptar un nombre variable de trimestres (pot ser 3, 4, 6...). L'XSLT hauria de calcular automàticament l'espaiat entre barres segons el nombre d'elements.Pista: Pots usar `count(//trimestre)` per saber quants n'hi ha i calcular l'espaiat dinàmicament.
