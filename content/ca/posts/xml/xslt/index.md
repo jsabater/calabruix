@@ -1,7 +1,7 @@
 ---
 title: "Transformacions XSLT"
 date: 2026-01-03
-lastmod: 2026-01-08
+lastmod: 2026-01-11
 description: "Transformacions XSLT per convertir documents XML a HTML, text o altres formats XML. Plantilles, XPath, iteracions, condicions i exemple complet amb l'XML de l'institut."
 summary: "Plantilles, expressions XPath, estructures de control i transformació d'XML a HTML."
 categories: ["ensenyament"]
@@ -23,10 +23,10 @@ A diferència de CSS, que només modifica l'aparença visual, XSLT pot:
 * Generar contingut nou.
 * Combinar múltiples fonts de dades.
 
-El funcionament bàsic és molt senzill:
+El funcionament bàsic és molt senzill: un document d'entrada més un conjunt de regles de transformació generen un document de sortida.
 
 ```
-Document XML (entrada) + Full XSLT (regles) = Document transformat (sortida)
+Document XML + Full XSLT = Document transformat
 ```
 
 Un processador XSLT llegeix el document XML d'entrada, aplica les regles definides al full d'estils XSLT i genera el document de sortida.
@@ -54,7 +54,7 @@ Un full XSLT és, en si mateix, un document XML:
 Els elements principals d'XPath són els següents:
 
 | Element                 | Funció                                  |
-|:-----------------------:|-----------------------------------------|
+|-------------------------|-----------------------------------------|
 | `<xsl:stylesheet>`      | Element arrel del full XSLT             |
 | `<xsl:output>`          | Configura el format de sortida          |
 | `<xsl:template>`        | Defineix una plantilla de transformació |
@@ -87,7 +87,7 @@ Originalment desenvolupat pel [*](W3C) l'any 1999, XPath és àmpliament usat pe
 Algunes expressions bàsiques d'XPath són:
 
 |   Expressió   | Selecciona                 |
-|:-------------:|----------------------------|
+|---------------|----------------------------|
 | `/`           | L'arrel del document       |
 | `element`     | Fills amb aquest nom       |
 | `/arrel/fill` | Camí absolut               |
@@ -112,7 +112,7 @@ Els predicats, o filtres, principals són els següents:
 Les funcions XPath més comunes són les següents:
 
 | Funció              | Descripció            | Exemple                      |
-|:-------------------:|-----------------------|------------------------------|
+|---------------------|-----------------------|------------------------------|
 | `text()`            | Contingut textual     | `nom/text()`                 |
 | `count()`           | Compta nodes          | `count(//alumne)`            |
 | `sum()`             | Suma valors           | `sum(//hores)`               |
