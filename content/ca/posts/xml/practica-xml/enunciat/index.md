@@ -1,15 +1,12 @@
 ---
-title: "Pràctica lliurable: Catàleg de videojocs en XML"
+title: "Enunciat del catàleg de videojocs en XML"
 date: 2026-01-11
 lastmod: 2026-01-11
-description: "Pràctica integradora on l'alumnat crea un catàleg de videojocs estil Steam utilitzant tot l'ecosistema XML: document ben format, validació amb DTD i XSD, organització amb namespaces, atributs reservats, visualització amb CSS i transformació XSLT a HTML."
-summary: "Pràctica lliurable d'XML: crea un catàleg de videojocs amb DTD, XSD, namespaces, CSS i XSLT."
+description: "Enunciat de la pràctica lliurable de creació d'un catàleg de videojocs estil Steam utilitzant totes les eines vistes: XML, DTD, XSD, CSS i XSLT"
+summary: "Enunciat de la pràctica on l'alumnat crea un catàleg de videojocs utilitzant l'ecosistema XML."
 categories: ["ensenyament"]
-tags: ["xml", "xslt", "dtd", "xsd", "css", "schema", "html"]
-series: ["XML"]
-series_order: 13
-weight: 130
-slug: practica-xml
+tags: ["xml", "xslt", "dtd", "xsd", "css", "schema", "html", "practica", "enunciat"]
+slug: enunciat
 ---
 
 En aquesta pràctica crearàs un catàleg de videojocs utilitzant XML i les tecnologies associades que hem estudiat al llarg del curs. El catàleg seguirà una estructura similar a la que utilitzen plataformes com Steam, incloent informació detallada sobre cada videojoc: títol, descripció, desenvolupador, plataformes, requisits del sistema, DLCs, valoracions, etc.
@@ -20,12 +17,12 @@ L'objectiu és demostrar el domini de tot l'ecosistema XML: des de la creació d
 
 Els objectius generals de cada bloc són:
 
-| Bloc | Objectius                                                 |
-|:----:|-----------------------------------------------------------|
-| 1    | Demostrar el domini de la sintaxi i estructura XML        |
-| 2    | Aplicar esquemes de validació (DTD i XSD)                 |
-| 3    | Utilitzar namespaces per organitzar vocabularis diferents |
-| 4    | Visualitzar i transformar documents XML                   |
+| Bloc | Objectius                                                                      |
+|:----:|--------------------------------------------------------------------------------|
+| 1    | Demostrar el domini de la sintaxi i estructura XML                             |
+| 2    | Usar espais de noms per organitzar vocabularis i aplicar esquemes de validació |
+| 3    | Visualitzar el document XML a través d'un full d'estils                        |
+| 4    | Transformar el document XML en un document HTML                                |
 
 ## Lliurables
 
@@ -223,3 +220,7 @@ xsltproc -o cataleg.html cataleg.xsl cataleg.xml
 ```
 
 I que pots verificar la validesa del fitxer HTML generat amb el [Markup Validation Service del W3C](https://validator.w3.org/).
+
+## Autoavaluació
+
+A mesura que vagis avançant, recorda que pots seguir les [passes descrites a l'autoavaluació de la pràctica]({{< relref "/posts/xml/practica-xml/autoavaluacio" >}}) per assegurar la correctesa dels documents abans de lliurar-los a través de l'aula virtual.

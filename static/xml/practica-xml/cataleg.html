@@ -1,0 +1,162 @@
+<!DOCTYPE html><html lang="ca">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El meu catàleg de videojocs</title>
+<style>
+                    :root {
+                        --color-fons: #1b2838;
+                        --color-fons-targeta: #2a475e;
+                        --color-text: #c7d5e0;
+                        --color-accent: #66c0f4;
+                        --color-preu: #a4d007;
+                        --color-puntuacio: #ffcc00;
+                    }
+                    * { box-sizing: border-box; margin: 0; padding: 0; }
+                    body {
+                        font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+                        background-color: var(--color-fons);
+                        color: var(--color-text);
+                        line-height: 1.6;
+                        padding: 2rem;
+                    }
+                    header {
+                        text-align: center;
+                        margin-bottom: 2rem;
+                        padding-bottom: 1rem;
+                        border-bottom: 2px solid var(--color-accent);
+                    }
+                    header h1 { color: var(--color-accent); margin-bottom: 0.5rem; }
+                    .meta { font-size: 0.9rem; opacity: 0.8; }
+                    .estadistiques {
+                        display: flex;
+                        justify-content: center;
+                        gap: 2rem;
+                        margin: 1rem 0;
+                        padding: 1rem;
+                        background-color: var(--color-fons-targeta);
+                        border-radius: 0.5rem;
+                    }
+                    .estadistiques span { font-weight: bold; color: var(--color-accent); }
+                    .videojocs {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+                        gap: 1.5rem;
+                        margin-top: 2rem;
+                    }
+                    .videojoc {
+                        background-color: var(--color-fons-targeta);
+                        border-radius: 0.5rem;
+                        padding: 1.5rem;
+                        transition: transform 0.2s ease;
+                    }
+                    .videojoc:hover { transform: translateY(-4px); }
+                    .videojoc h2 {
+                        color: var(--color-accent);
+                        font-size: 1.4rem;
+                        margin-bottom: 0.5rem;
+                    }
+                    .videojoc .descripcio {
+                        font-size: 0.9rem;
+                        margin-bottom: 1rem;
+                        opacity: 0.9;
+                    }
+                    .info-linia {
+                        font-size: 0.85rem;
+                        margin: 0.25rem 0;
+                    }
+                    .etiqueta {
+                        display: inline-block;
+                        background-color: var(--color-fons);
+                        padding: 0.2rem 0.6rem;
+                        border-radius: 1rem;
+                        font-size: 0.75rem;
+                        margin: 0.2rem;
+                    }
+                    .plataforma {
+                        display: inline-block;
+                        background-color: var(--color-accent);
+                        color: var(--color-fons);
+                        padding: 0.2rem 0.6rem;
+                        border-radius: 1rem;
+                        font-size: 0.75rem;
+                        margin: 0.2rem;
+                    }
+                    .preu {
+                        font-size: 1.3rem;
+                        font-weight: bold;
+                        color: var(--color-preu);
+                        margin: 0.75rem 0;
+                    }
+                    .puntuacio {
+                        color: var(--color-puntuacio);
+                        font-weight: bold;
+                    }
+                    .puntuacio-excellent { color: #66ff66; }
+                    .puntuacio-bo { color: var(--color-puntuacio); }
+                    .puntuacio-regular { color: #ff9966; }
+                    .puntuacio-baix { color: #ff6666; }
+                    .requisits {
+                        background-color: var(--color-fons);
+                        padding: 0.75rem;
+                        border-radius: 0.25rem;
+                        margin: 0.75rem 0;
+                        font-size: 0.8rem;
+                    }
+                    .requisits h4 { margin-bottom: 0.5rem; }
+                    .dlcs {
+                        margin-top: 1rem;
+                        padding-top: 0.75rem;
+                        border-top: 1px solid var(--color-fons);
+                    }
+                    .dlc {
+                        font-size: 0.85rem;
+                        padding: 0.25rem 0;
+                    }
+                    .gratuit { color: var(--color-preu); }
+                </style>
+</head>
+<body>
+<header><h1>El meu catàleg de videojocs</h1>
+<p class="meta">
+                        Autor: Nom Alumne |
+                        Actualitzat: 2025-01-15</p>
+<p class="meta">Col·lecció personal de videojocs.</p>
+<div class="estadistiques">
+<div>Total de jocs: <span>1</span>
+</div>
+<div>Puntuació mitjana: <span>95/100</span>
+</div>
+</div></header><main class="videojocs"><article class="videojoc" id="JOC001"><h2>Portal 2</h2>
+<p class="descripcio">Joc de trencaclosques en primera persona amb portals.</p>
+<p class="info-linia"><strong>Desenvolupador:</strong>Valve Corporation</p>
+<p class="info-linia"><strong>Distribuïdor:</strong>Valve Corporation</p>
+<p class="info-linia"><strong>Llançament:</strong>2011-04-19</p>
+<div class="info-linia">
+<strong>Gèneres: </strong><span class="etiqueta">Trencaclosques</span><span class="etiqueta">Primera persona</span>
+</div>
+<div class="info-linia">
+<strong>Plataformes: </strong><span class="plataforma">Windows</span><span class="plataforma">Mac</span><span class="plataforma">Linux</span>
+</div>
+<p class="preu">9.99 EUR</p>
+<p class="info-linia"><strong>Puntuació: </strong><span class="puntuacio puntuacio-excellent">95/100
+                </span>
+                (342,567 ressenyes)
+            </p>
+<div class="requisits">
+<h4>💻 Requisits mínims</h4>
+<p><strong>SO:</strong>Windows 7</p>
+<p><strong>CPU:</strong>3.0 GHz P4</p>
+<p><strong>RAM:</strong>2 GB</p>
+<p><strong>VRAM:</strong>512 MB</p>
+<p><strong>Disc:</strong>8 GB</p>
+</div>
+<div class="info-linia">
+<strong>Etiquetes: </strong><span class="etiqueta">cooperatiu</span><span class="etiqueta">un-jugador</span>
+</div>
+<div class="dlcs">
+<strong>📦 Contingut addicional:</strong><p class="dlc">Peer Review<span class="gratuit"> ✓ Gratuït</span></p>
+</div></article></main>
+</body>
+</html>
