@@ -1,7 +1,7 @@
 ---
 title: "Document XML d'exemple"
 date: 2026-01-03
-lastmod: 2026-01-08
+lastmod: 2026-01-11
 description: "Exemple pràctic de document XML amb una estructura d'alumnes i assignatures en un curs de formació professional."
 summary: "XML complet d'un curs de formació professional amb alumnes i assignatures"
 categories: ["ensenyament"]
@@ -26,21 +26,21 @@ institut
 ├── nom
 ├── codi
 ├── any-academic
-├── curs
-│   ├── @id
-│   ├── @nom
-│   ├── assignatures
-│   │   └── assignatura (x3)
-│   │       ├── @codi
-│   │       ├── nom
-│   │       └── hores
-│   └── alumnes
-│       └── alumne (x10)
-│           ├── @id
-│           ├── nom
-│           ├── cognoms
-│           ├── data-naixement
-│           └── email
+└─── curs
+    ├── @id
+    ├── @nom
+    ├── assignatures
+    │   └── assignatura (x3)
+    │       ├── @codi
+    │       ├── nom
+    │       └── hores
+    └── alumnes
+        └── alumne (x10)
+            ├── @id
+            ├── nom
+            ├── cognoms
+            ├── data-naixement
+            └── email
 ```
 
 Els elements precedits per `@` són atributs. Observa com hem decidit:
