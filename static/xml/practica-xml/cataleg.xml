@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cat:cataleg xmlns:cat="http://exemple.com/cataleg"
+             xmlns:joc="http://exemple.com/videojoc"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://exemple.com/cataleg cataleg.xsd"
+             xml:lang="ca">
+    
+    <!-- Metadades del catàleg -->
+    <cat:info>
+        <cat:titol>El meu catàleg de videojocs</cat:titol>
+        <cat:autor>Nom Alumne</cat:autor>
+        <cat:actualitzat>2025-01-15</cat:actualitzat>
+        <cat:descripcio xml:lang="ca">Col·lecció personal de videojocs.</cat:descripcio>
+        <cat:descripcio xml:lang="en">Personal videogame collection.</cat:descripcio>
+    </cat:info>
+    
+    <!-- Recursos externs amb URI base -->
+    <cat:recursos xml:base="https://cdn.exemple.com/imatges/">
+        <cat:recurs id="img-portal2" href="portal2.jpg"/>
+        <cat:recurs id="img-minecraft" href="minecraft.jpg"/>
+    </cat:recursos>
+    
+    <!-- Videojocs -->
+    <cat:videojocs>
+        <joc:videojoc id="JOC001">
+            <joc:titol>Portal 2</joc:titol>
+            <joc:descripcio xml:lang="ca">Joc de trencaclosques en primera persona amb portals.</joc:descripcio>
+            <joc:descripcio xml:lang="en">First-person puzzle game with portals.</joc:descripcio>
+            <joc:desenvolupador>Valve Corporation</joc:desenvolupador>
+            <joc:distribuidor>Valve Corporation</joc:distribuidor>
+            <joc:dataLlancament>2011-04-19</joc:dataLlancament>
+            <joc:generes>
+                <joc:genere>Trencaclosques</joc:genere>
+                <joc:genere>Primera persona</joc:genere>
+            </joc:generes>
+            <joc:plataformes>
+                <joc:plataforma>Windows</joc:plataforma>
+                <joc:plataforma>Mac</joc:plataforma>
+                <joc:plataforma>Linux</joc:plataforma>
+            </joc:plataformes>
+            <joc:preu moneda="EUR">9.99</joc:preu>
+            <joc:valoracions>
+                <joc:puntuacio>95</joc:puntuacio>
+                <joc:numRessenyes>342567</joc:numRessenyes>
+            </joc:valoracions>
+            <joc:requisits>
+                <joc:so>Windows 7</joc:so>
+                <joc:cpu>3.0 GHz P4</joc:cpu>
+                <joc:ram>2</joc:ram>
+                <joc:vram>512</joc:vram>
+                <joc:disc>8</joc:disc>
+            </joc:requisits>
+            <joc:etiquetes>
+                <joc:etiqueta>cooperatiu</joc:etiqueta>
+                <joc:etiqueta>un-jugador</joc:etiqueta>
+            </joc:etiquetes>
+            <joc:dlcs>
+                <joc:dlc id="DLC001" gratuit="true">
+                    <joc:nom>Peer Review</joc:nom>
+                </joc:dlc>
+            </joc:dlcs>
+        </joc:videojoc>
+        <!-- 14-19 videojocs més -->
+    </cat:videojocs>
+</cat:cataleg>

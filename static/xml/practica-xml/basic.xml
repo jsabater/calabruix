@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cataleg>
+    <!-- Catàleg de videojocs -->
+    <videojocs>
+        <videojoc id="JOC001">
+            <titol>Portal 2</titol>
+            <descripcio>Joc de trencaclosques en primera persona on el jugador utilitza un dispositiu que crea portals per resoldre puzzles i avançar per les instal·lacions d'Aperture Science.</descripcio>
+            <desenvolupador>Valve Corporation</desenvolupador>
+            <distribuidor>Valve Corporation</distribuidor>
+            <dataLlancament>2011-04-19</dataLlancament>
+            <generes>
+                <genere>Trencaclosques</genere>
+                <genere>Primera persona</genere>
+            </generes>
+            <plataformes>
+                <plataforma>Windows</plataforma>
+                <plataforma>Mac</plataforma>
+                <plataforma>Linux</plataforma>
+                <plataforma>PlayStation</plataforma>
+                <plataforma>Xbox</plataforma>
+            </plataformes>
+            <preu moneda="EUR">9.99</preu>
+            <valoracions>
+                <puntuacio>95</puntuacio>
+                <numRessenyes>342567</numRessenyes>
+            </valoracions>
+            <requisits>
+                <so>Windows 7</so>
+                <cpu>3.0 GHz P4</cpu>
+                <ram>2</ram>
+                <vram>512</vram>
+                <disc>8</disc>
+            </requisits>
+            <etiquetes>
+                <etiqueta>cooperatiu</etiqueta>
+                <etiqueta>un-jugador</etiqueta>
+                <etiqueta>historia-rica</etiqueta>
+                <etiqueta>ciencia-ficcio</etiqueta>
+            </etiquetes>
+            <dlcs>
+                <dlc id="DLC001" gratuit="true">
+                    <nom>Peer Review</nom>
+                </dlc>
+            </dlcs>
+        </videojoc>
+        <!-- 14-19 videojocs més -->
+    </videojocs>
+</cataleg>

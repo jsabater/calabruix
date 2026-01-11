@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fitxer: metadades.xsd - Esquema pel namespace meta: -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:meta="http://exemple.com/metadades"
+           targetNamespace="http://exemple.com/metadades"
+           elementFormDefault="qualified">
+
+    <xs:import namespace="http://www.w3.org/XML/1998/namespace"/>
+
+    <!-- Informació del catàleg -->
+    <xs:element name="info">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="titol" type="xs:string"/>
+                <xs:element name="autor" type="xs:string"/>
+                <xs:element name="actualitzat" type="xs:date"/>
+                <xs:element name="descripcio" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:simpleContent>
+                            <xs:extension base="xs:string">
+                                <xs:attribute ref="xml:lang" use="required"/>
+                            </xs:extension>
+                        </xs:simpleContent>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

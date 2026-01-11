@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Element arrel -->
+<!ELEMENT cat:cataleg (cat:info, cat:recursos?, cat:videojocs)>
+<!ATTLIST cat:cataleg
+    xmlns:cat CDATA #FIXED "http://exemple.com/cataleg"
+    xmlns:joc CDATA #FIXED "http://exemple.com/videojoc"
+    xmlns:xsi CDATA #IMPLIED
+    xsi:schemaLocation CDATA #IMPLIED
+    xml:lang CDATA #IMPLIED
+>
+
+<!-- Metadades del catàleg -->
+<!ELEMENT cat:info (cat:titol, cat:autor, cat:actualitzat, cat:descripcio+)>
+<!ELEMENT cat:titol (#PCDATA)>
+<!ELEMENT cat:autor (#PCDATA)>
+<!ELEMENT cat:actualitzat (#PCDATA)>
+<!ELEMENT cat:descripcio (#PCDATA)>
+<!ATTLIST cat:descripcio
+    xml:lang CDATA #IMPLIED
+>
+
+<!-- Recursos externs -->
+<!ELEMENT cat:recursos (cat:recurs+)>
+<!ATTLIST cat:recursos
+    xml:base CDATA #IMPLIED
+>
+<!ELEMENT cat:recurs EMPTY>
+<!ATTLIST cat:recurs
+    id ID #REQUIRED
+    href CDATA #REQUIRED
+>
+
+<!-- Contenidor de videojocs -->
+<!ELEMENT cat:videojocs (joc:videojoc+)>
+
+<!-- Videojoc -->
+<!ELEMENT joc:videojoc (joc:titol, joc:descripcio+, joc:desenvolupador, joc:distribuidor, joc:dataLlancament, joc:generes, joc:plataformes, joc:preu, joc:valoracions, joc:requisits, joc:etiquetes, joc:dlcs?)>
+<!ATTLIST joc:videojoc
+    id ID #REQUIRED
+>
+
+<!ELEMENT joc:titol (#PCDATA)>
+<!ELEMENT joc:descripcio (#PCDATA)>
+<!ATTLIST joc:descripcio
+    xml:lang CDATA #IMPLIED
+>
+<!ELEMENT joc:desenvolupador (#PCDATA)>
+<!ELEMENT joc:distribuidor (#PCDATA)>
+<!ELEMENT joc:dataLlancament (#PCDATA)>
+
+<!-- Gèneres -->
+<!ELEMENT joc:generes (joc:genere+)>
+<!ELEMENT joc:genere (#PCDATA)>
+
+<!-- Plataformes -->
+<!ELEMENT joc:plataformes (joc:plataforma+)>
+<!ELEMENT joc:plataforma (#PCDATA)>
+
+<!-- Preu -->
+<!ELEMENT joc:preu (#PCDATA)>
+<!ATTLIST joc:preu
+    moneda CDATA #REQUIRED
+>
+
+<!-- Valoracions -->
+<!ELEMENT joc:valoracions (joc:puntuacio, joc:numRessenyes)>
+<!ELEMENT joc:puntuacio (#PCDATA)>
+<!ELEMENT joc:numRessenyes (#PCDATA)>
+
+<!-- Requisits del sistema -->
+<!ELEMENT joc:requisits (joc:so, joc:cpu, joc:ram, joc:vram, joc:disc)>
+<!ELEMENT joc:so (#PCDATA)>
+<!ELEMENT joc:cpu (#PCDATA)>
+<!ELEMENT joc:ram (#PCDATA)>
+<!ELEMENT joc:vram (#PCDATA)>
+<!ELEMENT joc:disc (#PCDATA)>
+
+<!-- Etiquetes -->
+<!ELEMENT joc:etiquetes (joc:etiqueta+)>
+<!ELEMENT joc:etiqueta (#PCDATA)>
+
+<!-- DLCs -->
+<!ELEMENT joc:dlcs (joc:dlc+)>
+<!ELEMENT joc:dlc (joc:nom)>
+<!ATTLIST joc:dlc
+    id ID #REQUIRED
+    gratuit (true|false) #REQUIRED
+>
+<!ELEMENT joc:nom (#PCDATA)>

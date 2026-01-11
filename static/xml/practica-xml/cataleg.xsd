@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:cat="http://exemple.com/cataleg"
+           xmlns:joc="http://exemple.com/videojoc"
+           targetNamespace="http://exemple.com/cataleg"
+           elementFormDefault="qualified">
+
+    <!-- ==================== TIPUS PERSONALITZATS ==================== -->
+
+    <!-- Codi de moneda ISO 4217 (3 lletres majúscules) -->
+    <xs:simpleType name="tipusMoneda">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[A-Z]{3}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Puntuació de 0 a 100 -->
+    <xs:simpleType name="tipusPuntuacio">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="0"/>
+            <xs:maxInclusive value="100"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Preu (decimal positiu o zero per a jocs gratuïts) -->
+    <xs:simpleType name="tipusPreu">
+        <xs:restriction base="xs:decimal">
+            <xs:minInclusive value="0"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- RAM i disc en GB (enter positiu) -->
+    <xs:simpleType name="tipusGB">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- VRAM en MB (enter positiu) -->
+    <xs:simpleType name="tipusMB">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Nombre de ressenyes (enter positiu o zero) -->
+    <xs:simpleType name="tipusRessenyes">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="0"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Plataformes vàlides -->
+    <xs:simpleType name="tipusPlataforma">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Windows"/>
+            <xs:enumeration value="Mac"/>
+            <xs:enumeration value="Linux"/>
+            <xs:enumeration value="PlayStation"/>
+            <xs:enumeration value="Xbox"/>
+            <xs:enumeration value="Switch"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Identificador de videojoc (JOC + 3 dígits) -->
+    <xs:simpleType name="tipusIdVideojoc">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="JOC[0-9]{3}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Identificador de DLC (DLC + 3 dígits) -->
+    <xs:simpleType name="tipusIdDLC">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="DLC[0-9]{3}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Identificador de recurs -->
+    <xs:simpleType name="tipusIdRecurs">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="img-[a-z0-9\-]+"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Tipus per a text amb idioma -->
+    <xs:complexType name="tipusTextIdioma">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute ref="xml:lang" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <!-- ELEMENT ARREL -->
+
+    <xs:element name="cataleg">
+        <xs:complexType>
+            <xs:sequence>
+                <!-- Metadades del catàleg -->
+                <xs:element name="info">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="titol" type="xs:string"/>
+                            <xs:element name="autor" type="xs:string"/>
+                            <xs:element name="actualitzat" type="xs:date"/>
+                            <xs:element name="descripcio" type="cat:tipusTextIdioma" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+
+                <!-- Recursos externs -->
+                <xs:element name="recursos" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="recurs" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:attribute name="id" type="cat:tipusIdRecurs" use="required"/>
+                                    <xs:attribute name="href" type="xs:anyURI" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                        <xs:attribute ref="xml:base"/>
+                    </xs:complexType>
+                </xs:element>
+
+                <!-- Videojocs -->
+                <xs:element name="videojocs">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element ref="joc:videojoc" minOccurs="15" maxOccurs="20"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute ref="xml:lang"/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- VIDEOJOC (namespace joc:) -->
+
+    <xs:element name="videojoc" xmlns="http://exemple.com/videojoc">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="titol" type="xs:string"/>
+                <xs:element name="descripcio" type="cat:tipusTextIdioma" maxOccurs="unbounded"/>
+                <xs:element name="desenvolupador" type="xs:string"/>
+                <xs:element name="distribuidor" type="xs:string"/>
+                <xs:element name="dataLlancament" type="xs:date"/>
+                <xs:element name="generes">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="genere" type="xs:string" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="plataformes">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="plataforma" type="cat:tipusPlataforma" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="preu">
+                    <xs:complexType>
+                        <xs:simpleContent>
+                            <xs:extension base="cat:tipusPreu">
+                                <xs:attribute name="moneda" type="cat:tipusMoneda" use="required"/>
+                            </xs:extension>
+                        </xs:simpleContent>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="valoracions">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="puntuacio" type="cat:tipusPuntuacio"/>
+                            <xs:element name="numRessenyes" type="cat:tipusRessenyes"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="requisits">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="so" type="xs:string"/>
+                            <xs:element name="cpu" type="xs:string"/>
+                            <xs:element name="ram" type="cat:tipusGB"/>
+                            <xs:element name="vram" type="cat:tipusMB"/>
+                            <xs:element name="disc" type="cat:tipusGB"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="etiquetes">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="etiqueta" type="xs:string" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="dlcs" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="dlc" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="nom" type="xs:string"/>
+                                    </xs:sequence>
+                                    <xs:attribute name="id" type="cat:tipusIdDLC" use="required"/>
+                                    <xs:attribute name="gratuit" type="xs:boolean" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute name="id" type="cat:tipusIdVideojoc" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

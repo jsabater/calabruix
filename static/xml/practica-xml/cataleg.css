@@ -1,0 +1,263 @@
+/* Variables de color */
+:root {
+    --color-fons: #1b2838;
+    --color-fons-targeta: #2a475e;
+    --color-text: #c7d5e0;
+    --color-accent: #66c0f4;
+    --color-preu: #a4d007;
+    --color-puntuacio: #ffcc00;
+}
+
+/* Element arrel */
+cataleg {
+    display: block;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    background-color: var(--color-fons);
+    color: var(--color-text);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Contenidor de videojocs */
+videojocs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Targeta de videojoc */
+videojoc {
+    display: block;
+    background-color: var(--color-fons-targeta);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    transition: transform 0.2s ease;
+}
+
+videojoc:hover {
+    transform: translateY(-4px);
+}
+
+/* Títol del videojoc */
+videojoc > titol {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--color-accent);
+    margin-bottom: 0.5rem;
+}
+
+/* Descripció */
+videojoc > descripcio {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    opacity: 0.9;
+}
+
+/* Desenvolupador i distribuïdor */
+desenvolupador, distribuidor {
+    display: block;
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+desenvolupador::before {
+    content: "🛠 Desenvolupador: ";
+    font-weight: bold;
+}
+
+distribuidor::before {
+    content: "📦 Distribuïdor: ";
+    font-weight: bold;
+}
+
+/* Data de llançament */
+dataLlancament {
+    display: block;
+    font-size: 0.85rem;
+    margin: 0.5rem 0;
+}
+
+dataLlancament::before {
+    content: "📅 Llançament: ";
+    font-weight: bold;
+}
+
+/* Gèneres i plataformes */
+generes, plataformes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+}
+
+genere, plataforma {
+    display: inline-block;
+    background-color: var(--color-fons);
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+}
+
+plataforma {
+    background-color: var(--color-accent);
+    color: var(--color-fons);
+}
+
+/* Preu */
+preu {
+    display: inline-block;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: var(--color-preu);
+    margin: 1rem 0;
+}
+
+preu::after {
+    content: " " attr(moneda);
+    font-size: 0.9rem;
+    font-weight: normal;
+}
+
+/* Valoracions */
+valoracions {
+    display: block;
+    margin: 0.75rem 0;
+}
+
+puntuacio {
+    display: inline-block;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--color-puntuacio);
+}
+
+puntuacio::before {
+    content: "⭐ ";
+}
+
+puntuacio::after {
+    content: "/100";
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+numRessenyes {
+    display: inline-block;
+    font-size: 0.85rem;
+    margin-left: 1rem;
+    opacity: 0.8;
+}
+
+numRessenyes::before {
+    content: "(";
+}
+
+numRessenyes::after {
+    content: " ressenyes)";
+}
+
+/* Requisits del sistema */
+requisits {
+    display: block;
+    background-color: var(--color-fons);
+    padding: 1rem;
+    border-radius: 0.25rem;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+}
+
+requisits::before {
+    content: "💻 Requisits mínims";
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+so, cpu, ram, vram, disc {
+    display: block;
+    padding: 0.25rem 0;
+}
+
+so::before { content: "Sistema: "; font-weight: bold; }
+cpu::before { content: "CPU: "; font-weight: bold; }
+ram::before { content: "RAM: "; font-weight: bold; }
+ram::after { content: " GB"; }
+vram::before { content: "VRAM: "; font-weight: bold; }
+vram::after { content: " MB"; }
+disc::before { content: "Disc: "; font-weight: bold; }
+disc::after { content: " GB"; }
+
+/* Etiquetes */
+etiquetes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+}
+
+etiqueta {
+    display: inline-block;
+    background-color: #4a6741;
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+}
+
+/* DLCs */
+dlcs {
+    display: block;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-fons);
+}
+
+dlcs::before {
+    content: "📦 Contingut addicional";
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+dlc {
+    display: block;
+    padding: 0.5rem;
+    background-color: var(--color-fons);
+    border-radius: 0.25rem;
+    margin: 0.25rem 0;
+    font-size: 0.85rem;
+}
+
+dlc > nom {
+    display: inline;
+}
+
+dlc[gratuit="true"]::after {
+    content: " ✓ Gratuït";
+    color: var(--color-preu);
+    font-size: 0.8rem;
+}
+
+dlc[gratuit="false"]::after {
+    content: " 💰 De pagament";
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+/* Ocultar elements interns */
+videojoc[id], dlc[id] {
+    /* Els IDs es mantenen per funcionalitat però no es mostren */
+}
+
+/* Metadades - si existeixen, les ocultem o estilitzem a part */
+info {
+    display: none;
+}
+
+recursos {
+    display: none;
+}
