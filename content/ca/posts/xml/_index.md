@@ -12,7 +12,7 @@ La sèrie cobreix, de manera prou exhaustiva, l'origen de l'XML, la seva sintaxi
 
 ## Continguts de la sèrie
 
-1. [Origen i sintaxi de l'XML]({{< relref "/posts/xml/introduccio/" >}}): Origen i context històric de l'XML. Sintaxi bàsica: nodes, etiquetes, atributs, entitats, seccions CDATA, documents ben formats i vàlids."
+1. [Origen i sintaxi de l'XML]({{< relref "/posts/xml/introduccio/" >}}): Origen i context històric de l'XML. Sintaxi bàsica: nodes, etiquetes, atributs, entitats, seccions CDATA, documents ben formats i vàlids.
 2. [Document XML d'exemple]({{< relref "/posts/xml/exemple/" >}}): Exemple pràctic de document XML amb una estructura d'alumnes i assignatures en un curs de formació professional.
 3. [Atributs reservats XML]({{< relref "/posts/xml/atributs-reservats/" >}}): Atributs reservats de l'especificació XML per a l'idioma, per al tractament d'espais en blanc i per a URIs base. Propòsit i exemples pràctics.
 4. [Validació de documents XML]({{< relref "/posts/xml/validacio/" >}}): Validació de documents XML amb DTD i XSD. Sintaxi de DTD, introducció a XML Schema i comparativa entre ambdós sistemes.
