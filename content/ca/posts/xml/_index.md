@@ -24,6 +24,3 @@ La sèrie cobreix, de manera prou exhaustiva, l'origen de l'XML, la seva sintaxi
 10. [Pros i contres de l'XML]({{< relref "/posts/xml/pros-cons/" >}}): Anàlisi equilibrada dels avantatges i desavantatges de l'XML. Punts forts com la validació i extensibilitat, i limitacions com la verbositat i el rendiment.
 11. [Origen de JSON i comparativa amb XML]({{< relref "/posts/xml/json/" >}}): Origen i evolució del format JSON. Comparativa detallada amb XML: sintaxi, tipus de dades, validació, rendiment i casos d'ús. Avantatges i limitacions de JSON.
 12. [Equivalències entre JSON i XML i JSON Schema]({{< relref "/posts/xml/json-schema/" >}}): Conversió d'exemples XML a JSON. Introducció a JSON Schema per validar documents JSON. Eines online i de terminal Linux per a fer feina amb JSON.
-13. [Exercicis pràctics](#) — 4 exercicis amb XML i JSON
-14. [Pràctica lliurable XML](#) — Exercici complet amb rúbrica
-15. [Pràctica lliurable JSON](#) — Exercici complet amb rúbrica
