@@ -6,7 +6,7 @@ categories: ["ensenyament"]
 tags: ["xml", "json", "sgml", "xslt", "dtd", "xsd", "css", "schema"]
 ---
 
-Aquests articles són els apunts de classe d'una unitat temàtica de l'assignatura Llenguatge de Marques i Sistemes de Gestió Empresarial del primer curs del Grau Superior en Administració  de Sistemes Informàtics i Xarxes al Centre Integrat de Formació Professional (CIFP) Francesc de Borja Moll de Palma.
+Aquests articles són els apunts de classe d'una unitat temàtica de l'assignatura Llenguatge de Marques i Sistemes de Gestió Empresarial del primer curs del [*](CFGS) en Administració  de Sistemes Informàtics i Xarxes al [*](CIFP) [Francesc de Borja Moll](https://cifpfbmoll.eu/) de Palma.
 
 La sèrie cobreix, de manera prou exhaustiva, l'origen de l'XML, la seva sintaxi, la validació de documents amb [*](DTD) i amb [*](XSD), l'ús de namespaces, la visualització de documents amb CSS i la transformació de documents usant [*](XSLT). També inclou un article amb  eines de feina, tant en línia com al terminal. Finalment, inclou comparativa amb JSON, exercicis pràctics i pràctiques lliurables amb rúbriques.
 
