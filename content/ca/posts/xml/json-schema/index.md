@@ -1161,7 +1161,7 @@ Per fer aquest exercici, tens un directori amb fitxers JSON de comandes d'una bo
 }
 ```
 
-Genera almanco 4 fitxers adicionals, seguint el format de nom que consideris oportú, però assegura't de que tenguin l'extensió `.json`.
+Genera almanco 4 fitxers addicionals, seguint el format de nom que consideris oportú, però assegura't de que tenguin l'extensió `.json`.
 
 Requisits de l'script:
 
