@@ -222,6 +222,4 @@ Recorda que, per a transformar el document XML en un document HTML pots usar:
 xsltproc -o cataleg.html cataleg.xsl cataleg.xml
 ```
 
-I que pots verificar la validesa del fitxer HTML generat:
-
-```bash
+I que pots verificar la validesa del fitxer HTML generat amb el [Markup Validation Service del W3C](https://validator.w3.org/).
