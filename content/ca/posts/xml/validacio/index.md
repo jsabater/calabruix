@@ -1,7 +1,7 @@
 ---
 title: "Validació documents XML"
 date: 2026-01-03
-lastmod: 2026-01-08
+lastmod: 2026-01-11
 description: "Validació de documents XML amb DTD i XSD. Sintaxi de DTD, introducció a XML Schema i comparativa entre ambdós sistemes."
 summary: "Esquemes de validació XML: DTD complet, introducció a XSD i exemples pràctics."
 categories: ["ensenyament"]
@@ -64,7 +64,7 @@ La declaració `<!ELEMENT>` defineix quins elements poden existir i quin conting
 Els tipus de continguts suportats són els següents:
 
 | Contingut   | Significat                 | Exemple                     |
-|:-----------:|----------------------------|-----------------------------|
+|-------------|----------------------------|-----------------------------|
 | `EMPTY`     | Element sense contingut    | `<!ELEMENT br EMPTY>`       |
 | `ANY`       | Qualsevol contingut        | `<!ELEMENT contenidor ANY>` |
 | `(#PCDATA)` | Només text                 | `<!ELEMENT nom (#PCDATA)>`  |
@@ -75,7 +75,7 @@ Els tipus de continguts suportats són els següents:
 Els indicadors de cardinalitat suportats són els següents:
 
 | Símbol | Significat    | Exemple      |
-|:------:|---------------|--------------|
+|--------|---------------|--------------|
 | (cap)  | Exactament un | `(element)`  |
 | `?`    | Zero o un     | `(element?)` |
 | `*`    | Zero o més    | `(element*)` |
@@ -119,7 +119,7 @@ La declaració `<!ATTLIST>` defineix els atributs permesos per a un element. La 
 Els tipus d'atributs suportats són els següents:
 
 |    Tipus     | Descripció                     | Exemple de valor  |
-|:------------:|--------------------------------|-------------------|
+|--------------|--------------------------------|-------------------|
 | `CDATA`      | Text lliure                    | "qualsevol cosa"  |
 | `ID`         | Identificador únic al document | "A001"            |
 | `IDREF`      | Referència a un ID existent    | "A001"            |
@@ -131,7 +131,7 @@ Els tipus d'atributs suportats són els següents:
 Els valors per defecte son els següents:
 
 |      Valor       | Significat                           |
-|:----------------:|--------------------------------------|
+|------------------|--------------------------------------|
 | `#REQUIRED`      | L'atribut és obligatori              |
 | `#IMPLIED`       | L'atribut és opcional                |
 | `#FIXED "valor"` | Valor fix, no es pot canviar         |
@@ -317,7 +317,7 @@ La seva estructura bàsica és la següent:
 XSD inclou més de 40 tipus de dades predefinits. Alguns dels més importants són els següents:
 
 | Categoria      |     Tipus      | Exemple de valor    |
-|----------------|:--------------:|---------------------|
+|----------------|----------------|---------------------|
 | Text           | `xs:string`    | "Hola món"          |
 | Numèrics       | `xs:integer`   | 42                  |
 |                | `xs:decimal`   | 3.14                |

@@ -1,7 +1,7 @@
 ---
 title: "Visualització amb CSS"
 date: 2026-01-03
-lastmod: 2026-01-08
+lastmod: 2026-01-11
 description: "Aplicació de fulls d'estils CSS a documents XML. Enllaç amb instrucció de processament, selectors d'elements, propietats de visualització i exemple complet."
 summary: "Estilització de documents XML amb CSS: enllaç, selectors i exemple pràctic complet."
 categories: ["ensenyament"]
@@ -43,7 +43,7 @@ La connexió entre un document XML i el seu full d'estils es fa mitjançant una 
 Els atributs disponibles en aquesta instrucció són:
 
 |   Atribut   | Descripció                         | Exemple                        |
-|:-----------:|------------------------------------|--------------------------------|
+|-------------|------------------------------------|--------------------------------|
 | `type`      | Tipus MIME del full d'estils       | `text/css`                     |
 | `href`      | Ruta al fitxer CSS                 | `estils.css`, `css/estils.css` |
 | `media`     | Mitjà de sortida (opcional)        | `screen`, `print`              |
@@ -152,7 +152,7 @@ alumne:nth-of-type(even) {
 Per defecte, els elements XML no tenen cap estil de visualització definit. La propietat `display` és fonamental per controlar com es mostren:
 
 |     Valor      | Comportament                                        |
-|:--------------:|-----------------------------------------------------|
+|----------------|-----------------------------------------------------|
 | `block`        | Ocupa tota l'amplada, salt de línia abans i després |
 | `inline`       | Flueix amb el text, sense salt de línia             |
 | `inline-block` | Inline però accepta dimensions                      |

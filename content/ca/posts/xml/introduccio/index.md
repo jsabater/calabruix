@@ -147,7 +147,7 @@ Els noms d'etiquetes:
 * Són sensibles a majúscules i minúscules: `<Alumne>` i `<alumne>` són etiquetes diferents.
 
 | Nom vàlid     | Nom invàlid   | Motiu              |
-|:-------------:|:-------------:|--------------------|
+|---------------|---------------|--------------------|
 | `alumne`      | `2alumne`     | Comença amb número |
 | `nom_complet` | `nom complet` | Conté espai        |
 | `preu-total`  | `xml-dades`   | Comença amb "xml"  |
@@ -257,7 +257,7 @@ Per controlar explícitament el tractament dels espais, es pot usar l'atribut re
 Alguns caràcters tenen un significat especial en XML i no es poden usar directament dins del contingut. Per representar-los, s'utilitzen entitats predefinides:
 
 | Caràcter | Entitat  | Descripció                   |
-|:--------:|:--------:|------------------------------|
+|:--------:|----------|------------------------------|
 | `<`      | `&lt;`   | Menor que (inici d'etiqueta) |
 | `>`      | `&gt;`   | Major que (fi d'etiqueta)    |
 | `&`      | `&amp;`  | Ampersand (inici d'entitat)  |

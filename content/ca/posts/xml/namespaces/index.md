@@ -1,7 +1,7 @@
 ---
 title: "Espais de noms a l'XML"
 date: 2026-01-03
-lastmod: 2026-01-08
+lastmod: 2026-01-11
 description: "Què són els espais de noms en XML, per què es necessiten, sintaxi de declaració, prefixos, namespace per defecte i resolució de conflictes entre vocabularis."
 summary: "Declaració, prefixos, àmbits i exemple pràctic d'espais de noms en XML amb múltiples vocabularis."
 categories: ["ensenyament"]
@@ -306,7 +306,7 @@ El següent [document XML d'exemple d'empresa](/xml/namespaces/empresa.xml) amb 
 Analitzem l'exemple, part per part. Comencem pels espais de noms utilitzats:
 
 | Prefix | URI                                        | Propòsit                     |
-|:------:|--------------------------------------------|------------------------------|
+|--------|--------------------------------------------|------------------------------|
 | `emp`  | http://exemple.com/empresa                 | Estructura organitzativa     |
 | `rh`   | http://exemple.com/recursos-humans         | Dades de personal            |
 | `fin`  | http://exemple.com/finances                | Informació econòmica         |
@@ -322,7 +322,7 @@ Punts a destacar:
 Alguns namespaces són estàndards àmpliament reconeguts:
 
 | Prefix típic | URI                                         | Ús                                  |
-|:------------:|---------------------------------------------|-------------------------------------|
+|--------------|---------------------------------------------|-------------------------------------|
 | `xml`        | http://www.w3.org/XML/1998/namespace        | Atributs reservats (xml:lang, etc.) |
 | `xmlns`      | http://www.w3.org/2000/xmlns/               | Declaració de namespaces            |
 | `xsi`        | http://www.w3.org/2001/XMLSchema-instance   | Instàncies d'esquema                |
