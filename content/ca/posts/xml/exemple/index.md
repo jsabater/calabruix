@@ -1,7 +1,7 @@
 ---
 title: "Document XML d'exemple"
 date: 2026-01-03
-lastmod: 2026-01-11
+lastmod: 2026-01-13
 description: "Exemple pràctic de document XML amb una estructura d'alumnes i assignatures en un curs de formació professional."
 summary: "XML complet d'un curs de formació professional amb alumnes i assignatures"
 categories: ["ensenyament"]
@@ -151,6 +151,7 @@ La següent taula resumeix i justifica les decisions de disseny que s'han pres:
 | `nom` com a element                    | És contingut textual que es mostrarà a l'usuari              |
 | `data-naixement` amb format ISO        | Format estàndard AAAA-MM-DD, ordenable i internacional       |
 | `hores` com a element                  | Podria tenir atributs addicionals (teòriques, pràctiques)    |
+| `nom` del curs com a atribut           | Inconsistència al document per debatre amb l'alumnat         |
 | Contenidors `assignatures` i `alumnes` | Agrupen elements del mateix tipus, faciliten el processament |
 
 I aquestes són les bones pràctiques aplicades:
@@ -175,7 +176,7 @@ Encara no és **vàlid** perquè no hem definit cap esquema (DTD o XSD). Ho fare
 El document es podria ampliar amb:
 
 ```xml
-<!-- Notes dels alumnes per assignatura -->
+<!-- Notes dels alumnes per assignatura, dins cada element `alumne` -->
 <matricula alumne="A001" assignatura="LLM">
     <nota-parcial>7.5</nota-parcial>
     <nota-final>8.0</nota-final>
