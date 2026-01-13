@@ -176,7 +176,7 @@ Encara no és **vàlid** perquè no hem definit cap esquema (DTD o XSD). Ho fare
 El document es podria ampliar amb:
 
 ```xml
-<!-- Notes dels alumnes per assignatura, dins cada element `alumne` -->
+<!-- Notes dels alumnes per assignatura, dins cada `alumne` -->
 <matricula alumne="A001" assignatura="LLM">
     <nota-parcial>7.5</nota-parcial>
     <nota-final>8.0</nota-final>
