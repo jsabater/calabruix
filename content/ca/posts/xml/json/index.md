@@ -142,13 +142,13 @@ Exemple complet de [document JSON de l'institut](/xml/json/institut.json):
                     "id": "A001",
                     "nom": "Maria",
                     "cognoms": "García López",
-                    "email": "maria.garcia@cifpmoll.eu"
+                    "email": "maria.garcia@cifpfbmoll.eu"
                 },
                 {
                     "id": "A002",
                     "nom": "Pere",
                     "cognoms": "Martínez Soler",
-                    "email": "pere.martinez@cifpmoll.eu"
+                    "email": "pere.martinez@cifpfbmoll.eu"
                 }
             ]
         }

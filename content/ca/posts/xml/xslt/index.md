@@ -212,11 +212,11 @@ Com a exemple, suposem aquest XML d'entrada:
 <alumnes>
     <alumne>
         <nom>Maria</nom>
-        <email>maria@cifpmoll.eu</email>
+        <email>maria@cifpfbmoll.eu</email>
     </alumne>
     <alumne>
         <nom>Pere</nom>
-        <email>pere@cifpmoll.eu</email>
+        <email>pere@cifpfbmoll.eu</email>
     </alumne>
 </alumnes>
 ```
@@ -243,8 +243,8 @@ El resultat seria:
 
 ```html
 <ul class="llista-alumnes">
-    <li>"Maria" <maria@cifpmoll.eu></li>
-    <li>"Pere" <pere@cifpmoll.eu></li>
+    <li>"Maria" <maria@cifpfbmoll.eu></li>
+    <li>"Pere" <pere@cifpfbmoll.eu></li>
 </ul>
 ```
 
@@ -271,7 +271,7 @@ Si l'XML conté:
 ```xml
 <alumne>
     <nom>Maria</nom>
-    <email>maria@cifpmoll.eu</email>
+    <email>maria@cifpfbmoll.eu</email>
 </alumne>
 ```
 
@@ -279,7 +279,7 @@ La sortida serà:
 
 ```html
 <p>Nom: Maria</p>
-<p>Email: maria@cifpmoll.eu</p>
+<p>Email: maria@cifpfbmoll.eu</p>
 ```
 
 El punt (`.`) representa el node actual en `XPath`. És útil quan ja estem dins del node del qual volem extreure el valor:
@@ -784,7 +784,7 @@ Una vegada hem explicat els eines que tenim al nostre abast a l'hora d'aplicar t
                 <nom>Maria</nom>
                 <cognoms>García López</cognoms>
                 <data-naixement>2005-03-15</data-naixement>
-                <email>maria.garcia@cifpmoll.eu</email>
+                <email>maria.garcia@cifpfbmoll.eu</email>
             </alumne>
             [..]
         </alumnes>

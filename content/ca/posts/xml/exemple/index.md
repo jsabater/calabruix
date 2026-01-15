@@ -1,7 +1,7 @@
 ---
 title: "Document XML d'exemple"
 date: 2026-01-03
-lastmod: 2026-01-13
+lastmod: 2026-01-15
 description: "Exemple pràctic de document XML amb una estructura d'alumnes i assignatures en un curs de formació professional."
 summary: "XML complet d'un curs de formació professional amb alumnes i assignatures"
 categories: ["ensenyament"]
@@ -80,61 +80,61 @@ A continuació es presenta [el document XML base](/xml/exemple/institut.xml) amb
                 <nom>Maria</nom>
                 <cognoms>García López</cognoms>
                 <data-naixement>2005-03-15</data-naixement>
-                <email>maria.garcia@cifpmoll.eu</email>
+                <email>maria.garcia@cifpfbmoll.eu</email>
             </alumne>
             <alumne id="A002">
                 <nom>Pere</nom>
                 <cognoms>Martínez Soler</cognoms>
                 <data-naixement>2004-07-22</data-naixement>
-                <email>pere.martinez@cifpmoll.eu</email>
+                <email>pere.martinez@cifpfbmoll.eu</email>
             </alumne>
             <alumne id="A003">
                 <nom>Laura</nom>
                 <cognoms>Vidal Mas</cognoms>
                 <data-naixement>2005-01-08</data-naixement>
-                <email>laura.vidal@cifpmoll.eu</email>
+                <email>laura.vidal@cifpfbmoll.eu</email>
             </alumne>
             <alumne id="A004">
                 <nom>Jordi</nom>
                 <cognoms>Pons Ferrer</cognoms>
                 <data-naixement>2004-11-30</data-naixement>
-                <email>jordi.pons@cifpmoll.eu</email>
+                <email>jordi.pons@cifpfbmoll.eu</email>
             </alumne>
             <alumne id="A005">
                 <nom>Anna</nom>
                 <cognoms>Serra Riera</cognoms>
                 <data-naixement>2005-06-12</data-naixement>
-                <email>anna.serra@cifpmoll.eu</email>
+                <email>anna.serra@cifpfbmoll.eu</email>
             </alumne>
             <alumne id="A006">
                 <nom>Marc</nom>
                 <cognoms>Oliver Tous</cognoms>
                 <data-naixement>2004-09-03</data-naixement>
-                <email>marc.oliver@cifpmoll.eu</email>
+                <email>marc.oliver@cifpfbmoll.eu</email>
             </alumne>
             <alumne id="A007">
                 <nom>Carla</nom>
                 <cognoms>Munar Cifre</cognoms>
                 <data-naixement>2005-04-25</data-naixement>
-                <email>carla.munar@cifpmoll.eu</email>
+                <email>carla.munar@cifpfbmoll.eu</email>
             </alumne>
             <alumne id="A008">
                 <nom>Tomeu</nom>
                 <cognoms>Amengual Reus</cognoms>
                 <data-naixement>2004-12-18</data-naixement>
-                <email>tomeu.amengual@cifpmoll.eu</email>
+                <email>tomeu.amengual@cifpfbmoll.eu</email>
             </alumne>
             <alumne id="A009">
                 <nom>Aina</nom>
                 <cognoms>Crespí Bonnín</cognoms>
                 <data-naixement>2005-08-07</data-naixement>
-                <email>aina.crespi@cifpmoll.eu</email>
+                <email>aina.crespi@cifpfbmoll.eu</email>
             </alumne>
             <alumne id="A010">
                 <nom>Miquel</nom>
                 <cognoms>Fiol Pascual</cognoms>
                 <data-naixement>2004-05-14</data-naixement>
-                <email>miquel.fiol@cifpmoll.eu</email>
+                <email>miquel.fiol@cifpfbmoll.eu</email>
             </alumne>
         </alumnes>
     </curs>

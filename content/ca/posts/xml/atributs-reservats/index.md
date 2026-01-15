@@ -167,19 +167,19 @@ A continuació es presenta un document XML d'exemple:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<recursos xml:base="https://cifpmoll.eu/asix/">
+<recursos xml:base="https://cifpfbmoll.eu/asix/">
 
-    <!-- https://cifpmoll.eu/asix/apunts/tema1.pdf -->
+    <!-- https://cifpfbmoll.eu/asix/apunts/tema1.pdf -->
     <document href="apunts/tema1.pdf"/>
 
-    <!-- https://cifpmoll.eu/asix/apunts/tema2.pdf -->
+    <!-- https://cifpfbmoll.eu/asix/apunts/tema2.pdf -->
     <document href="apunts/tema2.pdf"/>
     
     <seccio xml:base="exercicis/">
-        <!-- https://cifpmoll.eu/asix/exercicis/ex01.xml -->
+        <!-- https://cifpfbmoll.eu/asix/exercicis/ex01.xml -->
         <fitxer href="ex01.xml"/>
 
-        <!-- https://cifpmoll.eu/asix/exercicis/ex02.xml -->
+        <!-- https://cifpfbmoll.eu/asix/exercicis/ex02.xml -->
         <fitxer href="ex02.xml"/>
     </seccio>
     
@@ -226,7 +226,7 @@ Podem enriquir [el document XML de l'institut]({{< relref "/posts/xml/exemple/" 
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<institut xml:lang="ca" xml:base="https://cifpmoll.eu/asix/">
+<institut xml:lang="ca" xml:base="https://cifpfbmoll.eu/asix/">
     <nom>CIFP Francesc de Borja Moll</nom>
     <codi>08012345</codi>
     <any-academic>2025-26</any-academic>
@@ -360,7 +360,7 @@ Crea un document XML per a un **repositori de recursos educatius** d'un mòdul f
 
 Requisits:
 
-1. Defineix una URI base a l'element arrel (pot ser fictícia, com `https://cifpmoll.eu/asix/llm/`).
+1. Defineix una URI base a l'element arrel (pot ser fictícia, com `https://cifpfbmoll.eu/asix/llm/`).
 2. Organitza els recursos en categories (apunts, exercicis, exemples, eines).
 3. Cada categoria pot tenir la seva pròpia sub-base relativa.
 4. Inclou almenys 10 recursos amb els atributs:
@@ -373,14 +373,14 @@ Estructura suggerida:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<repositori xml:base="https://cifpmoll.eu/asix/llm/" xml:lang="ca">
+<repositori xml:base="https://cifpfbmoll.eu/asix/llm/" xml:lang="ca">
     <modul nom="Llenguatges de Marques">
     
         <categoria nom="Apunts" xml:base="apunts/">
             <recurs href="tema1-introduccio.pdf" tipus="pdf" mida="2.5MB">
                 <titol>Tema 1: Introducció a XML</titol>
             </recurs>
-            <!-- La URI completa seria: https://cifpmoll.eu/asix/llm/apunts/tema1-introduccio.pdf -->
+            <!-- La URI completa seria: https://cifpfbmoll.eu/asix/llm/apunts/tema1-introduccio.pdf -->
             
             <!-- Més recursos... -->
         </categoria>
@@ -404,7 +404,7 @@ Tasca addicional: Afegeix una taula al final del document, com a comentari XML, 
 
 | Recurs | URI relativa            | URI base aplicada                      | URI completa resultant                                      |
 |--------|-------------------------|----------------------------------------|-------------------------------------------------------------|
-| Tema 1 | `tema1-introduccio.pdf` | `https://cifpmoll.eu/asix/llm/apunts/` | `https://cifpmoll.eu/asix/llm/apunts/tema1-introduccio.pdf` |
+| Tema 1 | `tema1-introduccio.pdf` | `https://cifpfbmoll.eu/asix/llm/apunts/` | `https://cifpfbmoll.eu/asix/llm/apunts/tema1-introduccio.pdf` |
 | ...    | ...                     | ...                                    | ...                                                         |
 
 Validació: Comprova que el document és ben format amb `xmllint` o [XML Validation](https://www.xmlvalidation.com/).

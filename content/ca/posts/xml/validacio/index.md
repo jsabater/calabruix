@@ -282,7 +282,7 @@ En canvi, si optàssim per una [DTD interna completa per a l'exemple de l'instit
                 <nom>Maria</nom>
                 <cognoms>García López</cognoms>
                 <data-naixement>2005-03-15</data-naixement>
-                <email>maria.garcia@cifpmoll.eu</email>
+                <email>maria.garcia@cifpfbmoll.eu</email>
             </alumne>
             [..]
         </alumnes>

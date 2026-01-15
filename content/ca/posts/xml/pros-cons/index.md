@@ -30,7 +30,7 @@ L'XML utilitza etiquetes amb noms significatius que descriuen el contingut. Qual
 <alumne>
     <nom>Maria</nom>
     <cognoms>Llompart Canyellas</cognoms>
-    <email>maria.llompart@cifpmoll.eu</email>
+    <email>maria.llompart@cifpfbmoll.eu</email>
 </alumne>
 ```
 

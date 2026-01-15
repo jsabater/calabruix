@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://cifpmoll.eu/schemas/institut.json",
+    "$id": "https://cifpfbmoll.eu/schemas/institut.json",
     "title": "Institut de Formació Professional",
     "description": "Esquema per validar documents JSON d'instituts de FP",
     "type": "object",

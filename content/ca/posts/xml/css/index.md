@@ -230,7 +230,7 @@ Anem a aplicar un full d'estils CSS a [l'exemple de l'institut](/xml/css/institu
                 <nom>Maria</nom>
                 <cognoms>García López</cognoms>
                 <data-naixement>2005-03-15</data-naixement>
-                <email>maria.garcia@cifpmoll.eu</email>
+                <email>maria.garcia@cifpfbmoll.eu</email>
             </alumne>
             [..]
         </alumnes>

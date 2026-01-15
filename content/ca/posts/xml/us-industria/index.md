@@ -164,7 +164,7 @@ Exemple de resposta SOAP:
                 <ws:Id>A001</ws:Id>
                 <ws:Nom>Maria</ws:Nom>
                 <ws:Cognoms>García López</ws:Cognoms>
-                <ws:Email>maria.garcia@cifpmoll.eu</ws:Email>
+                <ws:Email>maria.garcia@cifpfbmoll.eu</ws:Email>
             </ws:Alumne>
         </ws:GetAlumneResponse>
     </soap:Body>
@@ -212,14 +212,14 @@ RSS (Really Simple Syndication) permet distribuir continguts actualitzats (notí
 <?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title>Blog ASIX - CIFP Francesc de Borja Moll</title>
-    <link href="https://cifpmoll.eu/asix/blog"/>
-    <link rel="self" href="https://cifpmoll.eu/asix/blog/feed.atom"/>
+    <link href="https://cifpfbmoll.eu/asix/blog"/>
+    <link rel="self" href="https://cifpfbmoll.eu/asix/blog/feed.atom"/>
     <id>urn:uuid:blog-asix-cifpmoll</id>
     <updated>2025-03-15T10:00:00+01:00</updated>
     
     <entry>
         <title>Introducció a Docker</title>
-        <link href="https://cifpmoll.eu/asix/blog/intro-docker"/>
+        <link href="https://cifpfbmoll.eu/asix/blog/intro-docker"/>
         <id>urn:uuid:intro-docker-2025</id>
         <updated>2025-03-15T10:00:00+01:00</updated>
         <summary>Aprèn els conceptes bàsics de contenidors amb Docker.</summary>

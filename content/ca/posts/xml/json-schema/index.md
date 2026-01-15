@@ -45,13 +45,13 @@ A continuació, convertirem [l'exemple de l'institut](/xml/exemple/institut.xml)
                 <nom>Maria</nom>
                 <cognoms>García López</cognoms>
                 <data-naixement>2005-03-15</data-naixement>
-                <email>maria.garcia@cifpmoll.eu</email>
+                <email>maria.garcia@cifpfbmoll.eu</email>
             </alumne>
             <alumne id="A002">
                 <nom>Pere</nom>
                 <cognoms>Martínez Soler</cognoms>
                 <data-naixement>2004-07-22</data-naixement>
-                <email>pere.martinez@cifpmoll.eu</email>
+                <email>pere.martinez@cifpfbmoll.eu</email>
             </alumne>
             [..]
         </alumnes>
@@ -84,13 +84,13 @@ El seu JSON equivalent podria ser el següent:
                     "nom": "Maria",
                     "cognoms": "García López",
                     "dataNaixement": "2005-03-15",
-                    "email": "maria.garcia@cifpmoll.eu"
+                    "email": "maria.garcia@cifpfbmoll.eu"
                 },
                     "id": "A002",
                     "nom": "Pere",
                     "cognoms": "Martínez Soler",
                     "dataNaixement": "2004-07-22",
-                    "email": "pere.martinez@cifpmoll.eu"
+                    "email": "pere.martinez@cifpfbmoll.eu"
                 },
                 [..]
             ]
@@ -492,7 +492,7 @@ Vegem un [esquema complet per validar el document JSON de l'institut](/xml/json-
 ```json
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://cifpmoll.eu/schemas/institut.json",
+    "$id": "https://cifpfbmoll.eu/schemas/institut.json",
     "title": "Institut de Formació Professional",
     "description": "Esquema per validar documents JSON d'instituts de FP",
     "type": "object",
@@ -752,7 +752,7 @@ Podem usar `jq` per modificar documents:
 
 ```bash
 # Afegir camp
-jq '.institut.web = "https://cifpmoll.eu"' institut.json
+jq '.institut.web = "https://cifpfbmoll.eu"' institut.json
 
 # Modificar valor
 jq '.institut.curs.assignatures[0].hores = 130' institut.json
