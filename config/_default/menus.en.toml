@@ -55,15 +55,21 @@
 
 [[main]]
   name = "About"
-  title = "About Jaume Sabater"
+  title = "About me"
   pageRef = "about"
   weight = 40
 
 [[main]]
-  identifier = "Github"
-  pre = "github"
-  url = "https://github.com/jsabater"
-  weight = 50
+  name = "Work"
+  title = "Work with me"
+  pageRef = "work"
+  weight = 45
+
+#[[main]]
+#  identifier = "Github"
+#  pre = "github"
+#  url = "https://github.com/jsabater"
+#  weight = 50
 
 [[main]]
   identifier = "LinkedIn"

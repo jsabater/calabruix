@@ -1,8 +1,9 @@
 ---
 title: "Privacy policy"
 date: 2024-08-22
-lastmod: 2025-06-29
+lastmod: 2026-01-15
 description: "Privacy and cookies policy"
+slug: privacy
 ---
 
 This site neither uses cookies nor any software that tracks or collects data in the background. Moreover, I recommend using browsers that respect privacy.

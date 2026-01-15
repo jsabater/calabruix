@@ -1,9 +1,9 @@
 ---
 title: "Quant a mi"
 date: "2024-08-11"
-lastmod: 2026-01-07
+lastmod: 2026-01-15
 description: "Quant a en Jaume Sabater, l'autor d'aquest blog"
-translationKey: "about"
+slug: sobre
 ---
 
 Som un enginyer de sistemes amb una llarga trajectòria que va tenir el primer contacte amb Linux a través de [Debian GNU/Linux](https://www.debian.org) a mitjan anys noranta. Vaig començar com a desenvolupador de programari (front-end i back-end), però ben aviat em vaig endinsar en l'peració de serveis d'Internet amb servidors dedicats i, més endavant, amb la virtualització.
@@ -19,24 +19,6 @@ Fora de línia, practic molts esports (natació, vòlei platja, pàdel surf i se
 El que més m'agrada a la vida és aprendre, així que sempre tenc ganes de conèixer gent nova i compartir coneixement i experiències. Normalment som molt apassionat amb tot el que faig: m'agrada practicar esports, assistir a esdeveniments d'òpera i música clàssica, llegir llibres, cuinar i mirar pel·lícules i sèries.
 
 I també m'agrada escriure sobre el que aprenc i el que faig; d'aquí aquest blog. Tots els articles que conté es basen en programari lliure i de codi obert, i estan llicenciats sota [Creative Commons Reconeixement-CompartirIgual 4.0](https://creativecommons.org/licenses/by-sa/4.0/) (CC BY-SA 4.0).
-
-## Obert a col·laboracions professionals
-
-Em descriuria com a polifacètic. Fa molts anys, quan encara era adolescent, el mantra de *ser bo en una sola cosa* no va connectar amb mi; en comptes d'això, vaig adoptar un enfocament més holístic de la vida, la feina i les relacions socials.
-
-Des d'aleshores, he passat tota la vida aprenent de moltes pràctiques, disciplines i rols diferents, tant en l'esport com a la feina, a través d’aficions i de les persones. Això m'ha convertit en una persona molt versàtil, que s'adapta fàcilment al canvi, amb una perspectiva més àmplia i una ment més oberta. Comparteisc la visió holística de la tecnologia de John Carmack.
-
-> El més important és tenir una comprensió àmplia de la tecnologia. Pots ser especialista en un àmbit, però necessites entendre bé tot el sistema. Si no és així, mai no podràs prendre les decisions correctes.
-
-Com a directiu o responsable d'equip, crec fermament en el poder de la transformació a través d'un bon lideratge. Al llarg de la meva carrera, he fet feina amb èxit amb departaments no tècnics com producte, màrqueting o suport, així com amb operacions, administració i finances.
-
-Planificant amb antelació i liderant amb l'exemple, intent fomentar la resolució independent de problemes i la presa de decisions dins d'un marc ben definit, oferir retroalimentació constructiva mitjançant una comunicació clara, honesta i transparent, i empoderar els membres de l'equip perquè assumeixin responsabilitats evitant el micromanagement.
-
-Com a enginyer de sistemes, som principalment un perfil de back-end: sistemes, plataformes, devops, fiabilitat del lloc (site reliability), APIs REST, però també tenc un gran interès per les bones pràctiques de desenvolupament de programari i les arquitectures de software. Som un gran defensor de [*](TDD), [*](VSA) i [*](DDD), així com de les metodologies àgils.
-
-> En resum, si t'interessa utilitzar tecnologies de codi obert tant *on premise* com al núvol, això és el que faig.
-
-Si vols, pots fer una ullada [al meu currículum vitae a Kickresume](https://www.kickresume.com/cv/bLdx3M/).
 
 ## Sobre el lloc
 

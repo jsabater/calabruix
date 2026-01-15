@@ -1,8 +1,9 @@
 ---
 title: "Política de privadesa"
 date: 2024-08-22
-lastmod: 2025-06-29
+lastmod: 2026-01-15
 description: "Polítiques de privadesa i de galetes"
+slug: privadesa
 ---
 
 Aquest lloc web no fa servir galetes ni cap programari que faci seguiment o reculli dades en segon pla. A més, recoman utilitzar navegadors que respectin la privacitat.
