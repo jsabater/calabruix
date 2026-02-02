@@ -1,7 +1,7 @@
 ---
 title: "A què em dedic"
 date: "2026-01-15"
-lastmod: 2026-01-15
+lastmod: 2026-01-30
 description: "Com puc ajudar-te"
 slug: feina
 ---
@@ -26,4 +26,4 @@ Com a enginyer de sistemes, som principalment un perfil de back-end: sistemes, p
 Si vols, pots fer una ullada [al meu currículum vitae a Kickresume](https://www.kickresume.com/cv/bLdx3M/).
 
 [^1]: Pot ser també polimàtic.
-[^2]: La psicologia suggereix que el meu sistema nerviós, quan era nen, va començar a construir una arquitectura cognitiva coneguda com a ment en forma de M.
+[^2]: La psicologia suggereix que el meu sistema nerviós, quan era nin, va començar a construir una arquitectura cognitiva coneguda com a ment en forma de M.
