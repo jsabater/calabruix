@@ -1,6 +1,6 @@
 ---
 title: "Deploying Python applications using pyinfra"
-date: 2025-12-16
+date: 2025-01-15
 description: ""
 summary: ""
 categories: ["automation"]
@@ -8,7 +8,7 @@ tags: ["django", "python", "pyinfra"]
 draft: true
 ---
 
-This article explains how to deploy a Django web application using [pyinfra](https://pyinfra.com/) in our Proxmox Virtual Environment.
+In our [Proxmox Virtual Environment]({{< relref "/posts/proxmox/pve/" >}}), [provisioning of guests]({{< relref "/posts/ansible/provisioning/" >}}) is done using Ansible. In this article we will use [pyinfra](https://pyinfra.com/) to deploy a Django web application into one of those guests.
 
 ## Introduction
 
@@ -32,6 +32,37 @@ The execution model of `pyinfra` differs from Ansible in that:
 | Role      | Python modules and functions |
 | Inventory | Inventory                    |
 
+Pyinfra doesn't have a built-in mechanism for "return status and display nicely" because it's designed for operations (make changes) rather than queries (report status).
+
+
+Given pyinfra 3.x's removal of hooks, I recommend **Option B: Wrapper Script**.
+
+Reasons:
+1. **Clean separation**: pyinfra does what it's good at (parallel host operations), wrapper handles orchestration
+2. **Reliable**: Summary always prints, even if some hosts fail
+3. **Flexible**: Easy to add pre/post processing, logging, notifications
+4. **No workarounds**: Doesn't fight against pyinfra's design
+5. **Familiar pattern**: Similar to how Ansible Galaxy roles are often wrapped
+
+## Parametres in deploy methods
+
+Host data vs function parameters
+The reasoning is about where the data comes from:
+Use `host.data` inside the function when:
+
+* The data is host-specific and comes from inventory/group_data
+* Examples: `inventory_hostname`, `code`, `blackpearl_venv`, `postgres_host`
+* These are intrinsic to the host being operated on
+
+Pass as function parameter when:
+
+* The data is deploy-specific configuration, not host data
+* The data comes from external sources (salt files, environment, API)
+* You want the function to be reusable across different deploys with different configurations
+* Examples: `salt`, `service_name`
+
+Be consistent. If a function is tightly coupled to pyinfra (uses host.get_fact()), it can also use host.data. If it's a utility that could work standalone, pass parameters. Your get_password() is actually a pure utility function - it doesn't need pyinfra at all, so passing parameters makes sense.
+
 ## Installation
 
 Create a project folder, set up a virtual environment and install the package
@@ -40,7 +71,7 @@ Create a project folder, set up a virtual environment and install the package
 mkdir ~/Projects/pyinfra
 python3 -m venv ~/Projects/pyinfra/.venv
 source ~/Projects/pyinfra/.venv/bin/activate
-pip install pyinfra
+pip install pyinfra pyyaml
 ```
 
 Test the installation:
