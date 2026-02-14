@@ -1,5 +1,5 @@
 ---
-title: "Virtualtzació"
+title: "Virtualització"
 description: "La llista d'articles a la categoria de virtualització."
 date: "2024-07-18"
 ---
