@@ -19,7 +19,7 @@ Cada tema combina explicacions teòriques amb exemples pràctics i exercicis per
 1. [Introducció a Docker Swarm]({{< relref "/posts/docker/swarm/introduction/" >}}): Què és l'orquestració de contenidors i quins són els conceptes fonamentals de Docker Swarm.
 2. [Creació i gestió d'un clúster Docker Swarm]({{< relref "/posts/docker/swarm/creation/" >}}): Com inicialitzar un clúster Docker Swarm, afegir nodes i gestionar-los.
 3. [Serveis a Docker Swarm]({{< relref "/posts/docker/swarm/services/" >}}): Diferència entre contenidor i servei, creació de serveis, modes de desplegament i gestió de rèpliques.
-4. [Actualització i manteniment de serveis]({{< relref "/posts/docker/swarm/update/" >}}): Rolling updates, rollback, gestió de fallades i actualitzacions sense downtime
+4. [Actualització i manteniment de serveis]({{< relref "/posts/docker/swarm/update/" >}}): Rolling updates, rollback, gestió de fallades i actualitzacions sense downtime.
 5. [Xarxes a Docker Swarm]({{< relref "/posts/docker/swarm/network/" >}}): Xarxes overlay, descobriment de serveis, balanceig de càrrega i routing mesh.
 6. [Persistència de dades a Swarm]({{< relref "/posts/docker/swarm/persistance/" >}}): Reptes de la persistència en entorns distribuïts, volums locals i estratègies per a serveis amb estat.
 7. [De Docker Compose a Docker Swarm amb Stacks]({{< relref "/posts/docker/swarm/stacks/" >}}): Desplegament d'aplicacions multi-servei amb Docker Stack i fitxers Compose.
