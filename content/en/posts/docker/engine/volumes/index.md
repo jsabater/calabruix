@@ -1,4 +1,16 @@
-# Volume management with Docker
+---
+title: "Volume management with Docker"
+date: 2026-01-02
+lastmod: 2026-01-02
+description: ""
+summary: ""
+categories: ["virtualisation"]
+tags: ["docker", "engine"]
+series: ["Docker"]
+series_order: 6
+weight: 60
+draft: true
+---
 
 Volumes allow data to persist beyond the lifecycle of a container. This ensures that important data remains safe and accessible across container restarts. Let us demonstrate a data persistence issue with how our container is configured right now by following these steps:
 

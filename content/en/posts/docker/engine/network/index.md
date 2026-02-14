@@ -1,4 +1,16 @@
-# Network management with Docker
+---
+title: "Network management with Docker"
+date: 2026-01-02
+lastmod: 2026-01-02
+description: ""
+summary: ""
+categories: ["virtualisation"]
+tags: ["docker", "engine"]
+series: ["Docker"]
+series_order: 8
+weight: 80
+draft: true
+---
 
 Docker networking allows us to create and manage virtual networks that enable communication between containers, which is an essential feature when building multi-container applications.
 

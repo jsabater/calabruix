@@ -1,4 +1,16 @@
-# Working with multiple Dockerfiles
+---
+title: "Working with multiple Dockerfiles"
+date: 2026-01-02
+lastmod: 2026-01-02
+description: ""
+summary: ""
+categories: ["virtualisation"]
+tags: ["docker", "engine"]
+series: ["Docker"]
+series_order: 9
+weight: 90
+draft: true
+---
 
 Because we are now going to work with more than one container, properly organising the contents of our project becomes a must. It is best practice to organise the `Dockerfiles` into separate subdirectories, each dedicated to a specific service or component. This approach provides clarity and scalability, and makes it easy to maintain.
 

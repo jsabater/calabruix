@@ -1,4 +1,16 @@
-# Dockerfiles
+---
+title: "Dockerfiles"
+date: 2026-01-02
+lastmod: 2026-01-02
+description: ""
+summary: ""
+categories: ["virtualisation"]
+tags: ["docker", "engine"]
+series: ["Docker"]
+series_order: 7
+weight: 70
+draft: true
+---
 
 A `Dockerfile` is a text document that contains a set of instructions used to build a Docker image. Docker images are the blueprints for containers. The `Dockerfile` acts as a recipe, specifying everything needed to assemble the image: the base operating system, software dependencies, environment variables, network configurations, and the application code itself.
 

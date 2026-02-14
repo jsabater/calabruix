@@ -1,4 +1,16 @@
-# Image management with Docker
+---
+title: "Image management with Docker"
+date: 2026-01-02
+lastmod: 2026-01-02
+description: ""
+summary: ""
+categories: ["virtualisation"]
+tags: ["docker", "engine"]
+series: ["Docker"]
+series_order: 3
+weight: 30
+draft: true
+---
 
 Docker images are the foundation of containerization. This section introduces commands to pull, list, and remove images, enabling you to manage the base templates used to create containers.
 

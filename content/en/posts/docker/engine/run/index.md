@@ -1,4 +1,16 @@
-# Container management with Docker
+---
+title: "Container management with Docker"
+date: 2026-01-02
+lastmod: 2026-01-02
+description: ""
+summary: ""
+categories: ["virtualisation"]
+tags: ["docker", "engine"]
+series: ["Docker"]
+series_order: 4
+weight: 40
+draft: true
+---
 
 Once images are available, containers are created and run from them. This section covers essential commands for starting, stopping, listing, and removing containers to manage running applications.
 

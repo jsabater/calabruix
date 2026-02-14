@@ -1,4 +1,16 @@
-# Interacting with the Docker container
+---
+title: "Interacting with the Docker container"
+date: 2026-01-02
+lastmod: 2026-01-02
+description: ""
+summary: ""
+categories: ["virtualisation"]
+tags: ["docker", "engine"]
+series: ["Docker"]
+series_order: 5
+weight: 50
+draft: true
+---
 
 Should we find ourselves in need to interact with the container, we can use the `docker exec` command. For instance, we can start an interactive shell:
 

@@ -1,4 +1,16 @@
-# Docker installation and first commands
+---
+title: "Docker installation and first commands"
+date: 2026-01-02
+lastmod: 2026-01-02
+description: ""
+summary: ""
+categories: ["virtualisation"]
+tags: ["docker", "engine"]
+series: ["Docker"]
+series_order: 2
+weight: 20
+draft: true
+---
 
 We are going to introduce the Docker CLI (Command Line Interface) with a PostgreSQL database and an Apache HTTP server with PHP support on Debian/Ubuntu. We will download images and create containers from those images, and we will learn to work with volumes and networks.
 
