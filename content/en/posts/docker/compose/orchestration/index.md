@@ -1,4 +1,16 @@
-# Orchestration, production, and best practices with Docker Compose
+---
+title: "Orchestration, production, and best practices with Docker Compose"
+date: 2026-01-02
+lastmod: 2026-01-02
+description: ""
+summary: ""
+categories: ["virtualisation"]
+tags: ["docker", "compose"]
+series: ["Docker Compose"]
+series_order: 3
+weight: 30
+draft: true
+---
 
 Once your application stack is defined and configured, the focus shifts to how it runs, scales, and adapts to different environments. In this final part, we will look at orchestration features such as dependencies and health checks, how to manage containers through common lifecycle commands, and how to prepare your setup for production using override files. We will finish with practical recommendations and best practices to help you deploy and maintain your Docker Compose projects effectively.
 

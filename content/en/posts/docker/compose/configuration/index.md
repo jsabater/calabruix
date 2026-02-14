@@ -1,4 +1,16 @@
-# Configuration, networks, and data persistence with Docker Compose
+---
+title: "Configuration, networks, and data persistence with Docker Compose"
+date: 2026-01-02
+lastmod: 2026-01-02
+description: ""
+summary: ""
+categories: ["virtualisation"]
+tags: ["docker", "compose"]
+series: ["Docker Compose"]
+series_order: 2
+weight: 20
+draft: true
+---
 
 After defining services and learning how Docker Compose builds and manages containers, the next step is to make those services work together reliably. We will now explore how to configure our environment through variables and `.env` files, connect services using custom networks, and ensure data persists across container restarts using volumes. These are essential concepts for building stable and reusable Compose setups.
 

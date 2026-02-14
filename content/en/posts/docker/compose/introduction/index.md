@@ -1,4 +1,16 @@
-# Docker Compose fundamentals
+---
+title: "Docker Compose fundamentals"
+date: 2026-01-02
+lastmod: 2026-01-02
+description: ""
+summary: ""
+categories: ["virtualisation"]
+tags: ["docker", "compose"]
+series: ["Docker Compose"]
+series_order: 1
+weight: 10
+draft: true
+---
 
 When projects grow beyond a few containers, managing them with multiple `docker` commands quickly becomes messy. Docker Compose is a tool to define and run multi-container Docker applications using a single YAML file (by default, named `docker-compose.yml`). This configuration file describes the whole environment (services, networks and volumes) in a simple, declarative manner.
 
