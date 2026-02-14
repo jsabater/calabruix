@@ -4,7 +4,7 @@ date: 2026-01-03
 lastmod: 2026-01-08
 description: "Atributs reservats de l'especificació XML per a l'idioma, per al tractament d'espais en blanc i per a URIs base. Propòsit i exemples pràctics."
 summary: "Atributs especials d'idioma, espais en blanc i URIs base: propòsit i exemples pràctics."
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml", "sgml"]
 series: ["XML"]
 series_order: 3

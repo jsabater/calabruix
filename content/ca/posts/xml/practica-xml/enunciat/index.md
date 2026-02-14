@@ -4,7 +4,7 @@ date: 2026-01-11
 lastmod: 2026-01-11
 description: "Enunciat de la pràctica lliurable de creació d'un catàleg de videojocs estil Steam utilitzant totes les eines vistes: XML, DTD, XSD, CSS i XSLT"
 summary: "Enunciat de la pràctica on l'alumnat crea un catàleg de videojocs utilitzant l'ecosistema XML."
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml", "xslt", "dtd", "xsd", "css", "schema", "html", "practica", "enunciat"]
 slug: enunciat
 ---

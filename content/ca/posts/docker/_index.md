@@ -2,7 +2,7 @@
 title: "Docker"
 description: "Apunts de classe sobre contenidors Docker: Engine, Compose i Swarm"
 summary: "Apunts de classe sobre contenidors Docker: Engine, Compose i Swarm"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "engine", "compose", "swarm", "stack"]
 ---
 

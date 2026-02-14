@@ -4,7 +4,7 @@ date: 2026-01-11
 lastmod: 2026-01-11
 description: "Pràctica integradora on l'alumnat crea un catàleg de videojocs estil Steam utilitzant tot l'ecosistema XML: document ben format, validació amb DTD i XSD, organització amb namespaces, atributs reservats, visualització amb CSS i transformació XSLT a HTML."
 summary: "Pràctica lliurable d'XML: crea un catàleg de videojocs amb DTD, XSD, namespaces, CSS i XSLT."
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml", "xslt", "dtd", "xsd", "css", "schema", "html", "practica"]
 series: ["XML"]
 series_order: 13

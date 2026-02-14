@@ -4,7 +4,7 @@ date: 2026-01-03
 lastmod: 2026-01-11
 description: "Transformacions XSLT per convertir documents XML a HTML, text o altres formats XML. Plantilles, XPath, iteracions, condicions i exemple complet amb l'XML de l'institut."
 summary: "Plantilles, expressions XPath, estructures de control i transformació d'XML a HTML."
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml", "xslt"]
 series: ["XML"]
 series_order: 7

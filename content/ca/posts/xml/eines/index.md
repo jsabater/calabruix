@@ -4,7 +4,7 @@ date: 2026-01-03
 lastmod: 2026-01-08
 description: "Eines en línia i de terminal de comandes per a treballar amb documents XML: validadors, formatejadors i transformadors, amb exemples pràctics."
 summary: "Eines en línia i de terminal de comandes per a validar, formatejar i transformar documents XML."
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml", "xmllint", "xsltproc", "xmlstarlet"]
 series: ["XML"]
 series_order: 8

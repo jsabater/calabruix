@@ -4,7 +4,7 @@ date: 2026-01-03
 lastmod: 2026-01-11
 description: "Aplicació de fulls d'estils CSS a documents XML. Enllaç amb instrucció de processament, selectors d'elements, propietats de visualització i exemple complet."
 summary: "Estilització de documents XML amb CSS: enllaç, selectors i exemple pràctic complet."
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml", "css"]
 series: ["XML"]
 series_order: 6

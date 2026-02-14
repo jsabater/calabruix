@@ -4,7 +4,7 @@ date: 2026-01-31
 lastmod: 2026-01-31
 description: "Rolling updates, rollback, gestió de fallades i actualitzacions sense downtime"
 summary: "Rolling updates, rollback, gestió de fallades i actualitzacions sense downtime"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "swarm"]
 series: ["Docker Swarm"]
 series_order: 4

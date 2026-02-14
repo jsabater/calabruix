@@ -4,7 +4,7 @@ date: 2026-01-31
 lastmod: 2026-01-31
 description: "Reptes de la persistència en entorns distribuïts, volums locals i estratègies per a serveis amb estat"
 summary: "Reptes de la persistència en entorns distribuïts, volums locals i estratègies per a serveis amb estat"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "swarm"]
 series: ["Docker Swarm"]
 series_order: 6

@@ -4,7 +4,7 @@ date: 2026-01-03
 lastmod: 2026-01-11
 description: "Validació de documents XML amb DTD i XSD. Sintaxi de DTD, introducció a XML Schema i comparativa entre ambdós sistemes."
 summary: "Esquemes de validació XML: DTD complet, introducció a XSD i exemples pràctics."
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml", "dtd", "xsd", "schema"]
 series: ["XML"]
 series_order: 4

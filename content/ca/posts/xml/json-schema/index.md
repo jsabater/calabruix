@@ -4,7 +4,7 @@ date: 2026-01-03
 lastmod: 2026-01-09
 description: "Conversió d'exemples XML a JSON. Introducció a JSON Schema per validar documents JSON. Eines online i de terminal Linux per a fer feina amb JSON."
 summary: "Conversió XML a JSON, validació amb JSON Schema i eines de feina de terminal Linux i enn línia."
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml", "json", "schema"]
 series: ["XML"]
 series_order: 12

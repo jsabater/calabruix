@@ -2,7 +2,7 @@
 title: "Fonaments de Docker"
 description: "Fonaments de Docker: instal·lació, contenidors, imatges, volums i xarxes"
 summary: "Fonaments de Docker: instal·lació, contenidors, imatges, volums i xarxes"
-categories: ["ensenyament"]
+categories: ["teaching", "virtualisation"]
 tags: ["docker", "engine"]
 ---
 

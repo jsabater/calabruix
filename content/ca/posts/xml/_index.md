@@ -2,7 +2,7 @@
 title: "XML, el llenguatge de marques extensible"
 description: "Guia completa d'XML per a estudiants d'ASIX: des dels fonaments fins a les transformacions XSLT, amb comparativa i introducció a JSON. Exercicis pràctics."
 summary: "Guia completa d'XML, des dels fonaments fins a les transformacions, comparativa amb JSON i exercicis"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml", "json", "sgml", "xslt", "dtd", "xsd", "css", "schema"]
 ---
 

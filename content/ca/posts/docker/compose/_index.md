@@ -2,7 +2,7 @@
 title: "Gestió amb Compose"
 description: "Gestió d'aplicacions multi-contenidor amb Docker Compose"
 summary: "Gestió d'aplicacions multi-contenidor amb Docker Compose"
-categories: ["ensenyament"]
+categories: ["teaching", "virtualisation"]
 tags: ["docker", "compose"]
 ---
 

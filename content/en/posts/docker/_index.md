@@ -2,7 +2,7 @@
 title: "Docker"
 description: "Installation, configuration and management of Docker containers"
 summary: "Learn to install, configure and operate Docker containers"
-categories: ["virtualisation"]
+categories: ["virtualisation", "teaching"]
 tags: ["docker"]
 ---
 

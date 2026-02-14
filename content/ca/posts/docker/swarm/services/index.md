@@ -4,7 +4,7 @@ date: 2026-01-31
 lastmod: 2026-01-31
 description: "Diferència entre contenidor i servei, creació de serveis, modes de desplegament i gestió de rèpliques"
 summary: "Diferència contenidor/servei, creació de serveis, modes de desplegament i gestió de rèpliques"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "swarm"]
 series: ["Docker Swarm"]
 series_order: 3

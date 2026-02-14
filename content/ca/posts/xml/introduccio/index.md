@@ -4,7 +4,7 @@ date: 2026-01-03
 lastmod: 2026-01-08
 description: "Origen i context històric de l'XML. Sintaxi bàsica: nodes, etiquetes, atributs, entitats, seccions CDATA, documents ben formats i vàlids."
 summary: "Història i elements fonamentals: etiquetes, atributs, entitats i estructura de documents."
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml", "sgml"]
 series: ["XML"]
 series_order: 1

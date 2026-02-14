@@ -4,7 +4,7 @@ date: 2026-01-02
 lastmod: 2026-01-02
 description: ""
 summary: ""
-categories: ["virtualisation"]
+categories: ["virtualisation", "teaching"]
 tags: ["docker", "compose"]
 series: ["Docker Compose"]
 series_order: 2

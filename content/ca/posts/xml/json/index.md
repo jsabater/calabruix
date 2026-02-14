@@ -4,7 +4,7 @@ date: 2026-01-03
 lastmod: 2026-01-09
 description: "Origen i evolució del format JSON. Comparativa detallada amb XML: sintaxi, tipus de dades, validació, rendiment i casos d'ús. Avantatges i limitacions de JSON."
 summary: "Història de JSON, comparativa amb XML i anàlisi d'avantatges, limitacions i casos d'ús."
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml", "json"]
 series: ["XML"]
 series_order: 11

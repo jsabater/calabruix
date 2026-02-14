@@ -4,7 +4,7 @@ date: 2026-01-03
 lastmod: 2026-01-11
 description: "Què són els espais de noms en XML, per què es necessiten, sintaxi de declaració, prefixos, namespace per defecte i resolució de conflictes entre vocabularis."
 summary: "Declaració, prefixos, àmbits i exemple pràctic d'espais de noms en XML amb múltiples vocabularis."
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml"]
 series: ["XML"]
 series_order: 5

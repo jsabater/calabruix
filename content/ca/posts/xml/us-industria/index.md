@@ -4,7 +4,7 @@ date: 2026-01-03
 lastmod: 2026-01-08
 description: "Usos actuals de l'XML en diferents indústries i sectors, amb exemples realistes de formats XML en configuració de sistemes, intercanvi de dades, documents ofimàtics, serveis web i estàndards sectorials."
 summary: "Casos d'ús reals de l'XML: configuració, intercanvi de dades, documents i estàndards sectorials."
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml"]
 series: ["XML"]
 series_order: 9

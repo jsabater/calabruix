@@ -4,7 +4,7 @@ date: 2026-01-31
 lastmod: 2026-01-31
 description: "Desplegament d'aplicacions multi-servei amb Docker Stack i fitxers Compose"
 summary: "Desplegament d'aplicacions multi-servei amb Docker Stack i fitxers Compose"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "swarm", "stack", "compose"]
 series: ["Docker Swarm"]
 series_order: 7

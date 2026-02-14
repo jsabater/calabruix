@@ -4,7 +4,7 @@ date: 2026-01-11
 lastmod: 2026-01-11
 description: "Guia d'autoavaluació per a la pràctica lliurable de creació d'un catàleg de videojocs estil Steam. Comandes per validar XML, DTD, XSD, CSS i XSLT amb xmllint i xsltproc."
 summary: "Comandes de terminal per autoavaluar la pràctica del catàleg de videojocs."
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml", "xslt", "dtd", "xsd", "css", "schema", "html", "practica", "autoavaluacio"]
 slug: autoavaluacio
 ---

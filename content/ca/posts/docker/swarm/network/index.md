@@ -4,7 +4,7 @@ date: 2026-01-31
 lastmod: 2026-01-31
 description: "Xarxes overlay, descobriment de serveis, balanceig de càrrega i routing mesh"
 summary: "Xarxes overlay, descobriment de serveis, balanceig de càrrega i routing mesh"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "swarm"]
 series: ["Docker Swarm"]
 series_order: 5

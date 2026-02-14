@@ -2,7 +2,7 @@
 title: "Orquestració amb Swarm"
 description: "Orquestració de contenidors en clústers amb Docker Swarm"
 summary: "Orquestració de contenidors en clústers amb Docker Swarm"
-categories: ["ensenyament"]
+categories: ["teaching", "virtualisation"]
 tags: ["docker", "swarm"]
 ---
 

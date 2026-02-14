@@ -4,7 +4,7 @@ date: 2026-01-27
 lastmod: 2026-01-27
 description: "Què és l'orquestració de contenidors i quins són els conceptes fonamentals de Docker Swarm"
 summary: "Què és l'orquestració de contenidors i els conceptes fonamentals de Docker Swarm"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "swarm"]
 series: ["Docker Swarm"]
 series_order: 1

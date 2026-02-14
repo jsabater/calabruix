@@ -4,7 +4,7 @@ date: 2026-02-11
 lastmod: 2026-02-11
 description: "Cas pràctic complet: desplegament d'una aplicació Django amb Traefik, PostgreSQL, Redis i Celery"
 summary: "Cas pràctic complet: desplegament d'una aplicació Django amb Traefik, PostgreSQL, Redis i Celery"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "swarm", "django", "traefik", "celery", "postgresql", "redis"]
 series: ["Docker Swarm"]
 series_order: 9

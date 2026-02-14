@@ -4,7 +4,7 @@ date: 2026-01-03
 lastmod: 2026-01-03
 description: "Anàlisi equilibrada dels avantatges i desavantatges de l'XML. Punts forts com la validació i extensibilitat, i limitacions com la verbositat i el rendiment."
 summary: "Avantatges i limitacions: quan és la millor opció i quan convé considerar alternatives."
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml"]
 series: ["XML"]
 series_order: 10

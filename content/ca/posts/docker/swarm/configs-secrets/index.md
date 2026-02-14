@@ -4,7 +4,7 @@ date: 2026-02-11
 lastmod: 2026-02-11
 description: "Gestió segura de configuració i credencials amb Docker Configs i Docker Secrets"
 summary: "Gestió segura de configuració i credencials amb Docker Configs i Docker Secrets"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "swarm", "secrets", "config"]
 series: ["Docker Swarm"]
 series_order: 8

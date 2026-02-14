@@ -4,7 +4,7 @@ date: 2026-02-11
 lastmod: 2026-02-11
 description: "Scripts de desplegament, gestió automatitzada de configs i secrets, i pipelines de desplegament"
 summary: "Scripts de desplegament, gestió automatitzada de configs i secrets, i pipelines de desplegament"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "swarm"]
 series: ["Docker Swarm"]
 series_order: 10

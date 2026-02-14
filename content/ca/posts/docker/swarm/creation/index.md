@@ -4,7 +4,7 @@ date: 2026-01-31
 lastmod: 2026-01-31
 description: "Com inicialitzar un clúster Docker Swarm, afegir nodes i gestionar-los"
 summary: "Com inicialitzar un clúster Docker Swarm, afegir nodes i gestionar-los"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "swarm"]
 series: ["Docker Swarm"]
 series_order: 2

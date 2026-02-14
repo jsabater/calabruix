@@ -4,7 +4,7 @@ date: 2026-01-03
 lastmod: 2026-01-15
 description: "Exemple pràctic de document XML amb una estructura d'alumnes i assignatures en un curs de formació professional."
 summary: "XML complet d'un curs de formació professional amb alumnes i assignatures"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["xml"]
 series: ["XML"]
 series_order: 2
