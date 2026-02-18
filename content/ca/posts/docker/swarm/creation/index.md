@@ -385,9 +385,9 @@ Podem canviar la disponibilitat d'un node sense treure'l del clúster. Existeixe
 
 | Estat    | Descripció                                               |
 |:---------|:---------------------------------------------------------|
-| `Active` | El node accepta noves tasques amb normalitat             |
-| `Pause`  | El node no accepta noves tasques, però manté les actuals |
-| `Drain`  | El node no accepta tasques i evacua les que té           |
+| `active` | El node accepta noves tasques amb normalitat             |
+| `pause`  | El node no accepta noves tasques, però manté les actuals |
+| `drain`  | El node no accepta tasques i evacua les que té           |
 
 El mode `Drain` és útil per fer manteniment en un node sense interrompre els serveis:
 
