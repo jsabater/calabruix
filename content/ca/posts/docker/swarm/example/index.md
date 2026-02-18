@@ -9,7 +9,7 @@ tags: ["docker", "swarm", "django", "traefik", "celery", "postgresql", "redis"]
 series: ["Docker Swarm"]
 series_order: 9
 weight: 90
-slug: django-swarm
+slug: exemple-complet
 ---
 
 Aquest tema integra els conceptes vistos fins ara en un cas pràctic complet: el desplegament d'una aplicació web Django en un clúster Docker Swarm. L'exemple inclou molts dels components habituals d'una aplicació web moderna: proxy invers, base de dades, caché, cua de tasques i múltiples rèpliques de l'aplicació.
