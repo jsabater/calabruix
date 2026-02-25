@@ -1,7 +1,7 @@
 ---
 title: "Autoavaluació del catàleg de videojocs en XML"
 date: 2026-01-11
-lastmod: 2026-01-11
+lastmod: 2026-02-22
 description: "Guia d'autoavaluació per a la pràctica lliurable de creació d'un catàleg de videojocs estil Steam. Comandes per validar XML, DTD, XSD, CSS i XSLT amb xmllint i xsltproc."
 summary: "Comandes de terminal per autoavaluar la pràctica del catàleg de videojocs."
 categories: ["teaching"]
@@ -25,7 +25,7 @@ Aprofita aquestes eines per revisar la teva pràctica: si les comandes no retorn
 Les eines necessàries per a dur a terme aquest correcció són les següents:
 
 ```bash
-sudo apt install libxml2-utils xsltproc
+sudo apt install libxml2-utils xsltproc xmlstarlet
 ```
 
 ## Bloc 1
@@ -38,16 +38,16 @@ Comença verificant que el document `basic.xml` està ben format:
 xmllint --noout basic.xml
 ```
 
-Mostra l'estructura en arbre per a verificar l'estructura jeràrquica del document:
+Mostra l'estructura en arbre per a verificar l'estructura jeràrquica del document i aprofita per fer una primera ullada a la profunditat del document:
 
 ```bash
 xmllint --xpath '//*' basic.xml | head -50
 ```
 
-Compta els nivells de profunditat:
+Extreu el nombre de nivells màxim de profunditat:
 
 ```bash
-xmllint --format basic.xml | head -40
+xmlstarlet el -d basic.xml | awk -F'/' '{print NF-1}' | sort -rn | head -n 1
 ```
 
 Compta el número de videojocs:
@@ -59,7 +59,7 @@ xmllint --xpath 'count(//videojoc)' basic.xml
 Verifica els camps dels videojocs llistant tots els elements fills del primer videojoc:
 
 ```bash
-xmllint --xpath '//videojoc[1]/*' basic.xml 2>/dev/null | xmllint --format -
+xmllint --xpath '//videojoc[1]/*' basic.xml
 ```
 
 Verifica que els camps específics dels videojocs existeixen:
@@ -79,7 +79,7 @@ Compta el número de videojocs amb DLCs:
 xmllint --xpath 'count(//videojoc[dlcs])' basic.xml
 ```
 
-Llista tots els valors de l'atribut `id` als videojocs per a verificar-los:
+Llista tots els valors de l'atribut `id` als videojocs per a verificar-los, i aprofita per comprovar que els identificadors són únics:
 
 ```bash
 xmllint --xpath '//videojoc/@id' basic.xml
@@ -89,12 +89,6 @@ Verifica l'atribut `moneda` als preus dels videjocs:
 
 ```bash
 xmllint --xpath '//preu/@moneda' basic.xml
-```
-
-Comprova que els identificadors dels videojocs són únics:
-
-```bash
-xmllint --xpath '//videojoc/@id' basic.xml 2>/dev/null | tr ' ' '\n' | sort | uniq -d
 ```
 
 Verifica que has usat comentaris al document XML:
@@ -149,14 +143,14 @@ grep 'xml:base=' cataleg.xml
 Verifica les metadades del catàleg cercant la secció `info` per poder revisar que conté els camps requerits:
 
 ```bash
-xmllint --xpath '//*[local-name()="info"]' cataleg.xml 2>/dev/null | xmllint --format -
+xmllint --xpath '//*[local-name()="info"]' cataleg.xml
 ```
 
 Valida el document XML, d'una banda assegurant que el `DOCTYPE` està present i, d'altra, amb el DTD:
 
 ```bash
 # Verificar que el DOCTYPE està present
-head -5 cataleg.xml | grep DOCTYPE
+head -5 cataleg.xml | grep -i DOCTYPE
 
 # Validar amb DTD
 xmllint --valid --noout cataleg.xml
@@ -219,7 +213,7 @@ grep -c ':hover' cataleg.css
 grep -E '[0-9]+(em|rem|%)' cataleg.css | head -5
 ```
 
-Per a comprovar el resultat d'aplicar el full d'estils al fitxer XML, visualització manualment el document XML al navegador que tenguis instal·lat, e.g., Firefox, Vivaldi o Brave.
+Per a comprovar el resultat d'aplicar el full d'estils al fitxer XML, visualitza manualment el document XML al navegador que tenguis instal·lat, e.g., Firefox, Vivaldi o Brave.
 
 ## Bloc 4
 
@@ -260,7 +254,7 @@ grep -c 'xsl:if' cataleg.xsl
 grep -c 'xsl:choose' cataleg.xsl
 grep -c 'xsl:when' cataleg.xsl
 
-# variables
+# variable
 grep -c 'xsl:variable' cataleg.xsl
 
 # Attribute Value Templates (cercam '{}')
@@ -277,15 +271,15 @@ Verifica el contingut del fitxer HTML:
 
 ```bash
 # Verificar DOCTYPE
-head -3 cataleg.html | grep -i doctype
+head -3 cataleg.html | grep -i DOCTYPE
 
-# Verificar lang="ca"
+# Verificar idioma
 grep -o 'lang="[^"]*"' cataleg.html | head -1
 
 # Verificar que només mostra català (no hauria de tenir xml:lang="en" visible)
 grep -c 'xml:lang="en"' cataleg.html
 
-# Verificar estadístiques (buscar count, total, mitjana)
+# Verificar estadístiques (cercar count, total, mitjana)
 grep -iE '(total|mitjana|count)' cataleg.html
 
 # Verificar l'existència de CSS incrustat
