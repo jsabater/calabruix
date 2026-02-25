@@ -46,7 +46,7 @@ Requisits del document XML:
 
 1. **Declaració XML** amb versió 1.0 i codificació UTF-8.
 
-2. **Estructura jeràrquica** amb almenys 3 nivells de profunditat.
+2. **Estructura jeràrquica** amb almanco 3 nivells de profunditat.
 
 3. **Entre 15 i 20 videojocs** amb la següent informació per a cadascun:
    * Títol.
@@ -86,7 +86,7 @@ Requisits del document XML amb espais de noms:
    | `cat:` | `http://exemple.com/cataleg`  | Estructura del catàleg: element arrel, metadades, recursos                |
    | `joc:` | `http://exemple.com/videojoc` | Dades dels videojocs: títol, gèneres, plataformes, preus, requisits, DLCs |
 
-2. **Col·lisió de noms resolta:** Els namespaces han de resoldre almenys una col·lisió real. Per exemple, `cat:titol` (títol del catàleg) i `joc:titol` (títol del videojoc), o `cat:descripcio` i `joc:descripcio`.
+2. **Col·lisió de noms resolta:** Els namespaces han de resoldre almanco una col·lisió real. Per exemple, `cat:titol` (títol del catàleg) i `joc:titol` (títol del videojoc), o `cat:descripcio` i `joc:descripcio`.
 
 3. **Atribut reservat `xml:lang`:** per indicar l'idioma:
    * A l'element arrel per definir l'idioma principal del document (per exemple, `ca`).
@@ -138,7 +138,7 @@ Requisits del document:
    * Elements de dades en línia quan sigui apropiat.
    * Ocultació d'elements no rellevants per a la visualització (per exemple, identificadors interns).
 
-3. **Layout modern** amb almenys una d'aquestes tècniques:
+3. **Layout modern** amb almanco una d'aquestes tècniques:
    * CSS Grid per a la disposició general o les targetes de videojocs.
    * Flexbox per a l'alineació d'elements.
 
