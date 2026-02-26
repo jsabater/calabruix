@@ -1,7 +1,7 @@
 ---
 title: "Autoavaluació del catàleg de videojocs en XML"
 date: 2026-01-11
-lastmod: 2026-02-22
+lastmod: 2026-02-26
 description: "Guia d'autoavaluació per a la pràctica lliurable de creació d'un catàleg de videojocs estil Steam. Comandes per validar XML, DTD, XSD, CSS i XSLT amb xmllint i xsltproc."
 summary: "Comandes de terminal per autoavaluar la pràctica del catàleg de videojocs."
 categories: ["teaching"]
@@ -38,7 +38,7 @@ Comença verificant que el document `basic.xml` està ben format:
 xmllint --noout basic.xml
 ```
 
-Mostra l'estructura en arbre per a verificar l'estructura jeràrquica del document i aprofita per fer una primera ullada a la profunditat del document:
+Mostra l'estructura en arbre per a verificar la jerarquia d'elements del document i aprofita per fer una primera ullada a la seva profunditat:
 
 ```bash
 xmllint --xpath '//*' basic.xml | head -50
@@ -59,7 +59,7 @@ xmllint --xpath 'count(//videojoc)' basic.xml
 Verifica els camps dels videojocs llistant tots els elements fills del primer videojoc:
 
 ```bash
-xmllint --xpath '//videojoc[1]/*' basic.xml
+xmlstarlet sel -t -c "//videojoc[1]" basic.xml | xmlstarlet fo
 ```
 
 Verifica que els camps específics dels videojocs existeixen:
@@ -101,43 +101,112 @@ grep -c '<!--' basic.xml
 
 Els objectius del bloc 2 són, d'una banda, utilitzar espais de noms per organitzar vocabularis diferents i, d'altra, aplicar esquemes de validació DTD i XSD.
 
-Verifica els espais de noms declarats mostrant les declaracions de namespace a l'element arrel:
+Cal verificar els espais de noms declarats i usats. Comença per imprimir el namespace de l'element arrel:
 
 ```bash
-head -10 cataleg.xml | grep xmlns
+xmllint --xpath 'namespace-uri(/*)' cataleg.xml
 ```
 
-Verifica l'ús de prefixos comptant els elements amb prefix `cat:` i amb prefix `joc:`:
+Continua imprimint tots els espais de noms declarats al document:
 
 ```bash
-# Comptar elements amb prefix cat:
-grep -o '<cat:[a-zA-Z]*' cataleg.xml | wc -l
-
-# Comptar elements amb prefix joc:
-grep -o '<joc:[a-zA-Z]*' cataleg.xml | wc -l
+xmlstarlet sel -t -m "//namespace::*[name()!='xml']" -v "concat('xmlns:', name(), '=', .)" \
+  -n cataleg.xml | sed 's/xmlns:=/xmlns=/' | sed 's/=\(.*\)/="\1"/' | sort -u
 ```
 
-Verifica la resolució de la col·lisió de noms cercant elements amb el mateix nom local però diferent prefix:
+I acaba comptant el número de vegades que has fet ús d'un espai de noms al document:
 
 ```bash
-grep -E '<(cat|joc):titol' cataleg.xml
-grep -E '<(cat|joc):descripcio' cataleg.xml
+xmlstarlet sel -t -v 'count(//*[namespace-uri()!=""])' cataleg.xml && echo
 ```
 
-Verifica l'ús d'`xml:lang` tant a l'arrel com a les descripcions:
+Verifica l'ús de prefixos comptant els elements amb prefix `cat:`:
 
 ```bash
-# xml:lang a l'arrel
+xmlstarlet sel -t -v 'count(//*[starts-with(name(), "cat:")])' cataleg.xml && echo
+```
+
+ I també compta el elements amb prefix `joc:`:
+
+```bash
+xmlstarlet sel -t -v 'count(//*[starts-with(name(), "joc:")])' cataleg.xml && echo
+```
+
+Compta el número de videojocs:
+
+```bash
+xmllint --xpath "count(//*[local-name()='videojoc'])" cataleg.xml
+```
+
+Verifica els camps dels videojocs llistant tots els elements fills del primer videojoc:
+
+```bash
+xmlstarlet sel -t -c "//*[local-name()='videojoc'][1]" basic.xml | xmlstarlet fo
+```
+
+Verifica que els camps específics dels videojocs existeixen:
+
+```bash
+xmllint --xpath "count(//*[local-name()='titol'])" cataleg.xml
+xmllint --xpath "count(//*[local-name()='descripcio'])" cataleg.xml
+xmllint --xpath "count(//*[local-name()='desenvolupador'])" cataleg.xml
+xmllint --xpath "count(//*[local-name()='preu'])" cataleg.xml
+xmllint --xpath "count(//*[local-name()='puntuacio'])" cataleg.xml
+xmllint --xpath "count(//*[local-name()='requisits'])" cataleg.xml
+```
+
+Compta el número de videojocs amb DLCs:
+
+```bash
+xmllint --xpath "count(//*[local-name()='videojoc'][*[local-name()='dlcs']])" cataleg.xml
+```
+
+Llista tots els valors de l'atribut `id` als videojocs per a verificar-los, i aprofita per comprovar que els identificadors són únics:
+
+```bash
+xmllint --xpath "//*[local-name()='videojoc']/@id" cataleg.xml
+```
+
+Verifica l'atribut `moneda` als preus dels videjocs:
+
+```bash
+xmllint --xpath "//*[local-name()='preu']/@moneda" cataleg.xml
+```
+
+Verifica la resolució de la col·lisió de noms cercant elements amb el mateix nom local però diferent prefix. Primer, per als títol:
+
+```bash
+xmlstarlet sel -t -m "//*[local-name()='titol']" -v "name()" -n cataleg.xml | sort -u
+```
+
+I, després, per a les descripcions:
+
+```bash
+xmlstarlet sel -t -m "//*[local-name()='descripcio']" -v "name()" -n cataleg.xml | sort -u
+```
+
+Verifica l'ús d'`xml:lang`, començant primer per l'arrel:
+
+```bash
 grep -o 'xml:lang="[^"]*"' cataleg.xml | head -1
+```
 
-# xml:lang a descripcions
+I seguint amb les descripcions:
+
+```bash
 grep 'xml:lang=' cataleg.xml | grep -E '(cat|joc):descripcio' | head -5
 ```
 
-Verifica l'ús d'`xml:base`:
+Verifica l'ús d'`xml:base` a l'element arrel per a definir la URI base del document:
 
 ```bash
-grep 'xml:base=' cataleg.xml
+xmllint --xpath 'string(/*/@xml:base)' cataleg.xml
+```
+
+Si escau, verifica que se'n faci ús a qualsevol part del document, no només a l'arrel:
+
+```bash
+xmlstarlet sel -t -m "//*[@xml:base]" -v "name()" -o " amb valor " -v "@xml:base" -n cataleg.xml
 ```
 
 Verifica les metadades del catàleg cercant la secció `info` per poder revisar que conté els camps requerits:
@@ -146,13 +215,15 @@ Verifica les metadades del catàleg cercant la secció `info` per poder revisar 
 xmllint --xpath '//*[local-name()="info"]' cataleg.xml
 ```
 
-Valida el document XML, d'una banda assegurant que el `DOCTYPE` està present i, d'altra, amb el DTD:
+Per validar el document XML amb el DTD, abans revisar que el `DOCTYPE` està present i que enllaça al DTD:
 
 ```bash
-# Verificar que el DOCTYPE està present
 head -5 cataleg.xml | grep -i DOCTYPE
+```
 
-# Validar amb DTD
+Ara ja pots fer la validació amb el DTD:
+
+```bash
 xmllint --valid --noout cataleg.xml
 ```
 
@@ -188,28 +259,45 @@ Verifica l'enllaç al fitxer CSS dins el document XML:
 grep 'xml-stylesheet' cataleg.xml
 ```
 
-Verifica el contingut del fitxer CSS:
+Verifica que el contingut del fitxer CSS compleix tots els requeriments de l'enunciat. Començar per l'ús de variables de CSS:
 
 ```bash
-# Verificar ús de variables CSS
 grep -c '\-\-' cataleg.css
+```
 
-# Verificar ús de Grid o Flexbox
+Verifica l'ús de Grid o Flexbox:
+
+```bash
 grep -E 'display:\s*(grid|flex)' cataleg.css
+```
 
-# Verificar selectors d'atribut
+Verifica l'ús de selectors d'atribut:
+
+```bash
 grep -E '\[[a-zA-Z]' cataleg.css
+```
 
-# Verificar pseudoelements
+Verifica l'ús de pseudoelements:
+
+```bash
 grep -E '::(before|after)' cataleg.css
+```
 
-# Verificar ús de attr()
+Verifica ús de la funció `attr()`:
+
+```bash
 grep -c 'attr(' cataleg.css
+```
 
-# Verificar :hover
+Verifica l'ús de la pseudoclasse `:hover`:
+
+```bash
 grep -c ':hover' cataleg.css
+```
 
-# Verificar mides relatives
+Verifica l'ús de mides relatives:
+
+```bash
 grep -E '[0-9]+(em|rem|%)' cataleg.css | head -5
 ```
 
@@ -219,46 +307,84 @@ Per a comprovar el resultat d'aplicar el full d'estils al fitxer XML, visualitza
 
 L'objectiu del bloc 4 és transformar el document XML en un document HTML.
 
-Verifica l'estructura XSLT:
+Verifica l'estructura XSLT, començant per la declaració i els namespaces:
 
 ```bash
-# Verificar declaració i namespaces
-head -10 cataleg.xsl
+xmlstarlet el -v cataleg.xsl | head -1
+```
 
-# Comptar plantilles
+Compta el nombre de vegades que s'han usat plantilles:
+
+```bash
 grep -c 'xsl:template' cataleg.xsl
+```
 
-# Verificar output HTML
+Verifica que s¡ha especificat que la sortida és HTML:
+
+```bash
 grep 'xsl:output' cataleg.xsl
 ```
 
-Verifica els elements XSLT requerits:
+Verifica que els elements XPath requerits són presents al document XSLT. Comença per l'ús de `xsl:for-each` per a iterar sobre el conjunt de nodes:
 
 ```bash
-# for-each
 grep -c 'xsl:for-each' cataleg.xsl
+```
 
-# apply-templates
+Verifica l'ús de `xsl:apply-templates` per a l'aplicació de plantilles als nodes fills:
+
+```bash
 grep -c 'xsl:apply-templates' cataleg.xsl
+```
 
-# value-of
+Verifica l'ús de `xsl:value-of` per a extreure valors del nodes:
+
+```bash
 grep -c 'xsl:value-of' cataleg.xsl
+```
 
-# sort
+Verifica l'ús de `xsl:sort` per a ordenar la llista de nodes:
+
+```bash
 grep -c 'xsl:sort' cataleg.xsl
+```
 
-# if
+Verifica l'ús de condicions simples a través de `xsl:if`:
+
+```bash
 grep -c 'xsl:if' cataleg.xsl
+```
 
-# choose/when
+Verifica l'ús de condicions múltiples a través de `xsl:choose` i `xsl:when`:
+
+```bash
 grep -c 'xsl:choose' cataleg.xsl
 grep -c 'xsl:when' cataleg.xsl
+```
 
-# variable
+Verifica l'ús de variables a través de `xsl:variable`:
+
+```bash
 grep -c 'xsl:variable' cataleg.xsl
+```
 
-# Attribute Value Templates (cercam '{}')
+Verifica l'ús de plantilles de valor d'atribut (AVT):
+
+```bash
 grep -E '\{[@$][^}]+\}' cataleg.xsl | wc -l
+```
+
+Verifica l'ús de valors calculats (adapta-ho al teu fitxer):
+
+```bash
+grep -E 'xsl:variable.*(sum|count)\(' cataleg.xsl
+```
+
+També pots fer-ho amb `xmlstarlet`:
+
+```bash
+xmlstarlet sel -t -m "//xsl:variable[contains(@select, 'sum(') or contains(@select, 'count(')]" \
+  -v "name()" -o " amb nom " -v "@name" -o " usa " -v "@select" -n cataleg.xsl
 ```
 
 Executa la transformació XSLT:
@@ -267,22 +393,27 @@ Executa la transformació XSLT:
 xsltproc -o cataleg.html cataleg.xsl cataleg.xml
 ```
 
-Verifica el contingut del fitxer HTML:
+Verifica el contingut del fitxer HTML. Comença per assegurar-te de que tengui un `DOCTYPE`:
 
 ```bash
-# Verificar DOCTYPE
-head -3 cataleg.html | grep -i DOCTYPE
+grep -i DOCTYPE cataleg.html
+```
 
-# Verificar idioma
+Verifica que has inclòs l'idioma:
+
+```bash
 grep -o 'lang="[^"]*"' cataleg.html | head -1
+```
 
-# Verificar que només mostra català (no hauria de tenir xml:lang="en" visible)
-grep -c 'xml:lang="en"' cataleg.html
+Verifica que has inclòs estadístiques (adapta-ho al teu fitxer):
 
-# Verificar estadístiques (cercar count, total, mitjana)
+```bash
 grep -iE '(total|mitjana|count)' cataleg.html
+```
 
-# Verificar l'existència de CSS incrustat
+Verifica l'existència de CSS incrustat_
+
+```bash
 grep -c '<style>' cataleg.html
 ```
 
