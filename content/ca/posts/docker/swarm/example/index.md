@@ -1,7 +1,7 @@
 ---
 title: "Desplegament d'una aplicació Django amb Swarm"
 date: 2026-02-11
-lastmod: 2026-02-11
+lastmod: 2026-02-28
 description: "Cas pràctic complet: desplegament d'una aplicació Django amb Traefik, PostgreSQL, Redis i Celery"
 summary: "Cas pràctic complet: desplegament d'una aplicació Django amb Traefik, PostgreSQL, Redis i Celery"
 categories: ["teaching"]
@@ -222,7 +222,7 @@ El fitxer `.env` s'ha d'excloure del repositori afegint-lo al `.gitignore`:
 
 ```gitignore
 .env
-.env.production
+.env.prod
 !.env.example
 ```
 
@@ -231,7 +231,7 @@ El fitxer `.env` s'ha d'excloure del repositori afegint-lo al `.gitignore`:
 Traefik actua com a proxy invers i gestor del tràfic d'entrada. La seva configuració, diferent per a desenvolupament i producció, es gestiona amb Docker Configs. Guardarem ambdós fitxers de configuració dins el subdirectori `docker/<servei>/`.
 
 ```yaml
-# docker/traefik/traefik.development.yml
+# docker/traefik/traefik.devel.yml
 api:
   dashboard: true
   insecure: true  # Dashboard sense autenticació
@@ -254,7 +254,7 @@ A la configuració de producció afegirem:
 * Mode Swarm activat.
 
 ```yaml
-# docker/traefik/traefik.production.yml
+# docker/traefik/traefik.prod.yml
 api:
   dashboard: false
 
@@ -376,7 +376,7 @@ services:
       - "8080:8080"  # Dashboard de Traefik
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./docker/traefik/traefik.development.yml:/etc/traefik/traefik.yml:ro
+      - ./docker/traefik/traefik.devel.yml:/etc/traefik/traefik.yml:ro
     networks:
       - public
 
@@ -576,7 +576,7 @@ Usam el fitxer de Traefik de l'entorn de producció.
 # Configs
 configs:
   traefik_config:
-    file: ./docker/traefik/traefik.production.yml
+    file: ./docker/traefik/traefik.prod.yml
 ```
 
 **Secrets**
@@ -1117,7 +1117,7 @@ Tasques:
    * Puja-la al registre d'imatges.
 
 4. **Desplegar l'stack**:
-   * Crea el fitxer `docker/traefik/traefik.production.yml`. No incloguis l'ús de certificats TLS ni de Let's Encrypt si estàs fent l'exercici en un entorn de laboratori sense adreces públiques.
+   * Crea el fitxer `docker/traefik/traefik.prod.yml`. No incloguis l'ús de certificats TLS ni de Let's Encrypt si estàs fent l'exercici en un entorn de laboratori sense adreces públiques.
    * Crea el fitxer `docker-stack.yml` amb tots els serveis.
    * Desplega l'stack amb `docker stack deploy`.
 
