@@ -201,16 +201,7 @@ docker push myuser/myapp:$VERSION
 
 ## Conducte CI/CD
 
-Un conducte de desplegament, o pipeline de CI/CD, és la seqüència de passos que s'executen per dur el codi des del repositori fins a producció.
-
-Assumint que ja hem inicialitzat el clúster i creat els secrets prèviament, quan fem feina sense CI/CD, el flux típic és:
-
-1. Desenvolupar, provar i cometre els canvis al repositori.
-2. Opcionalment, etiquetar la versió.
-3. Construir la imatge de l'aplicació i pujar-la al registre.
-4. Desplegar l'stack i verificar l'estat.
-
-Ara bé, en un entorn professional, és dessitjable automatitzar aquest flux amb eines d'integració continúa i desplegament continuu (CI/CD), com [Woodpecker CI](https://woodpecker-ci.org/), [Forgejo Actions](https://forgejo.org/docs/next/admin/actions/), [GitLab CI/CD](https://docs.gitlab.com/ci/) o [GitHub Actions](https://github.com/features/actions).
+Un conducte de desplegament i integració continuus, o pipeline de CI/CD, és la seqüència de passos que s'executen per dur el codi des del repositori fins a producció. En un entorn professional, és dessitjable automatitzar aquest flux amb eines específiques, com [Woodpecker CI](https://woodpecker-ci.org/), [Forgejo Actions](https://forgejo.org/docs/next/admin/actions/), [GitLab CI/CD](https://docs.gitlab.com/ci/) o [GitHub Actions](https://github.com/features/actions).
 
 En aquest cas, els passos s'executen automàticament en resposta a events del repositori:
 
@@ -252,11 +243,21 @@ Per facilitar la contextualització, la següent taula indica les diferències c
 | Tests             | Opcionals                  | Obligatoris abans de desplegar |
 | Rollback          | Manual                     | Pot ser automàtic              |
 
-La creació d'una pipeline de CI/CD és la millor forma de posar una aplicació en marxa, motiu pel qual ho tractarem en un seguit d'articles separats.
+## Automatització
 
-Mentres tant, per no sortir excessivament de l'àmbit d'aquesta sèrie, anem a assegurar-nos de que el desplegament manual segueix sempre una llista de passos clara i concisa, i mirarem d'automatitzar alguns d'ells.
+La creació d'una pipeline de CI/CD és la millor forma de posar una aplicació en marxa, però no és una tasca menor, motiu pel qual ho tractarem en un seguit d'articles separats. Mentres tant, com a primera passa i per no desviar-nos excessivament de l'àmbit de Docker Swarm, començarem fixant uns objectius bàsics:
 
-## Desplegament
+1. Assegurar-nos de que el desplegament manual segueixi sempre una llista de passos clara i concisa.
+2. Automatitzar alguns passos en el que anomenarem un "conducte local semiautomatitzat".
+
+Assumint que ja hem inicialitzat el clúster i creat els secrets prèviament, quan fem feina sense CI/CD, el flux típic és:
+
+1. Desenvolupar, provar i cometre els canvis al repositori.
+2. Opcionalment, etiquetar la versió.
+3. Construir la imatge de l'aplicació i pujar-la al registre.
+4. Desplegar l'stack i verificar l'estat.
+
+### Desplegament
 
 Una vegada hem acabat de fer un seguit de canvis a la nostra aplicació i volem posar-los en producció, abans de començar el desplegament pròpiament dit, seguirem aquests passos:
 
@@ -301,6 +302,8 @@ A partir d'aquí, el desplegament d'una aplicació en un clúster de Docker Swar
    docker stack services myapp
    ```
 
+### Scripting
+
 Per evitar executar aquests passos manualment cada vegada, podem usar un script que els unifiqui:
 
 ```bash
@@ -344,9 +347,9 @@ Per a usar aquest script primer cal fer-lo executable:
 chmod +x deploy/deploy.sh
 ```
 
-## Seguretat
+## Accés SSH
 
-L'script usa `DOCKER_HOST` per executar comandes Docker remotament. Això requereix:
+Al llarg de l'article i també en alguns scripts hem usat la variable d'entorn `DOCKER_HOST` per executar comandes Docker remotament. Això requereix:
 
 1. Tenir accés SSH configurat amb claus.
 2. Que l'usuari remot tengui permisos per executar Docker.
@@ -366,7 +369,9 @@ Per configurar l'accés a través de SSH, pren els següents tres passos com a r
    ssh root@aaa.bb.cc.10 "docker info"
    ```
 
-Per acabar, un recull de bones pràctiques d'aspecte gener, a mode de resum:
+## Bones pràctiques
+
+Per acabar, un recull de bones pràctiques d'aspecte general, a mode de resum:
 
 1. No cometre mai credencials al repositori.
 2. Usar claus SSH específiques per al CI/CD amb permisos mínims.
