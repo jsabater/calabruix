@@ -914,3 +914,23 @@ force = host.data.get("force_restart", False)
 
 This is useful for CI/CD pipelines or one-off overrides without editing files.
 
+## Host delegation
+
+The Paradigm Shift: Ansible vs. Pyinfra
+In Ansible, the execution model revolves around the Task. The playbook says: "I am a Task. I am going to run against every server in the limit. Oh, wait, this specific task has delegate_to: nginx_host, so I will temporarily SSH over there to do this one thing."
+
+In Pyinfra, the execution model revolves around the Host. Pyinfra takes your deploys/maintenance_on.py script and evaluates it top-to-bottom for every host in your active inventory. It asks: "I am the NGINX host. As I read this Python script, which operations apply to me?"
+
+Because of this, Pyinfra does not have a delegate_to parameter on operations. Instead, you use standard Python if statements to route operations, combined with Pyinfra's superpower: Cross-host Fact Gathering.
+
+The Pyinfra Solution: Cross-Host Facts + Python Routing
+To replicate your Ansible block, we need the NGINX host to execute the directory and file operations, but it needs to ask the Django host if migrations are pending first.
+
+Pyinfra's inventory object allows you to grab another host and execute a Fact against it on the fly.
+
+Because Pyinfra runs scripts against the active inventory, both your Django LXC and your NGINX LXC must be targeted by the command. If you previously used Ansible with --limit blackpearl_prod, Ansible would still successfully delegate_to NGINX. Pyinfra is stricter. If you exclude NGINX from the run, the script won't run on it.
+
+When you run this deploy script, you need to ensure both are in scope:
+pyinfra inventory.py deploys/maintenance_on.py --limit "blackpearl_prod,nginx_prod"
+
+(If you run it without limits against your whole inventory, the if host.name == nginx_hostname: check guarantees it still only touches the correct server).
