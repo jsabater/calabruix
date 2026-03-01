@@ -25,8 +25,8 @@ Cada tema combina explicacions teòriques amb exemples pràctics i exercicis per
 7. [De Docker Compose a Docker Swarm amb Stacks]({{< relref "/posts/docker/swarm/stacks/" >}}): Desplegament d'aplicacions multi-servei amb Docker Stack i fitxers Compose.
 8. [Configuració i secrets]({{< relref "/posts/docker/swarm/configs-secrets/" >}}): Gestió segura de configuració i credencials amb Docker Configs i Docker Secrets.
 9. [Desplegament d'una aplicació Django amb Swarm]({{< relref "/posts/docker/swarm/example/" >}}): Cas pràctic complet: desplegament d'una aplicació Django amb Traefik, PostgreSQL, Redis i Celery.
+10. [Automatització del desplegament]({{< relref "/posts/docker/swarm/automation/" >}}): Scripts de desplegament, gestió automatitzada de configs i secrets, i pipelines de desplegament.
 <!--
-10. [Automatització del desplegament]({{< relref "/posts/docker/swarm/" >}}): Scripts de desplegament, gestió automatitzada de configs i secrets, i pipelines de desplegament.
 11: [Estratègies de desplegament avançades]({{< relref "/posts/docker/swarm/" >}}):
 12: [Monitorització i troubleshooting]({{< relref "/posts/docker/swarm/" >}}):
 13: [Alta disponibilitat i producció]({{< relref "/posts/docker/swarm/" >}}):

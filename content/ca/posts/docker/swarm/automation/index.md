@@ -1,42 +1,41 @@
 ---
 title: "Automatització del desplegament"
-date: 2026-02-11
-lastmod: 2026-02-18
-description: "Scripts de desplegament, gestió automatitzada de secrets, i pipelines de desplegament"
-summary: "Scripts de desplegament, gestió automatitzada de secrets, i pipelines de desplegament"
+date: 2026-02-28
+lastmod: 2026-02-28
+description: "Scripts de desplegament, gestió automatitzada de secrets i pipelines de desplegament"
+summary: "Scripts de desplegament, gestió automatitzada de secrets i pipelines de desplegament"
 categories: ["teaching"]
 tags: ["docker", "swarm", "automation", "ci/cd"]
 series: ["Docker Swarm"]
 series_order: 10
 weight: 100
 slug: automatitzacio
-draft: true
 ---
 
-Fins ara hem executat les comandes de Docker Swarm manualment: crear secrets, configurar serveis, desplegar stacks. En aquest tema automatitzarem el procés per garantir desplegaments consistents, repetibles i lliures d'errors humans.
+Fins ara hem executat les comandes de Docker Swarm manualment: crear secrets, configurar serveis, desplegar stacks. En aquest article automatitzarem el procés per garantir desplegaments consistents, repetibles i lliures d'errors humans.
 
 ## Estructura de projecte
 
-Abans d'automatitzar, convé organitzar el projecte de manera que faciliti el desplegament. Aquesta és l'estructura que hem anat construint al llarg dels temes anteriors:
+Abans d'automatitzar, convé organitzar el projecte de manera que faciliti el desplegament. Aquesta és l'estructura que hem anat construint al llarg dels temes anteriors, a la qual hem afegit el directory `deploy/`:
 
-```
+```text
 myapp/
-├── src/                                   # Codi font de l'aplicació
+├── src/                       # Codi font de l'aplicació
 │   └── ...
 ├── docker/
 │   ├── app/
-│   │   └── Dockerfile                     # Imatge de l'aplicació
+│   │   └── Dockerfile         # Imatge de l'aplicació
 │   └── traefik/
-│       ├── traefik.development.yml        # Configuració per a desenvolupament
-│       └── traefik.production.yml         # Configuració per a producció
+│       ├── traefik.devel.yml  # Configuració per a desenvolupament
+│       └── traefik.prod.yml   # Configuració per a producció
 ├── deploy/
-│   ├── deploy.sh                          # Script principal de desplegament
-│   └── manage-secrets.sh                  # Script per gestionar secrets
-├── docker-compose.yml                     # Desenvolupament local
-├── docker-stack.yml                       # Producció amb Swarm
-├── .env.example                           # Plantilla de variables d'entorn
-├── .env                                   # Variables locals (NO cometre)
-├── .env.production                        # Variables de producció (NO cometre)
+│   ├── deploy.sh              # Script principal de desplegament
+│   └── create-secrets.sh      # Script per crear els secrets
+├── docker-compose.yml         # Desenvolupament local
+├── docker-stack.yml           # Stack de producció
+├── .env.example               # Plantilla de variables d'entorn
+├── .env                       # Variables locals
+├── .env.prod                  # Variables de producció
 └── .gitignore
 ```
 
@@ -45,7 +44,7 @@ El fitxer `.gitignore` ha d'excloure tots els fitxers amb credencials:
 ```gitignore
 # Variables d'entorn amb valors reals
 .env
-.env.production
+.env.prod
 .env.staging
 
 # Mantenim només l'exemple
@@ -56,200 +55,141 @@ El fitxer `.gitignore` ha d'excloure tots els fitxers amb credencials:
 *.key
 ```
 
-## Gestió automatitzada de secrets
+## Gestió de secrets
 
-Al tema anterior vam veure com crear secrets manualment. Quan tenim diverses variables sensibles, això és propens a errors. L'script següent automatitza el procés llegint un fitxer `.env.production`.
+En articles anteriors vàrem veure com crear secrets manualment. Puntualment, pot ser sigui necessària una gestió manual però, en termes generals, ens convé automatitzar aquesta tasca per evitar errades humanes.
 
-### Fitxer `.env.production`
+La millor manera de gestionar aquests automatismes és a través d'eines com [Ansible](https://docs.ansible.com/) o [Pyinfra](https://pyinfra.com/):
 
-Aquest fitxer conté els valors reals per a producció. Mai s'ha de cometre al repositori:
+```yaml
+# Exemple de tasca d'un playbook d'Ansible que crea un secret
+- name: Crear secret a Docker Swarm
+  community.docker.docker_secret:
+    name: postgres_password
+    data: "{{ postgres_password }}"  # Variable de la bòveda
+    state: present
+```
+
+Però, per simplificar, en aquest article usarem un script de BASH que faci ús dels valors del fitxer `.env.prod`. Aquest fitxer conté els valors reals per a producció i, per tant, mai s'ha de cometre al repositori:
 
 ```bash
-# Secrets (credencials i dades sensibles)
+# Credencials i dades sensibles
 SECRET_KEY=una-clau-molt-segura-generada-aleatoriament
 POSTGRES_USER=myapp
 POSTGRES_PASSWORD=una-contrasenya-molt-segura
+...
 ```
 
-### Script `manage-secrets.sh`
+> Els noms d'usuari són també secrets i com a tal cal considerar-los.
+
+En aquest context, el flux de feina que seguiríem seria el següent:
+
+1. Inicialitzar el clúster al `node1`.
+2. Unir la resta de nodes al clúster (`node2` i `node3`).
+3. Configurar la variable `DOCKER_HOST`.
+4. Executar l'script `deploy/create-secrets.sh`.
 
 ```bash
 #!/bin/bash
 #
-# Gestiona secrets de Docker Swarm a partir d'un fitxer .env
+# deploy/create-secrets.sh
 #
-# Ús:
-#   ./manage-secrets.sh [create|remove] [fitxer_env] [nom_stack]
+# Crea els secrets inicials de Docker Swarm a partir d'un fitxer
+# Ús: deploy/create-secrets.sh [fitxer_env]
 #
-# Exemples:
-#   ./manage-secrets.sh create .env.production myapp
-#   ./manage-secrets.sh remove .env.production myapp
-#
-
 set -euo pipefail
 
-# === CONFIGURACIÓ ===
-# Definim quines variables són secrets
-SECRETS=(
-    "SECRET_KEY"
-    "POSTGRES_USER"
-    "POSTGRES_PASSWORD"
-)
+ENV_FILE="${1:-.env.prod}"
 
-# === FUNCIONS ===
-
-show_usage() {
-    echo "Ús: $0 [create|remove] [fitxer_env] [nom_stack]"
-    echo ""
-    echo "Comandes:"
-    echo "  create    Crea secrets al clúster"
-    echo "  remove    Elimina secrets del clúster"
-    echo ""
-    echo "Exemples:"
-    echo "  $0 create .env.production myapp"
-    echo "  $0 remove .env.production myapp"
+if [[ ! -f "$ENV_FILE" ]]; then
+    echo "Error: No s'ha trobat $ENV_FILE"
     exit 1
-}
+fi
 
-create_secrets() {
-    local env_file="$1"
-    local stack_name="$2"
+# Carrega les variables
+set -a
+source "$ENV_FILE"
+set +a
 
-    # Comprova que el fitxer existeix
-    if [[ ! -f "$env_file" ]]; then
-        echo "Error: No s'ha trobat el fitxer $env_file"
-        exit 1
+# Llista de secrets a crear
+SECRETS=("SECRET_KEY" "POSTGRES_USER" "POSTGRES_PASSWORD")
+
+for name in "${SECRETS[@]}"; do
+    value="${!name:-}"
+    secret_name="${name,,}"  # Converteix a minúscules
+    
+    if [[ -z "$value" ]]; then
+        echo "Avís: $name buit, s'omet"
+    elif docker secret inspect "$secret_name" &>/dev/null; then
+        echo "Existeix: $secret_name"
+    else
+        echo "$value" | docker secret create "$secret_name" -
+        echo "Creat: $secret_name"
     fi
-
-    # Carrega les variables del fitxer
-    set -a
-    source "$env_file"
-    set +a
-
-    echo "=== Creant secrets ==="
-    local created=0
-    local skipped=0
-
-    for name in "${SECRETS[@]}"; do
-        value="${!name:-}"
-        if [[ -z "$value" ]]; then
-            echo "  Avís: $name no té valor, s'omet"
-            ((skipped++))
-            continue
-        fi
-
-        # Nom del secret en minúscules
-        secret_name="${name,,}"
-
-        # Comprova si ja existeix
-        if docker secret inspect "$secret_name" &>/dev/null; then
-            echo "  Ja existeix: $secret_name (s'omet)"
-            ((skipped++))
-        else
-            echo "  Creant: $secret_name"
-            echo "$value" | docker secret create "$secret_name" -
-            ((created++))
-        fi
-    done
-
-    echo ""
-    echo "=== Resum ==="
-    echo "Secrets creats: $created"
-    echo "Secrets omesos: $skipped"
-}
-
-remove_secrets() {
-    local env_file="$1"
-    local stack_name="$2"
-
-    echo "=== Eliminant secrets ==="
-    local removed=0
-    local errors=0
-
-    for name in "${SECRETS[@]}"; do
-        secret_name="${name,,}"
-        if docker secret inspect "$secret_name" &>/dev/null; then
-            echo "  Eliminant: $secret_name"
-            if docker secret rm "$secret_name" 2>/dev/null; then
-                ((removed++))
-            else
-                echo "    Error: No s'ha pogut eliminar (pot estar en ús)"
-                ((errors++))
-            fi
-        fi
-    done
-
-    echo ""
-    echo "=== Resum ==="
-    echo "Secrets eliminats: $removed"
-    if [[ $errors -gt 0 ]]; then
-        echo "Errors: $errors (executa 'docker stack rm $stack_name' primer)"
-    fi
-}
-
-# === MAIN ===
-
-ACTION="${1:-}"
-ENV_FILE="${2:-.env.production}"
-STACK_NAME="${3:-myapp}"
-
-case "$ACTION" in
-    create)
-        create_secrets "$ENV_FILE" "$STACK_NAME"
-        ;;
-    remove)
-        remove_secrets "$ENV_FILE" "$STACK_NAME"
-        ;;
-    *)
-        show_usage
-        ;;
-esac
+done
 ```
 
-### Ús de l'script
+Abans de fer ús de l'script, revisa els següents punts:
+
+1. L'script té permisos d'execució:
+   ```bash
+   chmod +x deploy/create-secrets.sh
+   ```
+
+2. El fitxer `.env.prod`, generat a partir del fitxer `.env.example`, conté totes les variables necessàries i aquestes tenen els valors desitjats (recuperats d'una bòveda).
+   ```bash
+   cp .env.example .env.prod
+   vi .env.prod
+   ```
+
+3. La variable `SECRETS` dins l'script conté la llista correcta de secrets a crear.
+   ```bash
+   grep ^SECRETS deploy/create-secrets.sh
+   ```
+
+4. Has configurat la variable `DOCKER_HOST` amb la connexió al node gestor:
+   ```bash
+   export DOCKER_HOST=ssh://root@aaa.bb.cc.10
+   ```
+
+Ara ja pots executar l'script:
 
 ```bash
-# Fer l'script executable
-chmod +x deploy/manage-secrets.sh
-
-# Preparar el fitxer de producció
-cp .env.example .env.production
-nano .env.production  # Editar amb els valors reals
-
-# Crear secrets
-./deploy/manage-secrets.sh create .env.production myapp
-
-# Verificar
-docker secret ls
-
-# Eliminar (quan calgui, després de docker stack rm)
-./deploy/manage-secrets.sh remove .env.production myapp
+cd ~/Projects/myapp
+deploy/create-secrets.sh .env.prod
 ```
 
-L'script no sobreescriu secrets existents. Si necessites actualitzar un secret, primer has d'eliminar l'stack i el secret antic, com vam veure al tema anterior.
+Una vegada finalitzada la seva execució, verifica el resultat:
+
+```bash
+docker secret ls
+```
+
+L'script no sobreescriu secrets existents. Recorda que, si necessites actualitzar un secret, cal rotar-lo, com vam veure al tema anterior.
 
 ## Versionat d'imatges
 
-Un aspecte crític del desplegament és identificar quina versió de l'aplicació s'està executant.
+Un aspecte crític del desplegament és identificar quina versió de l'aplicació s'està executant. Per a assolir aquest objecti podem usar diverses estratègies que fan ús d'etiquetes.
 
-### Estratègies d'etiquetes
-
-| Estratègia | Exemple | Avantatges | Inconvenients |
-|:-----------|:--------|:-----------|:--------------|
-| `latest` | `myapp:latest` | Simple | No saps quina versió s'executa |
-| Versió semàntica | `myapp:1.2.3` | Clara, immutable | Cal mantenir versions manualment |
-| Hash de commit | `myapp:a1b2c3d` | Traçabilitat exacta | Poc llegible |
-| Data | `myapp:20260211` | Ordenació temporal | Pot haver-hi múltiples deploys/dia |
-| Combinada | `myapp:1.2.3-a1b2c3d` | Llegible i traçable | Més llarga |
+| Estratègia       | Exemple               | Avantatges          | Inconvenients                      |
+|:-----------------|:----------------------|:--------------------|:-----------------------------------|
+| `latest`         | `myapp:latest`        | Simple              | No sabem quina versió s'executa    |
+| Versió semàntica | `myapp:1.2.3`         | Clara, immutable    | Cal mantenir versions manualment   |
+| Hash de commit   | `myapp:a1b2c3d`       | Traçabilitat exacta | Poc llegible                       |
+| Data             | `myapp:20260211`      | Ordenació temporal  | Pot haver-hi múltiples deploys/dia |
+| Combinada        | `myapp:1.2.3-a1b2c3d` | Llegible i traçable | Més llarga                         |
 
 La recomanació és usar versió semàntica per a releases formals i hash de commit per a desplegaments continus durant el desenvolupament.
 
-### Generar l'etiqueta automàticament
+> Usar `latest` és còmode per a desenvolupament local. Per a qualsevol entorn de producció, usar una etiqueta immutable (hash o versió semàntica) és essencial per a la traçabilitat i la capacitat de fer rollback.
+
+Per aplicar aquesta recomanació, dins el context d'un conducte de CI/CD amb desplegaments automàtics de noves versions, podríem automatitzar el versionat de la següent forma:
 
 ```bash
-# Obtenir el tag de versió si existeix, sinó el hash curt del commit
+# Obtenir el tag de versió, si existeix, o el hash curt del commit
 get_version() {
-    git describe --tags --exact-match 2>/dev/null || git rev-parse --short HEAD
+    git describe --tags --exact-match 2>/dev/null || \
+    git rev-parse --short HEAD
 }
 
 VERSION=$(get_version)
@@ -259,390 +199,246 @@ docker build -t myuser/myapp:$VERSION -f docker/app/Dockerfile .
 docker push myuser/myapp:$VERSION
 ```
 
-## Pipeline de desplegament
+## Conducte CI/CD
 
-Un pipeline de desplegament és la seqüència de passos que s'executen per portar el codi des del repositori fins a producció.
+Un conducte de desplegament, o pipeline de CI/CD, és la seqüència de passos que s'executen per dur el codi des del repositori fins a producció.
 
-### Flux de treball local
+Assumint que ja hem inicialitzat el clúster i creat els secrets prèviament, quan fem feina sense CI/CD, el flux típic és:
 
-Quan treballem amb un clúster local o remot sense CI/CD, el flux típic és:
+1. Desenvolupar, provar i cometre els canvis al repositori.
+2. Opcionalment, etiquetar la versió.
+3. Construir la imatge de l'aplicació i pujar-la al registre.
+4. Desplegar l'stack i verificar l'estat.
 
-```mermaid
-flowchart TB
-    subgraph local["Màquina de desenvolupament"]
-        A[1. Desenvolupar i provar] --> B[2. Cometre canvis]
-        B --> C[3. Construir imatge]
-        C --> D[4. Pujar al registre]
-    end
-    
-    subgraph cluster["Clúster Swarm"]
-        E[5. Crear/actualitzar secrets]
-        F[6. Desplegar stack]
-        G[7. Verificar]
-    end
-    
-    D --> E
-    E --> F
-    F --> G
-```
+Ara bé, en un entorn professional, és dessitjable automatitzar aquest flux amb eines d'integració continúa i desplegament continuu (CI/CD), com [Woodpecker CI](https://woodpecker-ci.org/), [Forgejo Actions](https://forgejo.org/docs/next/admin/actions/), [GitLab CI/CD](https://docs.gitlab.com/ci/) o [GitHub Actions](https://github.com/features/actions).
 
-Els passos en detall:
+En aquest cas, els passos s'executen automàticament en resposta a events del repositori:
 
-1. **Desenvolupar i provar**: `docker compose up`
-2. **Cometre canvis**: `git add . && git commit && git push`
-3. **Construir imatge**: `docker build -t myuser/myapp:$VERSION .`
-4. **Pujar al registre**: `docker push myuser/myapp:$VERSION`
-5. **Crear secrets** (només el primer cop): `./manage-secrets.sh create`
-6. **Desplegar stack**: `docker stack deploy -c docker-stack.yml myapp`
-7. **Verificar**: `docker stack services myapp`
-
-### Flux de treball amb CI/CD
-
-En un entorn professional, el flux s'automatitza amb eines de CI/CD (GitHub Actions, GitLab CI, Gitea Actions, etc.). Els passos s'executen automàticament en resposta a events del repositori:
-
-```mermaid
+{{< mermaid >}}
+%%{init: {'theme': 'base'}}%%
 flowchart LR
     subgraph repo["Repositori"]
         A[Push/Merge]
     end
-    
+
     subgraph ci["Servidor CI/CD"]
-        B[Clonar repo]
-        C[Executar tests]
-        D[Construir imatge]
-        E[Pujar al registre]
+        direction LR
+        B[Clonar] --> C[Tests] --> D[Anàlisi<br>seguretat]
     end
-    
+
+    subgraph cd["Servidor CI/CD"]
+        direction LR
+        E[Build<br>imatges] --> F[Push a<br>registre]
+    end
+
     subgraph cluster["Clúster Swarm"]
-        F[Desplegar]
-        G[Verificar]
+        direction LR
+        G[Desplegar] --> H[Verificar]
     end
-    
-    A --> B --> C --> D --> E --> F --> G
-```
 
-**Diferències clau:**
+    A ~~~ B
+    D ~~~ E
+    F ~~~ G
+{{< /mermaid >}}
 
-| Aspecte | Flux local | Flux CI/CD |
-|:--------|:-----------|:-----------|
-| Execució | Manual | Automàtica per push/merge |
-| Entorn | Màquina del desenvolupador | Servidor dedicat |
-| Credencials | Fitxer `.env.production` | Variables secretes del CI/CD |
-| Accés al clúster | SSH directe | Clau SSH del CI/CD |
-| Tests | Opcionals | Obligatoris abans de desplegar |
-| Rollback | Manual | Pot ser automàtic |
+Per facilitar la contextualització, la següent taula indica les diferències claus:
 
-## Script de desplegament
+| Aspecte           | Flux local                 | Flux CI/CD                     |
+|:------------------|:---------------------------|:-------------------------------|
+| Execució          | Manual                     | Automàtica per `push`/`merge`  |
+| Entorn            | Màquina del desenvolupador | Servidor dedicat               |
+| Credencials       | Fitxer `.env.prod`         | Bòveda del CI/CD               |
+| Accés al clúster  | SSH directe                | Clau SSH del CI/CD             |
+| Tests             | Opcionals                  | Obligatoris abans de desplegar |
+| Rollback          | Manual                     | Pot ser automàtic              |
 
-Aquest script unifica tots els passos del flux local en una sola comanda:
+La creació d'una pipeline de CI/CD és la millor forma de posar una aplicació en marxa, motiu pel qual ho tractarem en un seguit d'articles separats.
+
+Mentres tant, per no sortir excessivament de l'àmbit d'aquesta sèrie, anem a assegurar-nos de que el desplegament manual segueix sempre una llista de passos clara i concisa, i mirarem d'automatitzar alguns d'ells.
+
+## Desplegament
+
+Una vegada hem acabat de fer un seguit de canvis a la nostra aplicació i volem posar-los en producció, abans de començar el desplegament pròpiament dit, seguirem aquests passos:
+
+1. Comprovar l'estat del repositori.
+   ```bash
+   git status
+   ```
+2. Si hi ha canvis sense cometre, farem commit.
+   ```bash
+   git add <ruta>
+   git commit -m "Missatge de commit"
+   ```
+3. Si escau, etiquetarem la versió de l'aplicació.
+   ```bash
+   git tag 1.1.0
+   git push --tags
+   ```
+
+A partir d'aquí, el desplegament d'una aplicació en un clúster de Docker Swarm segueix sempre la mateixa seqüència de passos:
+
+1. Obtenir la versió (*tag* de Git o *hash* del commit).
+   ```bash
+   # Si hi ha un tag al commit actual, l'usa; sinó, usa el hash
+   VERSION=$(git describe --tags --exact-match 2>/dev/null || git rev-parse --short HEAD)
+   echo $VERSION
+   ```
+2. Construir la imatge.
+   ```bash
+   docker build -t myuser/myapp:$VERSION -f docker/app/Dockerfile .
+   ```
+3. Pujar la imatge al registre.
+   ```bash
+   docker push myuser/myapp:$VERSION
+   ```
+4. Desplegar l'stack al clúster.
+   ```bash
+   export DOCKER_HOST=ssh://root@aaa.bb.cc.10
+   VERSION=$VERSION docker stack deploy -c docker-stack.yml myapp
+   ```
+5. Verificar que els serveis estan correctes.
+   ```bash
+   docker stack services myapp
+   ```
+
+Per evitar executar aquests passos manualment cada vegada, podem usar un script que els unifiqui:
 
 ```bash
 #!/bin/bash
 #
+# deploy/deploy.sh
+#
 # Script de desplegament per a Docker Swarm
 #
-# Ús:
-#   ./deploy.sh [versió]
-#
-# Exemples:
-#   ./deploy.sh              # Usa el hash del commit actual
-#   ./deploy.sh 1.2.3        # Usa la versió especificada
-#
-
 set -euo pipefail
 
-# === CONFIGURACIÓ ===
-REGISTRY="myuser"                    # Usuari de Docker Hub (o URL del registre)
-IMAGE_NAME="myapp"
-STACK_NAME="myapp"
-STACK_FILE="docker-stack.yml"
-DOCKERFILE="docker/app/Dockerfile"
-ENV_FILE=".env.production"
-MANAGER_HOST="root@185.12.64.10"     # Usuari i IP del node manager
+MANAGER_HOST="root@aaa.bb.cc.10"
 
-# === FUNCIONS ===
-
-log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
-}
-
-error() {
-    log "ERROR: $*" >&2
+# Comprova que no hi ha canvis pendents
+if [[ -n $(git status --porcelain) ]]; then
+    echo "Error: Hi ha canvis sense cometre"
     exit 1
-}
+fi
 
-get_version() {
-    if [[ -n "${1:-}" ]]; then
-        echo "$1"
-    else
-        git describe --tags --exact-match 2>/dev/null || git rev-parse --short HEAD
-    fi
-}
+# Obté la versió
+VERSION=$( \
+  git describe --tags --exact-match 2>/dev/null || \
+  git rev-parse --short HEAD)
+echo "Desplegant versió: $VERSION"
 
-check_prerequisites() {
-    log "Comprovant prerequisits..."
-    
-    # Comprovar que estem en un repo git
-    git rev-parse --git-dir > /dev/null 2>&1 || error "No és un repositori git"
-    
-    # Comprovar que no hi ha canvis sense cometre
-    if [[ -n $(git status --porcelain) ]]; then
-        error "Hi ha canvis sense cometre. Fes commit primer."
-    fi
-    
-    # Comprovar que existeix el fitxer stack
-    [[ -f "$STACK_FILE" ]] || error "No s'ha trobat $STACK_FILE"
-    
-    # Comprovar que existeix el Dockerfile
-    [[ -f "$DOCKERFILE" ]] || error "No s'ha trobat $DOCKERFILE"
-    
-    # Comprovar connexió SSH al manager
-    ssh -o ConnectTimeout=5 "$MANAGER_HOST" "docker info" > /dev/null 2>&1 \
-        || error "No es pot connectar a $MANAGER_HOST"
-    
-    log "Prerequisits correctes"
-}
+# Construeix i puja la imatge
+docker build -t myuser/myapp:$VERSION -f docker/app/Dockerfile .
+docker push myuser/myapp:$VERSION
 
-build_and_push() {
-    local version="$1"
-    local full_image="$REGISTRY/$IMAGE_NAME:$version"
-    
-    log "Construint imatge: $full_image"
-    docker build -t "$full_image" -f "$DOCKERFILE" .
-    
-    log "Pujant imatge al registre..."
-    docker push "$full_image"
-    
-    log "Imatge pujada correctament"
-}
+# Desplega al clúster
+export DOCKER_HOST=ssh://$MANAGER_HOST
+VERSION=$VERSION docker stack deploy -c docker-stack.yml myapp
 
-deploy_to_swarm() {
-    local version="$1"
-    
-    log "Desplegant al clúster..."
-    
-    # Usar DOCKER_HOST per executar comandes remotament
-    export DOCKER_HOST="ssh://$MANAGER_HOST"
-    
-    log "Desplegant stack amb versió $version..."
-    VERSION="$version" docker stack deploy -c "$STACK_FILE" "$STACK_NAME"
-    
-    log "Esperant que els serveis estiguin llestos..."
-    sleep 10
-    
-    # Restaurar DOCKER_HOST
-    unset DOCKER_HOST
-}
-
-verify_deployment() {
-    log "Verificant desplegament..."
-    
-    export DOCKER_HOST="ssh://$MANAGER_HOST"
-    
-    # Mostrar estat dels serveis
-    echo ""
-    docker stack services "$STACK_NAME"
-    echo ""
-    
-    # Comprovar que tots els serveis tenen les rèpliques desitjades
-    local all_ok=true
-    while IFS= read -r line; do
-        local name replicas actual desired
-        name=$(echo "$line" | awk '{print $1}')
-        replicas=$(echo "$line" | awk '{print $2}')
-        actual=$(echo "$replicas" | cut -d'/' -f1)
-        desired=$(echo "$replicas" | cut -d'/' -f2)
-        
-        if [[ "$actual" != "$desired" ]]; then
-            log "AVÍS: $name té $actual/$desired rèpliques"
-            all_ok=false
-        fi
-    done < <(docker stack services "$STACK_NAME" --format "{{.Name}} {{.Replicas}}")
-    
-    unset DOCKER_HOST
-    
-    if [[ "$all_ok" == "true" ]]; then
-        log "Tots els serveis estan correctes"
-    else
-        log "Alguns serveis encara s'estan iniciant. Revisa amb:"
-        log "  DOCKER_HOST=ssh://$MANAGER_HOST docker stack ps $STACK_NAME"
-    fi
-}
-
-# === MAIN ===
-
-main() {
-    local version
-    version=$(get_version "${1:-}")
-    
-    log "=========================================="
-    log "Desplegament de $IMAGE_NAME:$version"
-    log "=========================================="
-    
-    check_prerequisites
-    build_and_push "$version"
-    deploy_to_swarm "$version"
-    verify_deployment
-    
-    log "=========================================="
-    log "Desplegament completat: $IMAGE_NAME:$version"
-    log "=========================================="
-}
-
-main "$@"
+# Verifica
+watch docker stack ps myapp
 ```
 
-### Ús de l'script
+Per a usar aquest script primer cal fer-lo executable:
 
 ```bash
-# Fer l'script executable
 chmod +x deploy/deploy.sh
-
-# Desplegament amb versió automàtica (hash del commit)
-./deploy/deploy.sh
-
-# Desplegament amb versió específica
-./deploy/deploy.sh 1.2.3
 ```
 
-Sortida esperada:
+## Seguretat
 
-```
-[2026-02-18 10:30:00] ==========================================
-[2026-02-18 10:30:00] Desplegament de myapp:a1b2c3d
-[2026-02-18 10:30:00] ==========================================
-[2026-02-18 10:30:00] Comprovant prerequisits...
-[2026-02-18 10:30:01] Prerequisits correctes
-[2026-02-18 10:30:01] Construint imatge: myuser/myapp:a1b2c3d
-[2026-02-18 10:30:45] Pujant imatge al registre...
-[2026-02-18 10:31:20] Imatge pujada correctament
-[2026-02-18 10:31:21] Desplegant al clúster...
-[2026-02-18 10:31:25] Desplegant stack amb versió a1b2c3d...
-[2026-02-18 10:31:30] Esperant que els serveis estiguin llestos...
+L'script usa `DOCKER_HOST` per executar comandes Docker remotament. Això requereix:
 
-ID             NAME              MODE         REPLICAS   IMAGE
-abc123         myapp_traefik     replicated   1/1        traefik:v3.6
-def456         myapp_postgres    replicated   1/1        postgres:18-alpine
-ghi789         myapp_redis       replicated   1/1        redis:8.6-alpine
-jkl012         myapp_web         replicated   3/3        myuser/myapp:a1b2c3d
-mno345         myapp_worker      replicated   2/2        myuser/myapp:a1b2c3d
-pqr678         myapp_beat        replicated   1/1        myuser/myapp:a1b2c3d
+1. Tenir accés SSH configurat amb claus.
+2. Que l'usuari remot tengui permisos per executar Docker.
 
-[2026-02-18 10:31:41] Verificant desplegament...
-[2026-02-18 10:31:42] Tots els serveis estan correctes
-[2026-02-18 10:31:42] ==========================================
-[2026-02-18 10:31:42] Desplegament completat: myapp:a1b2c3d
-[2026-02-18 10:31:42] ==========================================
-```
+Per configurar l'accés a través de SSH, pren els següents tres passos com a referència:
 
-## Consideracions de seguretat
+1. Generar clau SSH
+   ```bash
+   ssh-keygen -t ed25519 -C "deploy@myapp"
+   ```
+2. Copiar la clau pública al manager
+   ```bash
+   ssh-copy-id root@aaa.bb.cc.10
+   ```
+3. Verificar l'accés
+   ```bash
+   ssh root@aaa.bb.cc.10 "docker info"
+   ```
 
-### Accés SSH al clúster
+Per acabar, un recull de bones pràctiques d'aspecte gener, a mode de resum:
 
-L'script usa `DOCKER_HOST=ssh://...` per executar comandes Docker remotament. Això requereix:
-
-1. Tenir accés SSH configurat amb claus (sense contrasenya).
-2. Que l'usuari remot tingui permisos per executar Docker.
-
-Per configurar l'accés:
-
-```bash
-# Generar clau SSH si no en tens
-ssh-keygen -t ed25519 -C "deploy@myapp"
-
-# Copiar la clau pública al manager
-ssh-copy-id root@185.12.64.10
-
-# Verificar l'accés
-ssh root@185.12.64.10 "docker info"
-```
-
-### Variables del CI/CD
-
-Els sistemes de CI/CD permeten definir variables secretes que no es mostren als logs:
-
-| Variable | Contingut |
-|:---------|:----------|
-| `DOCKERHUB_USERNAME` | Usuari de Docker Hub |
-| `DOCKERHUB_TOKEN` | Token d'accés de Docker Hub |
-| `SSH_PRIVATE_KEY` | Clau privada per connectar al clúster |
-| `SWARM_MANAGER_HOST` | Adreça del node manager |
-
-Aquestes variables es passen a l'script de desplegament sense exposar-les al codi font ni als logs.
-
-### Bones pràctiques
-
-1. **No cometre mai credencials** al repositori.
-2. **Usar claus SSH específiques** per al CI/CD amb permisos mínims.
-3. **Rotar secrets periòdicament**, especialment després de canvis de personal.
-4. **Revisar els logs** de desplegament per detectar anomalies.
-5. **Mantenir còpies de seguretat** dels secrets en una bòveda segura.
-
-## Resum
-
-| Component | Funció |
-|:----------|:-------|
-| `.env.example` | Plantilla de variables (es comete al repo) |
-| `.env.production` | Valors reals per a producció (NO es comete) |
-| `manage-secrets.sh` | Crea secrets al clúster des del fitxer `.env.production` |
-| `deploy.sh` | Construeix, puja i desplega en una sola comanda |
-| `docker-stack.yml` | Definició de l'stack amb secrets externs |
-
-**Flux de desplegament:**
-
-1. Desenvolupar i provar localment amb `docker compose up`.
-2. Cometre els canvis amb `git commit`.
-3. Executar `./deploy/deploy.sh [versió]`.
-4. L'script construeix, puja i desplega automàticament.
-5. Verificar el resultat.
+1. No cometre mai credencials al repositori.
+2. Usar claus SSH específiques per al CI/CD amb permisos mínims.
+3. Rotar secrets periòdicament, especialment després de canvis de personal.
+4. Revisar els logs de desplegament per detectar anomalies.
+5. Mantenir còpies de seguretat dels secrets en una bòveda segura.
 
 ## Exercici pràctic
 
-L'objectiu d'aquest exercici és crear un pipeline de desplegament automatitzat.
+L'objectiu d'aquest exercici és dur a terme desplegaments des de l'entorn local amb un cert nivell d'automatització, com a pas intermig de cap a un conducte de CI/CD complet i modern.
 
-### Requisits
+Requisits:
 
-* Un clúster Docker Swarm amb almenys 2 nodes.
+* Un clúster Docker Swarm amb almanco 2 nodes.
 * Accés SSH configurat amb claus al node manager.
 * Un compte a Docker Hub (o un registre alternatiu).
 * Git instal·lat a la màquina de desenvolupament.
 
-### Tasques
+Tasques:
 
 1. **Preparar els scripts**:
    * Crea el directori `deploy/` al teu projecte.
-   * Copia l'script `manage-secrets.sh` i ajusta la llista `SECRETS`.
+   * Copia l'script `create-secrets.sh` i ajusta la llista `SECRETS`.
    * Copia l'script `deploy.sh` i ajusta les variables de configuració.
    * Fes els scripts executables amb `chmod +x deploy/*.sh`.
 
 2. **Preparar la configuració**:
-   * Crea el fitxer `.env.production` amb els valors reals.
-   * Verifica que `.env.production` està al `.gitignore`.
+   * Crea el fitxer `.env.prod` a partir de `.env.example`.
+   * Omple'l amb els valors reals, recuperats d'una bòveda.
+   * Verifica que `.env.prod` està inclòs al `.gitignore`.
 
 3. **Primer desplegament**:
-   * Connecta al manager i crea els secrets:
+   * Configura l'accés al clúster
      ```bash
-     scp .env.production root@185.12.64.10:
-     ssh root@185.12.64.10
-     ./manage-secrets.sh create .env.production myapp
+     export DOCKER_HOST=ssh://root@aaa.bb.cc.10
+     ```
+   * Crea els secrets:
+     ```bash
+     deploy/create-secrets.sh .env.prod
+     ```
+   * Verifica que s'han creat:
+     ```bash
+     docker secret ls
      ```
    * Executa l'script de desplegament:
      ```bash
-     ./deploy/deploy.sh
+     deploy/deploy.sh
      ```
    * Verifica que l'aplicació funciona.
 
 4. **Actualització**:
    * Modifica alguna cosa al codi.
    * Fes commit dels canvis.
-   * Executa `./deploy/deploy.sh` de nou.
+   * Executa `deploy/deploy.sh` de nou.
+   * Observa el rolling update (darrera comanda de l'script).
    * Verifica que el canvi s'ha aplicat.
 
-5. **Desplegament amb versió**:
-   * Crea un tag git: `git tag 1.0.0`.
-   * Executa `./deploy/deploy.sh 1.0.0`.
-   * Verifica que la imatge té l'etiqueta correcta al registre.
+5. **Desplegament amb versió etiquetada**:
+   * Crea un tag git:
+     ```bash
+     git tag 1.1.0
+     git push --tags
+     ```
+   * Executa `deploy/deploy.sh`.
+   * Verifica que la imatge té l'etiqueta `1.1.0` al registre.
 
 6. **Neteja** (opcional):
-   * Elimina l'stack: `docker stack rm myapp`.
-   * Elimina els secrets: `./deploy/manage-secrets.sh remove .env.production myapp`.
+   * Elimina l'stack:
+     ```bash
+     docker stack rm myapp
+     ```
+   * Elimina els secrets manualment:
+     ```bash
+     docker secret rm secret_key postgres_user postgres_password
+     ```
