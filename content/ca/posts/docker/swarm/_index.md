@@ -27,8 +27,8 @@ Cada tema combina explicacions teòriques amb exemples pràctics i exercicis per
 9. [Desplegament d'una aplicació Django amb Swarm]({{< relref "/posts/docker/swarm/example/" >}}): Cas pràctic complet: desplegament d'una aplicació Django amb Traefik, PostgreSQL, Redis i Celery.
 10. [Automatització del desplegament]({{< relref "/posts/docker/swarm/automation/" >}}): Scripts de desplegament, gestió automatitzada de configs i secrets, i pipelines de desplegament.
 11. [Estratègies de desplegament avançades]({{< relref "/posts/docker/swarm/deployment-strategies/" >}}): Rolling updates, desplegaments Blue-Green, rollback i gestió de fallades.
+12. [Alta disponibilitat i producció]({{< relref "/posts/docker/swarm/high-availability" >}}): Múltiples managers, xifratge de xarxes, backups i consideracions per a entorns de producció.
 <!--
-12. [Monitorització i troubleshooting]({{< relref "/posts/docker/swarm/" >}}):
-13. [Alta disponibilitat i producció]({{< relref "/posts/docker/swarm/" >}}):
+13. [Monitorització i troubleshooting]({{< relref "/posts/docker/swarm/" >}}):
 14. [Pràctica final]({{< relref "/posts/docker/swarm/" >}}):
 -->
