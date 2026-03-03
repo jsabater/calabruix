@@ -28,7 +28,7 @@ Cada tema combina explicacions teòriques amb exemples pràctics i exercicis per
 10. [Automatització del desplegament]({{< relref "/posts/docker/swarm/automation/" >}}): Scripts de desplegament, gestió automatitzada de configs i secrets, i pipelines de desplegament.
 11. [Estratègies de desplegament avançades]({{< relref "/posts/docker/swarm/deployment-strategies/" >}}): Rolling updates, desplegaments Blue-Green, rollback i gestió de fallades.
 12. [Alta disponibilitat i producció]({{< relref "/posts/docker/swarm/high-availability" >}}): Múltiples managers, xifratge de xarxes, backups i consideracions per a entorns de producció.
+13. [Monitorització i troubleshooting]({{< relref "/posts/docker/swarm/monitoring/" >}}): Diagnòstic, depuració, logs centralitzats i monitorització amb Grafana Stack.
 <!--
-13. [Monitorització i troubleshooting]({{< relref "/posts/docker/swarm/" >}}):
 14. [Pràctica final]({{< relref "/posts/docker/swarm/" >}}):
 -->
