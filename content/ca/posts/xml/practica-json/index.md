@@ -37,11 +37,11 @@ Els lliurables de la pràctica són els següents:
 | `botiga.schema.json` | Esquema de validació JSON Schema                   | 2    |
 | `CONSULTES.md`       | Document amb les consultes jq i els seus resultats | 3    |
 
-## Bloc 1: Document JSON i decisions de disseny
+## Bloc 1: Document JSON
 
 En aquest bloc crearàs el document JSON principal de la botiga d'esports i documentaràs les decisions de disseny que has pres.
 
-### Requisits del document JSON
+### Requisits del document
 
 El document `botiga.json` ha de contenir:
 
@@ -98,7 +98,7 @@ El document `botiga.json` ha de contenir:
    - `object`: producte, ressenya, informació de contacte...
    - `array`: categories, productes, variants, imatges, etiquetes...
 
-### Requisits del document de decisions
+### Decisions de disseny
 
 El document `README.md` ha d'explicar breument (1-2 pàgines en format Markdown) les decisions de disseny que has pres:
 
@@ -174,7 +174,7 @@ jsonschema --instance botiga.json botiga.schema.json
 
 Si la validació és correcta, la comanda no mostrarà cap sortida. Si hi ha errors, mostrarà missatges indicant quin camp falla i per què.
 
-## Bloc 3: Processament amb jq
+## Bloc 3: Processament
 
 En aquest bloc demostraràs que saps usar l'eina `jq` per extreure, filtrar i processar dades del document JSON.
 
