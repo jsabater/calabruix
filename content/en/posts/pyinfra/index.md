@@ -934,3 +934,16 @@ When you run this deploy script, you need to ensure both are in scope:
 pyinfra inventory.py deploys/maintenance_on.py --limit "blackpearl_prod,nginx_prod"
 
 (If you run it without limits against your whole inventory, the if host.name == nginx_hostname: check guarantees it still only touches the correct server).
+
+## Host delegation (take 2)
+
+The Ansible Way: Task-Centric ("Delegate To")
+In Ansible, the Task is the boss.
+You run a playbook against blackpearl1.
+The Task says: "I am a task for blackpearl1. Oh, I have a delegate_to: nginx1 instruction! Okay, I will temporarily SSH into nginx1, create the folder using blackpearl1's code variable, and then come back."
+
+The Pyinfra Way: Host-Centric ("Read the Script")
+In Pyinfra, the Host is the boss.
+You pass the script to Pyinfra. Pyinfra hands a copy of the script to blackpearl1 and a copy to nginx1.
+Pyinfra tells them: "Read this script from top to bottom. If you see an operation, and you are allowed to run it, add it to your to-do list."
+
