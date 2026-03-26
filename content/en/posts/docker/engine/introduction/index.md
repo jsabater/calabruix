@@ -12,9 +12,9 @@ weight: 10
 draft: true
 ---
 
-Before containerization, software deployment was plagued by environmental inconsistencies. Developers would create applications that ran perfectly on their local machines but failed spectacularly in testing, staging, or production environments. This happened because each environment had different operating system versions, libraries, system configurations and installed packages.
+Before containerization, software deployment often suffered from environmental inconsistencies. Developers would create applications that ran well on their local machines but failed in testing, staging, or production environments. This happened because each environment had different operating system versions, libraries, system configurations and installed packages.
 
-The traditional solution involved extensive documentation, complex deployment scripts, and configuration management tools that tried to replicate environments. However, this approach was error-prone and time-consuming. Teams were forced to spend time debugging environment-specific issues rather than focusing on business logic and feature development.
+The traditional solution involved extensive documentation, custom deployment scripts, and configuration management tools that tried to replicate environments. However, this approach was error-prone and time-consuming, so teams were often forced to spend time debugging environment-specific issues rather than focusing on business logic and feature development.
 
 Virtual machines were the previous standard for application isolation, but they came with significant overhead, as each VM required a complete guest operating system. Running multiple applications meant running multiple VMs, leading to resource waste. 
 
