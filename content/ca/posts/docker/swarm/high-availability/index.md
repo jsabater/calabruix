@@ -89,7 +89,7 @@ I per a degradar un node manager a worker usarem la següent:
 docker node demote node3
 ```
 
-{{< alert icon="triangle-exclamation" >}}
+{{< alert >}}
 Si degradam massa managers i perdem el quòrum, el clúster queda inoperatiu.
 {{< /alert >}}
 

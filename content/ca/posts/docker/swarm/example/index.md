@@ -60,7 +60,7 @@ def register(request):
 
 Celery Beat és un procés que s'executa contínuament i, segons un calendari definit, afegeix tasques a la cua. Essencialment, un `cron` per a Celery.
 
-{{< alert icon="triangle-exclamation" >}}
+{{< alert >}}
 Celery Beat ha de tenir **exactament una rèplica**. Múltiples instàncies executarien les tasques periòdiques més d'una vegada.
 {{< /alert >}}
 

@@ -83,7 +83,7 @@ sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 ```
 
-{{< alert icon="triangle-exclamation" >}}
+{{< alert >}}
 Assegura't d'obrir el port 22 (SSH) abans d'activar el firewall. Si no ho fas, perdràs l'accés remot a la màquina.
 {{< /alert >}}
 
@@ -361,7 +361,7 @@ El procés invers és degradar un manager a worker:
 docker node demote node2
 ```
 
-{{< alert icon="triangle-exclamation" >}}
+{{< alert >}}
 **Atenció amb el quòrum!** No degradis managers si això redueix el nombre de managers per sota del mínim necessari per mantenir el quòrum.
 {{< /alert >}}
 
