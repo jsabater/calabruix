@@ -354,29 +354,78 @@ Es proposen tres exercicis pràctics per facilitar l'aprenentatge progressiu.
 
 1. Descarrega la imatge `postgres:18-alpine`.
 2. Consulta la [documentació a Docker Hub](https://hub.docker.com/_/postgres) i la [documentació oficial](https://www.postgresql.org/docs/current/libpq-envars.html) al per identificar les variables d'entorn necessàries.
-3. Executa un contenidor anomenat `pg-test` amb una base de dades `biblioteca`, usuari `biblio` i contrasenya `biblio123`.
+3. Executa un contenidor anomenat `pg-test` amb una base de dades `biblioteca`, usuari `biblio` i contrasenya `dFeWm5y2dZCP9wKKWYAe`.
 4. Connecta't al contenidor amb `docker exec` i obre el client `psql`.
-5. Crea una taula `llibres` amb columnes `id`, `titol` i `autor`, i insereix un conjunt de registres.
-   ```sql
-   CREATE TABLE IF NOT EXISTS llibres
-   (id SERIAL PRIMARY KEY, titol VARCHAR(50), autor);
-
-   INSERT INTO llibres (titol, autor)
-        VALUES (1, 'Red Sparrow', 'Jason Matthews'),
-               (2, 'A Feast for Crows', 'George R. R. Martin'),
-               (3, 'Foundation', 'Isaac Asimov'),
-               (4, '1984', 'George Orwell'),
-               (5, 'The Lord of the Rings', 'J. R. R. Tolkien'),
-               (6, 'Woken Furies', 'Richard Morgan')
-   ON CONFLICT (id) DO NOTHING;
-   ```
+5. Crea una taula `llibre` amb columnes `id`, `titol` i `autor`, i insereix un conjunt de registres.
 6. Consulta les dades per verificar que s'han inserit correctament.
-   ```sql
-   SELECT * FROM llibres ORDER BY id ASC;
-   ```
 7. Consulta els logs del contenidor per veure els missatges d'inicialització.
+8. Atura i neteja el contenidor.
 
-Pista: Usa `psql --help` per a averiguar com connectar-te a la base de dades a través de les variables d'entorn i executar comandes SQL.
+> Pista: Usa `psql --help` per a averiguar com connectar-te a la base de dades a través de les variables d'entorn i executar comandes SQL.
+
+{{< details summary="Respostes" >}}
+
+Creació del contenidor:
+
+```bash
+docker run --name pg-test \
+  --env POSTGRES_PASSWORD='dFeWm5y2dZCP9wKKWYAe' \
+  --env POSTGRES_USER=biblio \
+  --env POSTGRES_DB=biblioteca \
+  --publish 5432:5432 \
+  --detach postgres:18-alpine
+```
+
+Connexió al contenidor:
+
+```bash
+docker exec -it pg-test /bin/bash
+```
+
+Execució del client de terminal `psql` per connectar-nos a la base de dades:
+
+```bash
+psql --user=$POSTGRES_USER --dbname=$POSTGRES_DB
+```
+
+Creació de la taula:
+
+```sql
+CREATE TABLE IF NOT EXISTS llibre
+(id SERIAL PRIMARY KEY, titol VARCHAR(50), autor VARCHAR(50));
+```
+
+Inserció de registres a la taula:
+
+```sql
+INSERT INTO llibre (id, titol, autor)
+     VALUES (1, 'Red Sparrow', 'Jason Matthews'),
+            (2, 'A Feast for Crows', 'George R. R. Martin'),
+            (3, 'Foundation', 'Isaac Asimov'),
+            (4, '1984', 'George Orwell'),
+            (5, 'The Lord of the Rings', 'J. R. R. Tolkien'),
+            (6, 'Woken Furies', 'Richard Morgan')
+ON CONFLICT (id) DO NOTHING;
+```
+
+Consulta de registres existents:
+
+```sql
+SELECT * FROM llibre ORDER BY id ASC;
+```
+
+Consulta dels logs generats pel contenidor:
+
+```bash
+docker logs pg-test
+```
+
+Aturada i neteja del contenidor:
+
+```bash
+docker rm --force pg-test
+```
+{{< /details >}} 
 
 ### Exercici 2
 
@@ -384,12 +433,12 @@ Pista: Usa `psql --help` per a averiguar com connectar-te a la base de dades a t
 
 Per a aquest exercici farem servir uns fitxers SQL ja preparats, que pots descarregar:
 
-- {{< icon "download" >}} [city.sql](/docker/engine/management/city.sql): Crea la taula city amb dades de ciutats i coordenades geogràfiques (requereix PostGIS).
-- {{< icon "download" >}} [student.sql](/docker/engine/management/student.sql): Crea la taula student amb dades d'estudiants.
+- {{< icon "download" >}} [city.sql](/docker/engine/management/city.sql): Crea la taula `city` amb dades de ciutats i coordenades geogràfiques (requereix PostGIS).
+- {{< icon "download" >}} [student.sql](/docker/engine/management/student.sql): Crea la taula `student` amb dades d'estudiants.
 - {{< icon "download" >}} [queries.sql](/docker/engine/management/queries.sql): Consultes SQL per generar activitat al servidor.
 
 1. Descarrega els tres fitxers SQL.
-2. Executa un contenidor PostgreSQL anomenat `pg-monitor` amb les credencials que consideris adequades.
+2. Executa un contenidor PostgreSQL usant la imatge `postgis/postgis:18-3.6-alpine` anomenat `pg-monitor` amb una base de dades `escola`, usuari `escola` i clau `mMG5fZFtXm0N6TgW1F6P`.
 3. Obre una nova terminal i executa `docker logs --follow pg-monitor` per veure els logs en temps real.
 4. Obre una altra terminal i executa `docker stats pg-monitor` per monitoritzar l'ús de recursos.
 5. Usant `docker cp `, copia els fitxers `city.sql` i `student.sql` al contenidor i executa'ls per crear les taules i inserir les dades.
@@ -398,3 +447,44 @@ Per a aquest exercici farem servir uns fitxers SQL ja preparats, que pots descar
 8. Atura el monitoratge amb Ctrl+C i neteja el contenidor.
 
 > Les consultes espacials amb PostGIS generen més càrrega de CPU que les consultes simples, cosa que facilita observar els canvis a `docker stats`.
+
+{{< details summary="Respostes" >}}
+
+Creació del contenidor:
+
+```bash
+docker pull postgis/postgis:18-3.6-alpine
+docker run --name pg-monitor \
+  --env POSTGRES_PASSWORD='mMG5fZFtXm0N6TgW1F6P' \
+  --env POSTGRES_USER=escola \
+  --env POSTGRES_DB=escola \
+  --publish 5432:5432 \
+  --detach postgis/postgis:18-3.6-alpine
+```
+
+Copia els fitxers SQL al contenidor:
+
+```bash
+docker cp city.sql pg-monitor:/city.sql
+docker cp student.sql pg-monitor:/student.sql
+docker cp queries.sql pg-monitor:/queries.sql
+```
+
+Execució de les consultes SQL:
+
+```bash
+docker exec pg-monitor psql --user=escola \
+  --dbname=escola -f /city.sql
+docker exec pg-monitor psql --user=escola \
+  --dbname=escola -f /student.sql
+docker exec pg-monitor psql --user=escola \
+  --dbname=escola -f /queries.sql
+```
+
+Aturada i neteja del contenidor:
+
+```bash
+docker rm --force pg-monitor
+```
+
+{{< /details >}} 
