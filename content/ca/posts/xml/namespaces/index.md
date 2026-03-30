@@ -173,7 +173,7 @@ Per assignar un namespace a un atribut, cal usar explícitament un prefix:
 
 ## Exemple complet
 
-El següent [document XML d'exemple d'empresa](/xml/namespaces/empresa.xml) amb múltiples vocabularis combina informació d'empresa, recursos humans i dades financeres en un sol document:
+El següent {{< icon "download" >}} [document XML d'exemple d'empresa](/xml/namespaces/empresa.xml) amb múltiples vocabularis combina informació d'empresa, recursos humans i dades financeres en un sol document:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>

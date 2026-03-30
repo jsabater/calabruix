@@ -206,7 +206,7 @@ assignatura::before {
 
 ## Exemple complet
 
-Anem a aplicar un full d'estils CSS a [l'exemple de l'institut](/xml/css/institut.xml) que hem usat en aquesta sèrie. El document XML quedaria segons segueix:
+Anem a aplicar un full d'estils CSS a {{< icon "download" >}} [l'exemple de l'institut](/xml/css/institut.xml) que hem usat en aquesta sèrie. El document XML quedaria segons segueix:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -238,7 +238,7 @@ Anem a aplicar un full d'estils CSS a [l'exemple de l'institut](/xml/css/institu
 </institut>
 ```
 
-Acompanyariem el document anterior amb el [corresponent full d'estils CSS](/xml/css/institut.css):
+Acompanyariem el document anterior amb el {{< icon "download" >}} [corresponent full d'estils CSS](/xml/css/institut.css):
 
 ```css
 /* ----- Estils generals ----- */

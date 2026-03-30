@@ -194,7 +194,7 @@ Addicionalment, les entitats també poden ser de de paràmetre (per a DTD). Aque
 
 ### Exemple complet
 
-A continuació es mostra un [exemple de DTD extern per a l'exemple de l'institut](/xml/validacio/institut.dtd), que podríem guardar amb el nom `institut.dtd`:
+A continuació es mostra un {{< icon "download" >}} [exemple de DTD extern per a l'exemple de l'institut](/xml/validacio/institut.dtd), que podríem guardar amb el nom `institut.dtd`:
 
 ```dtd
 <?xml version="1.0" encoding="UTF-8"?>
@@ -239,7 +239,7 @@ I al fitxer `institut.xml` tendríem la següent referència:
 </institut>
 ```
 
-En canvi, si optàssim per una [DTD interna completa per a l'exemple de l'institut](/xml/validacio/institut.xml), llavors obtendríem el següent fitxer `institut.xml`:
+En canvi, si optàssim per una {{< icon "download" >}} [DTD interna completa per a l'exemple de l'institut](/xml/validacio/institut.xml), llavors obtendríem el següent fitxer `institut.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -397,7 +397,7 @@ Exemple de tipus personalitzats amb restriccions:
 </xs:simpleType>
 ```
 
-A continuació es mostra un [exemple d'XSD extern per a l'exemple de l'institut](/xml/validacio/institut.xsd), que podríem guardar amb el nom `institut.xsd`:
+A continuació es mostra un {{< icon "download" >}} [exemple d'XSD extern per a l'exemple de l'institut](/xml/validacio/institut.xsd), que podríem guardar amb el nom `institut.xsd`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
