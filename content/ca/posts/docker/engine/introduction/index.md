@@ -1,6 +1,6 @@
 ---
 title: "Introducció a Docker"
-date: 2025-09-15
+date: 2026-03-24
 lastmod: 2026-03-24
 description: "Context històric, arquitectura de Docker, comparativa amb màquines virtuals i altres tecnologies de contenidors"
 summary: "Context històric, arquitectura de Docker, comparativa amb màquines virtuals i altres tecnologies de contenidors"
