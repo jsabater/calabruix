@@ -218,14 +218,39 @@ No podem eliminar una imatge si hi ha contenidors (en execució o aturats) que l
 
 Quan descarregam una imatge, Docker la descarrega en **capes** (*layers*). Cada capa representa un canvi al sistema de fitxers, com ara instal·lar un paquet o copiar fitxers.
 
+Per exemple, descarreguem la imatge `alpine:3.23`:
 ```bash
-$ docker pull postgres:18
-18: Pulling from library/postgres
-ec781dee3f47: Pull complete 
-ce2467f2f21d: Pull complete 
-d4ced18622af: Pull complete 
+$ docker pull alpine:3.23
+3.23: Pulling from library/alpine
+589002ba0eae: Pull complete
 ...
 ```
+
+Si ara descarreguem la imatge `nginx:1.29-alpine3.23`:
+
+```bash
+$ docker pull nginx:1.29-alpine3.23
+1.29-alpine3.23: Pulling from library/nginx
+589002ba0eae: Already exists 
+8892f80f46a0: Pull complete 
+91d1c9c22f2c: Pull complete 
+...
+```
+
+Podem veure com Docker ha reutilitzat la capa amb identificador `589002ba0eae` de la imatge `alpine:3.23` per la imatge `nginx:1.29-alpine3.23`.
+
+Si ara descarregam la imatge `postgres:18-alpine3.23`:
+
+```bash
+$ docker pull postgres:18-alpine3.23
+18-alpine3.23: Pulling from library/postgres
+589002ba0eae: Already exists 
+a92c4c6bf7bf: Pull complete 
+36af16c7d2ce: Pull complete
+...
+```
+
+Podem veure com Docker ha reutilitzat la capa amb identificador `589002ba0eae` de la imatge `alpine:3.23` per la imatge `postgres:18-alpine3.23`.
 
 Aquest sistema de capes permet:
 
