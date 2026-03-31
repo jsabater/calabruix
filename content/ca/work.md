@@ -1,10 +1,12 @@
 ---
 title: "A què em dedic"
 date: "2026-01-15"
-lastmod: 2026-01-30
+lastmod: 2026-03-31
 description: "Com puc ajudar-te"
 slug: feina
 ---
+
+> TL;DR: Si us interessa utilitzar tecnologies de codi obert tant a la vostra infraestructura com al núvol europeu, això és el que faig.
 
 Em descriuria com a polifacètic[^1]. Fa molts anys, quan encara era adolescent, el mantra de *ser bo en una sola cosa*[^2] no va connectar amb mi; en comptes d'això, vaig adoptar un enfocament més holístic de la vida, la feina i les relacions socials.
 
@@ -20,8 +22,6 @@ Com a gestor, crec fermament en el poder de la transformació a través d’un b
 * Oferir retroalimentació constructiva mitjançant una comunicació clara, honesta i transparent.
 
 Com a enginyer de sistemes, som principalment un perfil de back-end: sistemes, plataformes, devops, fiabilitat del lloc (site reliability), APIs REST, però també tenc un gran interès per les bones pràctiques de desenvolupament de programari i les arquitectures de software. Som un gran defensor de [*](TDD), [*](VSA) i [*](DDD), així com de les metodologies àgils.
-
-> En resum, si us interessa utilitzar tecnologies de codi obert tant a la vostra infraestructura com al núvol, això és el que faig.
 
 Si vols, pots fer una ullada [al meu currículum vitae a Kickresume](https://www.kickresume.com/cv/bLdx3M/).
 

@@ -1,10 +1,12 @@
 ---
 title: "What I do"
 date: "2026-01-15"
-lastmod: 2026-01-15
+lastmod: 2026-03-31
 description: "How I can help you"
 slug: work
 ---
+
+> TL;DR: If you are interested in using open source technologies on premise or on the European cloud, this is what I do.
 
 I would describe myself as a *jack of many trades, master of some*[^1]. Way back, when I was still a teenager, the *being good at one thing* mantra did not resonate with me[^2] so, instead, I took a more holistic approach to life, work, and social relationships.
 
@@ -20,8 +22,6 @@ As a manager, I strongly believe in the power of transformation through good lea
 * Provide constructive feedback using clear, honest and transparent communication.
 
 As a systems engineer, I am, mostly, a back-end guy: systems, platform, devops, site reliability, REST APIs, but I also have great interest in good software development practices and software architectures. I am a huge fan of [*](TDD), [*](VSA) and [*](DDD), and agile methodologies.
-
-> TL;DR, if you are interested in using open source technologies on premise or on the cloud, this is what I do.
 
 If you want, you can have a look at [my curriculum vitae a Kickresume](https://www.kickresume.com/cv/bLdx3M/).
 
