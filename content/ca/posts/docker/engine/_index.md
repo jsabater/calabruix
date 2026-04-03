@@ -21,5 +21,5 @@ Cada tema combina explicacions teòriques amb exemples pràctics i exercicis per
 3. [Gestió de contenidors]({{<relref "/posts/docker/engine/management/" >}}): Execució, inspecció, logs, interacció i còpia de fitxers.
 4. [Volums i persistència]({{<relref "/posts/docker/engine/volumes/" >}}): Tipus de muntatge, gestió de volums, bind mounts.
 5. [Dockerfiles i construcció d'imatges]({{<relref "/posts/docker/engine/dockerfiles/" >}}): Instruccions, `.dockerignore`, capes, cache i multi-stage builds.
-6. [Xarxes Docker]({{<relref "/posts/docker/engine/" >}}): Tipus de xarxes, resolució DNS, comunicació entre contenidors.
+6. [Xarxes Docker]({{<relref "/posts/docker/engine/networks/" >}}): Tipus de xarxes, resolució DNS, comunicació entre contenidors.
 7. [Projectes multi-contenidor]({{<relref "/posts/docker/engine/" >}}): Organització, gestió de recursos i preparació per a Docker Compose.
