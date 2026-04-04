@@ -11,3 +11,7 @@ Aquests articles són els apunts de classe d'una unitat temàtica de l'assignatu
 Aquesta sèrie d'articles cobreix Docker Compose, l'eina que permet definir i executar aplicacions multi-contenidor a partir d'un fitxer YAML. Partint dels coneixements previs de Docker Engine, el contingut explora l'estructura dels fitxers Compose, la gestió de serveis, xarxes i volums, l'ús de variables d'entorn, i els fluxos de treball habituals en entorns de desenvolupament.
 
 Cada tema combina explicacions teòriques amb exemples pràctics i exercicis, preparant l'alumnat per gestionar aplicacions complexes localment abans de fer el salt a l'orquestració amb Docker Swarm.
+
+## Continguts de la sèrie
+
+1. [Fonaments de Docker Compose]({{<relref "/posts/docker/compose/introduction/" >}}): Aprèn els fonaments de Docker Compose, com definir serveis amb el fitxer `compose.yaml`, les comandes essencials per gestionar el cicle de vida dels contenidors i les convencions de noms automàtiques que aplica Compose.
