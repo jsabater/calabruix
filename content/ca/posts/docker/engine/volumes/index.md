@@ -1,10 +1,10 @@
 ---
 title: "Volums i persistència"
-date: 2026-03-30
-lastmod: 2026-03-30
+date: 2026-04-02
+lastmod: 2026-04-02
 description: "Persistència de dades amb volums Docker, bind mounts i gestió del cicle de vida de les dades"
 summary: "Persistència de dades amb volums Docker, bind mounts i gestió del cicle de vida de les dades"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "engine", "containers", "mongodb", "valkey"]
 series: ["Docker Engine"]
 series_order: 4

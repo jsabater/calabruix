@@ -1,10 +1,10 @@
 ---
 title: "Xarxes Docker"
-date: 2026-03-29
-lastmod: 2026-03-29
+date: 2026-04-03
+lastmod: 2026-04-03
 description: "Xarxes Docker: tipus de xarxes, comunicació entre contenidors, DNS intern i aïllament"
 summary: "Xarxes Docker: tipus de xarxes, comunicació entre contenidors, DNS intern i aïllament"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "engine", "networking", "nginx", "python"]
 series: ["Docker Engine"]
 series_order: 6

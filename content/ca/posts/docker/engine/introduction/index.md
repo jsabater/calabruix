@@ -4,7 +4,7 @@ date: 2026-03-24
 lastmod: 2026-03-24
 description: "Context històric, arquitectura de Docker, comparativa amb màquines virtuals i altres tecnologies de contenidors"
 summary: "Context històric, arquitectura de Docker, comparativa amb màquines virtuals i altres tecnologies de contenidors"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "engine", "containers"]
 series: ["Docker Engine"]
 series_order: 1

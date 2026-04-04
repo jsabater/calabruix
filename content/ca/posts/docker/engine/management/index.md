@@ -4,7 +4,7 @@ date: 2026-03-29
 lastmod: 2026-03-29
 description: "Execució, configuració, inspecció, logs, interacció i cicle de vida dels contenidors Docker"
 summary: "Execució, configuració, inspecció, logs, interacció i cicle de vida dels contenidors Docker"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "engine", "containers", "mariadb", "adminer", "postgresql"]
 series: ["Docker Engine"]
 series_order: 3

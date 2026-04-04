@@ -4,7 +4,7 @@ date: 2026-03-31
 lastmod: 2026-03-31
 description: "Creació d'imatges personalitzades amb Dockerfile, instruccions, optimització i multi-stage builds"
 summary: "Creació d'imatges personalitzades amb Dockerfile, instruccions, optimització i multi-stage builds"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "engine", "dockerfile", "containers", "python", "django"]
 series: ["Docker Engine"]
 series_order: 5

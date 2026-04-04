@@ -4,7 +4,7 @@ date: 2026-03-25
 lastmod: 2026-03-25
 description: "Instal·lació de Docker a Debian/Ubuntu, primers comandaments i gestió bàsica d'imatges"
 summary: "Instal·lació de Docker a Debian/Ubuntu, primers comandaments i gestió bàsica d'imatges"
-categories: ["ensenyament"]
+categories: ["teaching"]
 tags: ["docker", "engine", "containers"]
 series: ["Docker Engine"]
 series_order: 2
