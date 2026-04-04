@@ -9,7 +9,6 @@ tags: ["docker", "compose"]
 series: ["Docker Compose"]
 series_order: 10
 weight: 10
-draft: true
 slug: fonaments
 ---
 
