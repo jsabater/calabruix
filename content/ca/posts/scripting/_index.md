@@ -4,7 +4,6 @@ description: "Fonaments de programació i scripting amb Python orientat a l'admi
 summary: "Fonaments de programació i scripting amb Python orientat a l'administració de sistemes"
 categories: ["teaching"]
 tags: ["python", "scripting"]
-draft: true
 ---
 
 Aquests articles són els apunts de classe d'una unitat temàtica de l'assignatura Implantació de Sistemes Operatius del primer curs del CFGS en Administració de Sistemes Informàtics i Xarxes al CIFP [Francesc de Borja Moll](https://cifpfbmoll.eu/) de Palma.
@@ -20,7 +19,7 @@ La sèrie està dividida en dues parts.
 ### Part I: Fonaments de programació
 
 1. [Introducció a Python i algorismes]({{<relref "/posts/scripting/introduction/">}}): Primers passos amb Python: què és un algorisme, instal·lació, l'intèrpret interactiu, primer script i permisos d'execució.
-2. [Variables i tipus de dades]({{<relref "/posts/scripting/">}}): Variables, tipus bàsics, conversions, f-strings i entrada de dades.
+2. [Variables i tipus de dades]({{<relref "/posts/scripting/variables/">}}): Variables, tipus bàsics, conversions, f-strings i entrada de dades.
 3. [Col·leccions de dades]({{<relref "/posts/scripting/">}}): Llistes, tuples, diccionaris i conjunts per organitzar informació.
 4. [Expressions i operadors]({{<relref "/posts/scripting/">}}): Operadors aritmètics, de comparació, lògics i de pertinença.
 5. [Estructures de control]({{<relref "/posts/scripting/">}}): Decisions amb if, elif, else i match-case.
