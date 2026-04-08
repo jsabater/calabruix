@@ -1,7 +1,7 @@
 ---
 title: "Col·leccions de dades"
 date: 2026-04-05
-lastmod: 2026-04-05
+lastmod: 2026-04-08
 description: "Llistes, tuples, diccionaris i conjunts per organitzar informació amb Python"
 summary: "Llistes, tuples, diccionaris i conjunts per organitzar informació amb Python"
 categories: ["teaching"]
@@ -50,7 +50,7 @@ Vegem cada tipus en detall.
 
 Una **llista** és una col·lecció ordenada i mutable d'elements. "Ordenada" significa que els elements mantenen la posició en què els hem afegit. "Mutable" significa que podem modificar la llista després de crear-la: afegir, eliminar o canviar elements.
 
-### Creació
+**Creació**
 
 Cream una llista posant els elements entre claudàtors `[]`, separats per comes:
 
@@ -68,7 +68,7 @@ alertes = []
 dades = ["servidor01", 22, True, "192.168.0.3", 3.14]
 ```
 
-### Accés
+**Accés**
 
 Accedim als elements usant índexs entre claudàtors. Recordem que els índexs comencen al 0:
 
@@ -91,7 +91,7 @@ print(servidors[1:])    # ['web02', 'db01', 'mail01']
 print(servidors[:2])    # ['web01', 'web02']
 ```
 
-### Modificació
+**Modificació**
 
 Podem canviar un element assignant un nou valor a la seva posició:
 
@@ -101,7 +101,7 @@ servidors[0] = "mail01"
 print(servidors)  # ['mail01', 'web02', 'db01']
 ```
 
-### Addició
+**Addició**
 
 Hi ha diverses maneres d'afegir elements a una llista. Donada la llista següent:
 
@@ -149,7 +149,7 @@ llista.extend([4, 5])
 print(llista)  # [1, 2, 3, 4, 5]
 ```
 
-### Eliminació
+**Eliminació**
 
 També hi ha diverses maneres d'eliminar elements. Donada la següent llista:
 
@@ -194,7 +194,7 @@ servidors.clear()
 print(servidors)  # []
 ```
 
-### Cerca
+**Cerca**
 
 Podem comprovar si un element existeix i trobar la seva posició. Donada la llista:
 
@@ -224,7 +224,7 @@ print(ports.count(80))  # 3
 
 > Si intentam trobar l'índex d'un element que no existeix, Python genera un error `ValueError`. Abans de cridar `.index()`, és bona pràctica comprovar si l'element existeix amb `in`.
 
-### Ordenació
+**Ordenació**
 
 Podem ordenar una llista de dues maneres, modificant la llista existent o creant una nova llista.
 
@@ -260,7 +260,7 @@ print(invertits)  # ['web02', 'web01', 'mail01', 'db01']
 
 > Per invertir l'ordre d'una llista sense ordernar-la usaríem el built-in `reversed()`.
 
-### Longitud
+**Longitud**
 
 La funció `len()` retorna el nombre d'elements:
 
@@ -274,7 +274,7 @@ print(f"Tenim {len(servidors)} servidors")
 
 Una **tupla** és una col·lecció ordenada i **immutable** d'elements. Un cop creada, no podem modificar-la: no podem afegir, eliminar ni canviar elements. Això pot semblar una limitació, però és útil quan volem assegurar que les dades no canviaran accidentalment.
 
-### Creació
+**Creació**
 
 Cream una tupla posant els elements entre parèntesis `()`. Exemple d'una tupla amb dades d'un servidor:
 
@@ -300,7 +300,7 @@ Els parèntesis són opcionals en molts casos:
 coordenades = "web01", "192.168.1.10", 22
 ```
 
-### Accés
+**Accés**
 
 L'accés funciona igual que amb les llistes:
 
@@ -313,7 +313,7 @@ print(servidor[-1])  # 22
 print(servidor[0:2]) # ('web01', '192.168.1.10')
 ```
 
-### Immutabilitat
+**Immutabilitat**
 
 Si intentam modificar una tupla, Python genera un error:
 
@@ -322,7 +322,7 @@ servidor = ("web01", "192.168.1.10", 22)
 servidor[0] = "webserver01"  # TypeError: 'tuple' object does not support item assignment
 ```
 
-### Desempaquetament
+**Desempaquetament**
 
 Una característica molt útil és el **desempaquetament**, que permet assignar cada element a una variable en una sola línia:
 
@@ -347,7 +347,7 @@ nom, ip, actiu = obtenir_info_servidor()
 print(f"Servidor {nom} ({ip}): {'Actiu' if actiu else 'Inactiu'}")
 ```
 
-### Tuples vs llistes
+## Tuples vs llistes
 
 Usam **tuples** quan:
 
@@ -388,7 +388,7 @@ inventari[0][0] = "webserver01"  # Error!
 
 Un **diccionari** és una col·lecció de parells **clau-valor**. En comptes d'accedir als elements per índex numèric, hi accedim per una clau que nosaltres definim. Això fa els diccionaris ideals per emmagatzemar dades estructurades.
 
-### Creació
+**Creació**
 
 Cream un diccionari posant parells `clau: valor` entre claus `{}`. Per exemple:
 
@@ -418,7 +418,7 @@ servidor = {
 }
 ```
 
-### Accés
+**Accés**
 
 Accedim als valors usant la clau entre claudàtors:
 
@@ -449,7 +449,7 @@ print(servidor.get("sistema", "Linux"))  # Linux (valor per defecte)
 print(servidor.get("nom", "desconegut")) # web01 (la clau existeix)
 ```
 
-### Modificació
+**Modificació**
 
 Podem modificar un valor existent o afegir un nou parell clau-valor amb la mateixa sintaxi:
 
@@ -476,7 +476,7 @@ servidor.update(config_extra)
 print(servidor)  # {'nom': 'web01', 'ip': '192.168.1.10', 'port': 22, 'actiu': True}
 ```
 
-### Eliminació
+**Eliminació**
 
 Podem eliminar elements de diverses maneres. Donat el diccionari següent:
 
@@ -506,7 +506,7 @@ servidor.clear()
 print(servidor)  # {}
 ```
 
-### Claus, valors i parells
+**Claus, valors i parells**
 
 Els diccionaris ofereixen mètodes per obtenir les seves parts. Donat el diccionari següent:
 
@@ -534,7 +534,7 @@ print(servidor.items())   # dict_items([('nom', 'web01'), ('ip', '192.168.1.10')
 
 Aquests mètodes són especialment útils per iterar sobre el diccionari, com veurem més endavant.
 
-### Pertinença
+**Pertinença**
 
 Usam l'operador `in` per comprovar si una clau existeix:
 
@@ -547,7 +547,7 @@ print("sistema" in servidor) # False
 
 Fixem-nos que `in` cerca entre les **claus**, no entre els valors.
 
-### Exemple pràctic
+**Exemple pràctic**
 
 Un ús molt comú dels diccionaris és emmagatzemar configuracions:
 
@@ -575,7 +575,7 @@ config_nginx["ssl"]["enabled"] = False
 
 Un **conjunt** és una col·lecció **no ordenada** d'elements **únics**. Els conjunts eliminen automàticament els duplicats i són molt eficients per comprovar si un element existeix.
 
-### Crear conjunts
+**Creació**
 
 Cream un conjunt amb `set()` o posant elements entre claus `{}`:
 
@@ -601,7 +601,7 @@ buit = set()
 
 > Els elements d'un conjunt han de ser immutables (strings, nombres, tuples). No podem posar llistes ni diccionaris dins un conjunt.
 
-### Addició
+**Addició**
 
 Donat el següent conjunt:
 
@@ -637,7 +637,7 @@ usuaris_connectats.discard("inexistent")
 print(usuaris_connectats)  # {'anna', 'joan', 'maria'}
 ```
 
-### Operacions
+**Operacions**
 
 Els conjunts suporten operacions matemàtiques de teoria de conjunts. Donat el següent conjunt:
 
@@ -674,7 +674,7 @@ exclusius = servidors_producció ^ servidors_backup
 print(exclusius)  # {'web02', 'backup01'}
 ```
 
-### Pertinença
+**Pertinença**
 
 Comprovar si un element existeix en un conjunt és molt ràpid:
 
