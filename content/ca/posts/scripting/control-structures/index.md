@@ -26,9 +26,9 @@ print("Tercera instrucció")
 
 Però sovint necessitam que el programa prengui camins diferents segons les circumstàncies. Per exemple, un script de monitoratge podria:
 
-- Mostrar "OK" si l'ús de disc és inferior al 80%.
-- Mostrar "Advertència" si està entre el 80% i el 95%.
-- Mostrar "Crític" si supera el 95%.
+- Mostrar `OK` si l'ús de disc és inferior al 80%.
+- Mostrar `Warning` si està entre el 80% i el 95%.
+- Mostrar `Critical` si supera el 95%.
 
 Això és el **flux condicional**: el programa decideix quin codi executar basant-se en condicions que avaluam en temps d'execució.
 
@@ -586,12 +586,12 @@ Es proposen quatre exercicis pràctics per consolidar els conceptes d'aquest art
 Objectiu: Classificar un port segons el seu rang i identificar-lo si és conegut.
 
 1. Crea un script anomenat `classificador_ports.py`.
-2. Demana a l'usuari un número de port.
+2. Demana a l'usuari un número de port. En aquest exercici assumirem que tots usen el protocol [*](TCP).
 3. Classifica'l segons el rang:
-   - 0-1023: Ports del sistema (privilegiats)
-   - 1024-49151: Ports registrats
-   - 49152-65535: Ports dinàmics o privats
-4. Si el port és un dels coneguts (22=SSH, 80=HTTP, 443=HTTPS, 3306=MySQL, 5432=PostgreSQL), mostra'n el nom.
+   - `0-1023`: Ports del sistema (privilegiats)
+   - `1024-49151`: Ports registrats
+   - `49152-65535`: Ports dinàmics o privats
+4. Si el port és un dels coneguts, mostra'n el nom (pots agafar alguns exemples del fitxer `/etc/services`).
 5. Usa un diccionari per mapejar els ports coneguts.
 
 > Pista: primer comprova el rang, després consulta el diccionari de ports coneguts.
@@ -652,10 +652,10 @@ else:
 Objectiu: Mostrar alertes de diferents nivells segons l'ús de disc.
 
 1. Crea un script anomenat `monitor_disc.py`.
-2. Defineix constants per als llindars: `OK` (`<70%`), `ATENCIÓ` (`70-84%`), `ADVERTÈNCIA` (`85-94%`), `CRÍTIC` (`>=95%`).
+2. Defineix constants per als llindars: `OK` (`<70%`), `ALERT` (`70-84%`), `WARNING` (`85-94%`), `CRITICAL` (`>=95%`).
 3. Demana a l'usuari el percentatge d'ús actual.
 4. Mostra el nivell d'alerta amb un missatge adequat.
-5. Si el nivell és `ADVERTÈNCIA` o `CRÍTIC`, suggereix accions.
+5. Si el nivell és `WARNING` o `CRITICAL`, suggereix accions.
 
 > Pista: recorda l'ordre de les condicions quan els rangs se solapen.
 
@@ -681,13 +681,13 @@ if us < 0 or us > 100:
 else:
     # Determinar nivell d'alerta
     if us >= LLINDAR_CRITIC:
-        nivell = "CRÍTIC"
+        nivell = "CRITICAL"
         missatge = "Espai pràcticament exhaurit!"
     elif us >= LLINDAR_ADVERTENCIA:
-        nivell = "ADVERTÈNCIA"
+        nivell = "WARNING"
         missatge = "Espai baix, cal actuar aviat"
     elif us >= LLINDAR_ATENCIO:
-        nivell = "ATENCIÓ"
+        nivell = "ALERT"
         missatge = "Ús moderat-alt"
     else:
         nivell = "OK"
