@@ -39,8 +39,10 @@ Python ofereix quatre tipus principals de col·leccions, cadascuna amb caracter�
 |------------|:-------:|:-------:|:---------:|-----------------|
 | Llista     | Sí      | Sí      | Sí        | `[a, b, c]`     |
 | Tupla      | Sí      | No      | Sí        | `(a, b, c)`     |
-| Diccionari | Sí*     | Sí      | Claus: No | `{clau: valor}` |
+| Diccionari | Sí*     | Sí      | No[^1]    | `{clau: valor}` |
 | Conjunt    | No      | Sí      | No        | `{a, b, c}`     |
+
+[^1]: Les claus d'un diccionari no poden estar duplicades, però els valors sí.
 
 > *Els diccionaris mantenen l'ordre d'inserció des de Python 3.7.
 
