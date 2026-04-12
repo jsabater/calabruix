@@ -32,7 +32,7 @@ Però sovint necessitam que el programa prengui camins diferents segons les circ
 
 Això és el **flux condicional**: el programa decideix quin codi executar basant-se en condicions que avaluam en temps d'execució.
 
-## L'estructura if
+## Estructura `if`
 
 L'estructura `if` és la més bàsica per prendre decisions. Executa un bloc de codi només si una condició és certa:
 
@@ -90,7 +90,7 @@ if usuari in usuaris_autoritzats:
     print("Accés concedit al sistema")
 ```
 
-## L'estructura if-else
+## Estructura `if-else`
 
 Sovint volem executar un codi si la condició és certa i un altre codi si és falsa. Per això usam `if-else`:
 
@@ -114,7 +114,7 @@ else:
     print(f"Es recomanen almenys {espai_minim_gb} GB")
 ```
 
-## L'estructura if-elif-else
+## Estructura `if-elif-else`
 
 Quan tenim més de dues alternatives, usam `elif` (contracció de "else if"):
 
@@ -307,7 +307,7 @@ def processar_dades(dades):
     # Processar... (sense niuaments)
 ```
 
-## L'operador ternari
+## Operador ternari
 
 Per a assignacions condicionals simples, Python ofereix l'**operador ternari** (o expressió condicional):
 
@@ -369,7 +369,7 @@ else:
     resultat = calcular_c()
 ```
 
-## L'estructura match-case
+## Estructura `match-case`
 
 L'estructura `match-case` permet comparar un valor contra múltiples patrons de manera elegant:
 
