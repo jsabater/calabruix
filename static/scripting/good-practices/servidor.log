@@ -1,0 +1,200 @@
+2026-04-11 10:15:01 [INFO] cron: Starting scheduled task: backup
+2026-04-11 10:15:02 [DEBUG] postgres: SELECT executed in 8ms
+2026-04-11 10:15:03 [INFO] nginx: GET /api/users 200 42ms
+2026-04-11 10:15:04 [INFO] redis: Cache HIT for key user:1001
+2026-04-11 10:15:05 [INFO] postgres: INSERT executed in 15ms
+2026-04-11 10:15:06 [INFO] nginx: GET /health 200 3ms
+2026-04-11 10:15:07 [DEBUG] redis: Cache MISS for key product:5523
+2026-04-11 10:15:08 [INFO] nginx: GET /api/products 200 67ms
+2026-04-11 10:15:09 [INFO] postgres: SELECT executed in 23ms
+2026-04-11 10:15:10 [WARNING] nginx: Slow response for GET /api/reports 892ms
+2026-04-11 10:15:11 [INFO] redis: Cache HIT for key session:abc123
+2026-04-11 10:15:12 [INFO] postgres: UPDATE executed in 31ms
+2026-04-11 10:15:13 [INFO] nginx: GET /api/orders 200 55ms
+2026-04-11 10:15:14 [ERROR] postgres: Connection timeout after 30000ms
+2026-04-11 10:15:15 [INFO] nginx: GET /metrics 200 12ms
+2026-04-11 10:15:16 [INFO] postgres: DELETE executed in 18ms
+2026-04-11 10:15:17 [INFO] nginx: GET /api/users 404 5ms
+2026-04-11 10:15:18 [DEBUG] redis: Cache MISS for key order:7891
+2026-04-11 10:15:19 [INFO] cron: Completed scheduled task: backup
+2026-04-11 10:15:20 [ERROR] nginx: GET /api/products 500 1205ms
+2026-04-11 10:15:21 [INFO] nginx: GET /api/users 200 38ms
+2026-04-11 10:15:22 [INFO] postgres: SELECT executed in 11ms
+2026-04-11 10:15:23 [INFO] redis: Cache HIT for key user:1042
+2026-04-11 10:15:24 [INFO] nginx: GET /health 200 2ms
+2026-04-11 10:15:25 [DEBUG] postgres: SELECT executed in 5ms
+2026-04-11 10:15:26 [INFO] nginx: GET /api/products 200 73ms
+2026-04-11 10:15:27 [INFO] redis: Cache HIT for key product:2010
+2026-04-11 10:15:28 [INFO] postgres: INSERT executed in 22ms
+2026-04-11 10:15:29 [INFO] nginx: GET /api/orders 200 48ms
+2026-04-11 10:15:30 [DEBUG] redis: Cache MISS for key user:3301
+2026-04-11 10:15:31 [INFO] nginx: GET /api/users 200 51ms
+2026-04-11 10:15:32 [INFO] postgres: SELECT executed in 14ms
+2026-04-11 10:15:33 [INFO] redis: Cache HIT for key session:def456
+2026-04-11 10:15:34 [INFO] nginx: GET /metrics 200 8ms
+2026-04-11 10:15:35 [WARNING] postgres: High query time for SELECT 156ms
+2026-04-11 10:15:36 [INFO] nginx: GET /api/products 200 62ms
+2026-04-11 10:15:37 [INFO] redis: Cache HIT for key product:3847
+2026-04-11 10:15:38 [INFO] postgres: UPDATE executed in 27ms
+2026-04-11 10:15:39 [INFO] nginx: GET /health 200 3ms
+2026-04-11 10:15:40 [INFO] nginx: GET /api/orders 200 44ms
+2026-04-11 10:15:41 [DEBUG] redis: Cache MISS for key session:xyz789
+2026-04-11 10:15:42 [INFO] postgres: SELECT executed in 9ms
+2026-04-11 10:15:43 [INFO] nginx: GET /api/users 200 35ms
+2026-04-11 10:15:44 [INFO] redis: Cache HIT for key user:1099
+2026-04-11 10:15:45 [INFO] cron: Starting scheduled task: cleanup
+2026-04-11 10:15:46 [INFO] nginx: GET /api/products 404 4ms
+2026-04-11 10:15:47 [INFO] postgres: DELETE executed in 13ms
+2026-04-11 10:15:48 [INFO] redis: Cache HIT for key order:1122
+2026-04-11 10:15:49 [INFO] nginx: GET /api/orders 200 58ms
+2026-04-11 10:15:50 [DEBUG] postgres: SELECT executed in 7ms
+2026-04-11 10:15:51 [INFO] nginx: GET /health 200 2ms
+2026-04-11 10:15:52 [INFO] redis: Cache HIT for key product:4501
+2026-04-11 10:15:53 [INFO] postgres: INSERT executed in 19ms
+2026-04-11 10:15:54 [INFO] nginx: GET /api/users 200 47ms
+2026-04-11 10:15:55 [WARNING] redis: High memory usage detected
+2026-04-11 10:15:56 [INFO] nginx: GET /metrics 200 9ms
+2026-04-11 10:15:57 [INFO] postgres: SELECT executed in 12ms
+2026-04-11 10:15:58 [INFO] redis: Cache HIT for key session:ghi012
+2026-04-11 10:15:59 [INFO] nginx: GET /api/products 200 71ms
+2026-04-11 10:16:00 [INFO] cron: Completed scheduled task: cleanup
+2026-04-11 10:16:01 [INFO] nginx: GET /api/orders 200 52ms
+2026-04-11 10:16:02 [DEBUG] redis: Cache MISS for key user:4420
+2026-04-11 10:16:03 [INFO] postgres: UPDATE executed in 25ms
+2026-04-11 10:16:04 [INFO] nginx: GET /api/users 200 39ms
+2026-04-11 10:16:05 [INFO] redis: Cache HIT for key product:5012
+2026-04-11 10:16:06 [INFO] nginx: GET /health 200 3ms
+2026-04-11 10:16:07 [ERROR] redis: Connection refused
+2026-04-11 10:16:08 [INFO] postgres: SELECT executed in 16ms
+2026-04-11 10:16:09 [INFO] nginx: GET /api/products 200 65ms
+2026-04-11 10:16:10 [INFO] redis: Cache HIT for key order:2233
+2026-04-11 10:16:11 [INFO] nginx: GET /api/orders 404 6ms
+2026-04-11 10:16:12 [DEBUG] postgres: SELECT executed in 6ms
+2026-04-11 10:16:13 [INFO] nginx: GET /api/users 200 43ms
+2026-04-11 10:16:14 [INFO] redis: Cache HIT for key user:1567
+2026-04-11 10:16:15 [INFO] postgres: INSERT executed in 21ms
+2026-04-11 10:16:16 [INFO] nginx: GET /metrics 200 11ms
+2026-04-11 10:16:17 [WARNING] nginx: Slow response for GET /api/reports 723ms
+2026-04-11 10:16:18 [INFO] redis: Cache HIT for key session:jkl345
+2026-04-11 10:16:19 [INFO] postgres: SELECT executed in 10ms
+2026-04-11 10:16:20 [INFO] nginx: GET /api/products 200 68ms
+2026-04-11 10:16:21 [DEBUG] redis: Cache MISS for key product:6234
+2026-04-11 10:16:22 [INFO] nginx: GET /health 200 2ms
+2026-04-11 10:16:23 [INFO] postgres: UPDATE executed in 29ms
+2026-04-11 10:16:24 [INFO] nginx: GET /api/orders 200 49ms
+2026-04-11 10:16:25 [INFO] redis: Cache HIT for key order:3344
+2026-04-11 10:16:26 [INFO] nginx: GET /api/users 200 41ms
+2026-04-11 10:16:27 [INFO] postgres: DELETE executed in 14ms
+2026-04-11 10:16:28 [DEBUG] redis: Cache MISS for key session:mno678
+2026-04-11 10:16:29 [INFO] nginx: GET /api/products 200 59ms
+2026-04-11 10:16:30 [INFO] cron: Starting scheduled task: healthcheck
+2026-04-11 10:16:31 [INFO] redis: Cache HIT for key user:2089
+2026-04-11 10:16:32 [INFO] postgres: SELECT executed in 13ms
+2026-04-11 10:16:33 [INFO] nginx: GET /metrics 200 7ms
+2026-04-11 10:16:34 [INFO] nginx: GET /api/orders 200 53ms
+2026-04-11 10:16:35 [INFO] redis: Cache HIT for key product:7123
+2026-04-11 10:16:36 [ERROR] postgres: Deadlock detected, transaction rolled back
+2026-04-11 10:16:37 [INFO] nginx: GET /api/users 200 36ms
+2026-04-11 10:16:38 [INFO] postgres: INSERT executed in 17ms
+2026-04-11 10:16:39 [INFO] nginx: GET /health 200 3ms
+2026-04-11 10:16:40 [DEBUG] redis: Cache MISS for key order:5566
+2026-04-11 10:16:41 [INFO] nginx: GET /api/products 200 74ms
+2026-04-11 10:16:42 [INFO] redis: Cache HIT for key session:pqr901
+2026-04-11 10:16:43 [INFO] postgres: SELECT executed in 8ms
+2026-04-11 10:16:44 [INFO] nginx: GET /api/orders 200 46ms
+2026-04-11 10:16:45 [INFO] cron: Completed scheduled task: healthcheck
+2026-04-11 10:16:46 [INFO] redis: Cache HIT for key user:3102
+2026-04-11 10:16:47 [INFO] nginx: GET /api/users 200 40ms
+2026-04-11 10:16:48 [WARNING] postgres: High query time for UPDATE 189ms
+2026-04-11 10:16:49 [INFO] nginx: GET /metrics 200 10ms
+2026-04-11 10:16:50 [INFO] postgres: SELECT executed in 11ms
+2026-04-11 10:16:51 [DEBUG] redis: Cache MISS for key product:8456
+2026-04-11 10:16:52 [INFO] nginx: GET /api/products 200 63ms
+2026-04-11 10:16:53 [INFO] redis: Cache HIT for key order:4455
+2026-04-11 10:16:54 [INFO] nginx: GET /health 200 2ms
+2026-04-11 10:16:55 [INFO] postgres: UPDATE executed in 24ms
+2026-04-11 10:16:56 [INFO] nginx: GET /api/orders 200 57ms
+2026-04-11 10:16:57 [INFO] redis: Cache HIT for key session:stu234
+2026-04-11 10:16:58 [INFO] nginx: GET /api/users 500 2103ms
+2026-04-11 10:16:59 [ERROR] nginx: Internal server error processing request
+2026-04-11 10:17:00 [INFO] postgres: DELETE executed in 16ms
+2026-04-11 10:17:01 [INFO] nginx: GET /api/products 200 66ms
+2026-04-11 10:17:02 [DEBUG] redis: Cache MISS for key user:5678
+2026-04-11 10:17:03 [INFO] redis: Cache HIT for key product:9012
+2026-04-11 10:17:04 [INFO] nginx: GET /metrics 200 8ms
+2026-04-11 10:17:05 [INFO] postgres: SELECT executed in 9ms
+2026-04-11 10:17:06 [INFO] nginx: GET /api/orders 200 50ms
+2026-04-11 10:17:07 [INFO] redis: Cache HIT for key order:5566
+2026-04-11 10:17:08 [INFO] nginx: GET /health 200 3ms
+2026-04-11 10:17:09 [INFO] postgres: INSERT executed in 20ms
+2026-04-11 10:17:10 [INFO] nginx: GET /api/users 200 44ms
+2026-04-11 10:17:11 [WARNING] nginx: Slow response for GET /api/reports 651ms
+2026-04-11 10:17:12 [INFO] redis: Cache HIT for key user:4123
+2026-04-11 10:17:13 [DEBUG] postgres: SELECT executed in 4ms
+2026-04-11 10:17:14 [INFO] nginx: GET /api/products 200 70ms
+2026-04-11 10:17:15 [INFO] cron: Starting scheduled task: backup
+2026-04-11 10:17:16 [INFO] redis: Cache HIT for key session:vwx567
+2026-04-11 10:17:17 [INFO] nginx: GET /api/orders 200 54ms
+2026-04-11 10:17:18 [INFO] postgres: UPDATE executed in 28ms
+2026-04-11 10:17:19 [INFO] nginx: GET /api/users 404 5ms
+2026-04-11 10:17:20 [DEBUG] redis: Cache MISS for key order:7788
+2026-04-11 10:17:21 [INFO] nginx: GET /health 200 2ms
+2026-04-11 10:17:22 [INFO] postgres: SELECT executed in 15ms
+2026-04-11 10:17:23 [INFO] redis: Cache HIT for key product:1234
+2026-04-11 10:17:24 [INFO] nginx: GET /metrics 200 9ms
+2026-04-11 10:17:25 [INFO] nginx: GET /api/products 200 61ms
+2026-04-11 10:17:26 [INFO] postgres: DELETE executed in 12ms
+2026-04-11 10:17:27 [INFO] redis: Cache HIT for key user:5234
+2026-04-11 10:17:28 [INFO] nginx: GET /api/orders 200 47ms
+2026-04-11 10:17:29 [DEBUG] redis: Cache MISS for key session:yza890
+2026-04-11 10:17:30 [INFO] postgres: INSERT executed in 18ms
+2026-04-11 10:17:31 [INFO] nginx: GET /api/users 200 37ms
+2026-04-11 10:17:32 [INFO] redis: Cache HIT for key order:6677
+2026-04-11 10:17:33 [WARNING] redis: Approaching max connections limit
+2026-04-11 10:17:34 [INFO] nginx: GET /health 200 3ms
+2026-04-11 10:17:35 [INFO] postgres: SELECT executed in 10ms
+2026-04-11 10:17:36 [INFO] nginx: GET /api/products 200 69ms
+2026-04-11 10:17:37 [INFO] redis: Cache HIT for key product:2345
+2026-04-11 10:17:38 [INFO] nginx: GET /api/orders 200 51ms
+2026-04-11 10:17:39 [INFO] cron: Completed scheduled task: backup
+2026-04-11 10:17:40 [DEBUG] postgres: SELECT executed in 6ms
+2026-04-11 10:17:41 [INFO] nginx: GET /api/users 200 42ms
+2026-04-11 10:17:42 [INFO] redis: Cache HIT for key session:bcd123
+2026-04-11 10:17:43 [INFO] nginx: GET /metrics 200 11ms
+2026-04-11 10:17:44 [ERROR] postgres: Query execution failed: syntax error
+2026-04-11 10:17:45 [INFO] nginx: GET /api/products 200 64ms
+2026-04-11 10:17:46 [INFO] redis: Cache HIT for key user:6345
+2026-04-11 10:17:47 [INFO] postgres: UPDATE executed in 26ms
+2026-04-11 10:17:48 [INFO] nginx: GET /health 200 2ms
+2026-04-11 10:17:49 [DEBUG] redis: Cache MISS for key product:9876
+2026-04-11 10:17:50 [INFO] nginx: GET /api/orders 200 56ms
+2026-04-11 10:17:51 [INFO] postgres: SELECT executed in 14ms
+2026-04-11 10:17:52 [INFO] redis: Cache HIT for key order:7788
+2026-04-11 10:17:53 [INFO] nginx: GET /api/users 200 39ms
+2026-04-11 10:17:54 [INFO] postgres: INSERT executed in 23ms
+2026-04-11 10:17:55 [WARNING] nginx: Slow response for GET /api/reports 534ms
+2026-04-11 10:17:56 [INFO] redis: Cache HIT for key session:efg456
+2026-04-11 10:17:57 [INFO] nginx: GET /api/products 200 72ms
+2026-04-11 10:17:58 [DEBUG] redis: Cache MISS for key user:7456
+2026-04-11 10:17:59 [INFO] nginx: GET /metrics 200 7ms
+2026-04-11 10:18:00 [INFO] postgres: DELETE executed in 15ms
+2026-04-11 10:18:01 [INFO] nginx: GET /api/orders 200 48ms
+2026-04-11 10:18:02 [INFO] redis: Cache HIT for key product:3456
+2026-04-11 10:18:03 [INFO] nginx: GET /health 200 3ms
+2026-04-11 10:18:04 [INFO] postgres: SELECT executed in 12ms
+2026-04-11 10:18:05 [INFO] nginx: GET /api/users 200 45ms
+2026-04-11 10:18:06 [INFO] redis: Cache HIT for key user:8567
+2026-04-11 10:18:07 [INFO] cron: Starting scheduled task: cleanup
+2026-04-11 10:18:08 [DEBUG] postgres: SELECT executed in 5ms
+2026-04-11 10:18:09 [INFO] nginx: GET /api/products 404 4ms
+2026-04-11 10:18:10 [INFO] redis: Cache HIT for key order:8899
+2026-04-11 10:18:11 [INFO] nginx: GET /api/orders 200 52ms
+2026-04-11 10:18:12 [INFO] postgres: UPDATE executed in 30ms
+2026-04-11 10:18:13 [INFO] nginx: GET /health 200 2ms
+2026-04-11 10:18:14 [DEBUG] redis: Cache MISS for key session:hij789
+2026-04-11 10:18:15 [INFO] nginx: GET /api/users 200 38ms
+2026-04-11 10:18:16 [INFO] redis: Cache HIT for key product:4567
+2026-04-11 10:18:17 [INFO] postgres: INSERT executed in 16ms
+2026-04-11 10:18:18 [INFO] nginx: GET /metrics 200 10ms
+2026-04-11 10:18:19 [INFO] nginx: GET /api/products 200 67ms
+2026-04-11 10:18:20 [INFO] cron: Completed scheduled task: cleanup
