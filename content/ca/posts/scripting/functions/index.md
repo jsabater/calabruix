@@ -847,10 +847,6 @@ def processar(dades):
 
 ## Exercicis
 
-Es proposen quatre exercicis pràctics per consolidar els conceptes vists en aquest article.
-
-## Exercicis
-
 Es proposen quatre exercicis pràctics per consolidar els conceptes d'aquest article.
 
 ### Exercici 1
