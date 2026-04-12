@@ -41,7 +41,7 @@ Python ofereix dos tipus de bucles:
 - `for`: per iterar sobre una seqüència d'elements (llista, tupla, cadena, diccionari...).
 - `while`: per repetir mentre es compleixi una condició.
 
-## El bucle for
+## El bucle `for`
 
 El bucle `for` recorre els elements d'una seqüència un per un:
 
@@ -133,11 +133,11 @@ Configuració actual:
   ssl: True
 ```
 
-## La funció range()
+## La funció `range()`
 
 Quan volem repetir una acció un nombre determinat de vegades o generar una seqüència de nombres, usam `range()`.
 
-**range(n)**
+**`range(n)`**
 
 Quan passam un valor enter a la funció `range()`, aquesta genera una seqüència de nombres de 0 a n-1. Exemple:
 
@@ -148,7 +148,7 @@ for i in range(5):
 
 En aquest cas, la funció genera els valors 0, 1, 2, 3, 4.
 
-**range(inici, fi)**
+**`range(inici, fi)`**
 
 Quan passam dos valors enters a la funció `range()`, aquesta genera una seqüència de nombres que comença amb `inici` i acaba amb `fi - 1`. Exemple:
 
@@ -159,7 +159,7 @@ for i in range(1, 6):
 
 En aquest cas, la funció genera els valors 1, 2, 3, 4, 5. És a dir, el valor inicial s'inclou, però el final no.
 
-**range(inici, fi, pas)**
+**`range(inici, fi, pas)`**
 
 Quan passam tres valors enters a la funció `range()`, aquesta genera una seqüència de nombres que comença amb `inici`, acaba amb `fi - 1` i te un pas de `pas`. Exemple:
 
@@ -214,7 +214,7 @@ for i in range(len(servidors)):
 
 > Tot i que podem usar `range(len(llista))` per obtenir índexs, hi ha una manera més elegant: `enumerate()`, que veurem a continuació.
 
-## La funció enumerate()
+## La funció `enumerate()`
 
 La funció `enumerate()` ens permet obtenir l'índex i el valor de cada element alhora:
 
@@ -273,7 +273,7 @@ for num_linia, linia in enumerate(atacs_log, start=1):
     print(f"{num_linia:3}: {linia}")
 ```
 
-## La funció zip()
+## La funció `zip()`
 
 La funció `zip()` combina múltiples seqüències element per element:
 
@@ -372,7 +372,7 @@ Canvis detectats:
   + Ara:   max_conn=200
 ```
 
-## El bucle while
+## El bucle `while`
 
 El bucle `while` repeteix un bloc de codi **mentre** una condició sigui certa:
 
@@ -406,7 +406,7 @@ Compte enrere: 1
 Take off!
 ```
 
-### for vs while
+### `for` vs `while`
 
 Com a regla general, usam `for` quan sabem quants elements volem processar o tenim una seqüència definida:
 
@@ -475,7 +475,7 @@ if not connectat:
 
 A vegades necessitam alterar el flux normal d'un bucle: sortir-ne abans d'hora o botar alguna iteració.
 
-### break
+### `break`
 
 La instrucció `break` atura el bucle immediatament i continua amb el codi que ve després:
 
@@ -506,7 +506,7 @@ Cerca finalitzada
 
 El bucle s'atura en trobar `db01` i no continua amb `mail01` ni `backup01`.
 
-### continue
+### `continue`
 
 La instrucció `continue` bota la resta del codi de la iteració actual i passa a la següent iteració:
 
@@ -573,7 +573,7 @@ IPs externes:
   74.10.0.14
 ```
 
-## else als bucles for
+## `else` als bucles `for`
 
 Python permet afegir una clàusula `else` als bucles `for`. El codi de l'`else` s'executa **només si el bucle acaba normalment**, és a dir, sense `break`:
 
@@ -611,7 +611,9 @@ Si canviem `cercat = "maria"`:
 Usuari maria trobat!
 ```
 
-### Exemple pràctic: verificar si un port està disponible
+**Exemple pràctic**
+
+Vegem un exemple pràctic per verificar si un port està disponible:
 
 ```python
 ports_usats = [22, 80, 443, 8080]
@@ -705,7 +707,7 @@ print(mapeig)  # {'ssh': 22, 'http': 80, 'https': 443}
 
 > La comprensió de diccionari funciona igual que la de llista però genera un diccionari.
 
-### Quan usar comprensions
+**Quan usar comprensions**
 
 Les comprensions són ideals per a:
 
