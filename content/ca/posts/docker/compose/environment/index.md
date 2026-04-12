@@ -10,20 +10,19 @@ series: ["Docker Compose"]
 series_order: 20
 weight: 20
 slug: variables-entorn
-draft: true
 ---
 
-A l'article anterior vam veure com definir serveis amb Docker Compose i com passar variables d'entorn directament al fitxer `compose.yaml`. Aquesta aproximació funciona per a exemples senzills, però quan treballam amb aplicacions reals que requereixen credencials de bases de dades, claus API o configuracions específiques per entorn, necessitam una estratègia més robusta.
+A l'article anterior vam veure com definir serveis amb Docker Compose i com passar variables d'entorn directament al fitxer `compose.yaml`. Aquesta aproximació funciona per a exemples senzills, però quan fem feina amb aplicacions reals que requereixen credencials de bases de dades, claus API o configuracions específiques per entorn, necessitam una estratègia més robusta.
 
 Incrustar credencials directament al fitxer de configuració és una pràctica perillosa: si versionam el fitxer amb Git, les credencials quedaran exposades a l'historial del repositori per sempre. A més, fa difícil reutilitzar la mateixa configuració en diferents entorns (desenvolupament, proves, producció) sense haver de modificar el fitxer cada vegada.
 
-Docker Compose ofereix diverses eines per gestionar la configuració de manera segura i flexible: variables d'entorn inline, fitxers `.env`, la directiva `env_file` i interpolació de variables. En aquest article explorarem cadascuna d'aquestes opcions i les seves aplicacions pràctiques.
+Docker Compose ofereix diverses eines per gestionar la configuració de manera segura i flexible: variables d'entorn en línia, fitxers `.env`, la directiva `env_file` i interpolació de variables. En aquest article explorarem cadascuna d'aquestes opcions i les seves aplicacions pràctiques.
 
 ## Variables d'entorn inline
 
-La manera més directa de passar variables d'entorn a un contenidor és usant la clau `environment` dins la definició del servei. Aquesta clau accepta dos formats:
+La manera més directa de passar variables d'entorn a un contenidor és usant la clau `environment` dins la definició del servei. Aquesta clau accepta dos formats, mapa i llista, ambdós equivalents. Com que el format mapa, o diccionari, es més legible, usarem el format mapa per a tots els exemples d'aquesta sèrie.
 
-**Format mapa** (recomanat per llegibilitat):
+Exemple:
 
 ```yaml
 services:
@@ -35,23 +34,9 @@ services:
       POSTGRES_DB: docmost
 ```
 
-**Format llista**:
-
-```yaml
-services:
-  postgres:
-    image: postgres:18-alpine
-    environment:
-      - POSTGRES_USER=docmost
-      - POSTGRES_PASSWORD=secretpassword
-      - POSTGRES_DB=docmost
-```
-
-Ambdós formats són equivalents. El format mapa és més llegible i és el que usarem als exemples d'aquesta sèrie.
-
 > Les variables definides amb `environment` s'injecten directament al contenidor i estan disponibles per al procés que s'hi executa.
 
-## Fitxers .env
+## Fitxers `.env`
 
 Un fitxer `.env` és un fitxer de text pla que conté parells clau-valor, un per línia. Docker Compose carrega automàticament el fitxer `.env` que es trobi al mateix directori que el fitxer `compose.yaml`:
 
@@ -71,10 +56,10 @@ La sintaxi dels fitxers `.env` és senzilla:
 - Cada línia conté una assignació `CLAU=valor`
 - Les línies que comencen amb `#` són comentaris
 - Els espais al voltant del `=` no estan permesos
-- Els valors poden contenir espais si s'envolten amb cometes
+- Els valors poden contenir espais si s'envolten amb cometes dobles
 - Les línies buides s'ignoren
 
-### Interpolació de variables
+**Interpolació de variables**
 
 Un cop definides les variables al fitxer `.env`, podem usar-les dins el `compose.yaml` amb la sintaxi `${VARIABLE}`:
 
@@ -88,13 +73,13 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
 ```
 
-Quan executam `docker compose up`, Compose substitueix `${POSTGRES_USER}` pel valor `docmost` definit al fitxer `.env`. Aquesta interpolació és especialment útil per:
+Quan executam `docker compose up`, Compose substitueix `${POSTGRES_USER}` pel valor `docmost` definit al fitxer `.env`, i el mateix amb la resta de variables. Aquesta interpolació és especialment útil per:
 
-- Compartir valors entre múltiples serveis
-- Mantenir les credencials fora del fitxer `compose.yaml`
-- Facilitar el canvi de configuració sense modificar el fitxer principal
+- Compartir valors entre múltiples serveis.
+- Mantenir les credencials fora del fitxer `compose.yaml`.
+- Facilitar el canvi de configuració sense modificar el fitxer principal.
 
-### Valors per defecte
+**Valors per defecte**
 
 Podem especificar valors per defecte en cas que una variable no estigui definida:
 
@@ -109,9 +94,9 @@ services:
 
 La sintaxi `${VARIABLE:-valor_defecte}` assigna `valor_defecte` si `VARIABLE` no existeix o està buida.
 
-### Especificar un fitxer .env diferent
+**Especificar un fitxer `.env` diferent**
 
-Per defecte, Compose cerca un fitxer anomenat `.env` al directori actual. Podem especificar un fitxer diferent amb l'opció `--env-file`:
+Per defecte, Compose cerca un fitxer anomenat `.env` al mateix directori on es troba el fitxer `compose.yaml`, però podem especificar un fitxer diferent amb l'opció `--env-file`:
 
 ```bash
 docker compose --env-file .env.production up --detach
@@ -127,7 +112,7 @@ projecte/
 └── .env.production   # Producció
 ```
 
-## Directiva env_file
+## Directiva `env_file`
 
 Mentre que el fitxer `.env` s'usa principalment per a la interpolació dins el `compose.yaml`, la directiva `env_file` carrega variables d'entorn directament dins el contenidor:
 
@@ -149,56 +134,55 @@ SECRET_KEY=mysupersecretkey
 
 Aquestes variables estaran disponibles dins el contenidor però no seran visibles ni interpolables dins el `compose.yaml`.
 
-### Diferència entre .env i env_file
+**Diferència entre .env i env_file**
 
-És important entendre la diferència:
+És important entendre la diferència entre el fitxer `.env` i la directiva `env_file`:
 
-| Característica | Fitxer `.env` | Directiva `env_file` |
-|----------------|---------------|----------------------|
-| Propòsit | Interpolació dins `compose.yaml` | Injectar variables al contenidor |
-| Carrega automàtica | Sí (si es diu `.env`) | No, cal especificar-ho |
-| Variables visibles a Compose | Sí | No |
-| Variables disponibles al contenidor | Només si s'interpolen | Sí, totes |
+| Característica                      | Fitxer `.env`                    | Directiva `env_file`             |
+|-------------------------------------|----------------------------------|----------------------------------|
+| Propòsit                            | Interpolació dins `compose.yaml` | Injectar variables al contenidor |
+| Carrega automàtica                  | Sí (si es diu `.env`)            | No, cal especificar-ho           |
+| Variables visibles a Compose        | Sí                               | No                               |
+| Variables disponibles al contenidor | Només si s'interpolen            | Sí, totes                        |
 
 Podem combinar ambdues tècniques:
 
 ```yaml
 services:
   webapp:
-    image: myapp:${APP_VERSION}    # Interpola des de .env
+    image: myapp:${APP_VERSION}  # Interpola des de .env
     env_file:
-      - .env.webapp                 # Carrega al contenidor
+      - .env.webapp              # Carrega al contenidor
     environment:
-      APP_URL: ${APP_URL}           # Interpola des de .env
+      APP_URL: ${APP_URL}        # Interpola des de .env
 ```
 
 ## Precedència de variables
 
 Quan una mateixa variable es defineix en múltiples llocs, Docker Compose segueix un ordre de precedència (de major a menor prioritat):
 
-1. Variables del sistema operatiu (exportades amb `export`)
-2. Fitxer especificat amb `--env-file`
-3. Fitxer `.env` al directori actual
-4. Variables definides dins `env_file` al `compose.yaml`
-5. Variables definides dins `environment` al `compose.yaml`
+1. Variables d'entorn del sistema operatiu, exportades amb `export` o com a part de la comanda executada.
+2. Fitxer especificat amb `--env-file`.
+3. Fitxer `.env` al directori actual.
+4. Variables definides dins `env_file` al `compose.yaml`.
+5. Variables definides dins `environment` al `compose.yaml`.
 
-Aquesta jerarquia permet sobreescriure valors sense modificar els fitxers de configuració:
+Aquesta jerarquia permet sobreescriure valors sense modificar els fitxers de configuració. El següent exemple sobreescriu temporalment una variable d'entorn:
 
 ```bash
-# Sobreescriure temporalment una variable
 POSTGRES_PASSWORD=noupassword docker compose up --detach
 ```
 
-## Variables predefinides de Compose
+## Variables predefinides
 
-Docker Compose defineix algunes variables que podem usar per personalitzar el comportament:
+Docker Compose predefineix algunes variables que podem usar per personalitzar el comportament:
 
-| Variable | Descripció |
-|----------|------------|
+| Variable               | Descripció                                           |
+|------------------------|------------------------------------------------------|
 | `COMPOSE_PROJECT_NAME` | Nom del projecte (per defecte, el nom del directori) |
-| `COMPOSE_FILE` | Ruta al fitxer de configuració |
-| `COMPOSE_PROFILES` | Perfils actius (els veurem a un article posterior) |
-| `DOCKER_HOST` | Socket de Docker a usar |
+| `COMPOSE_FILE`         | Ruta al fitxer de configuració                       |
+| `COMPOSE_PROFILES`     | Perfils actius (els veurem a un article posterior)   |
+| `DOCKER_HOST`          | Socket de Docker a usar                              |
 
 Per exemple, per executar el mateix projecte amb un nom diferent:
 
@@ -206,9 +190,9 @@ Per exemple, per executar el mateix projecte amb un nom diferent:
 COMPOSE_PROJECT_NAME=docmost-prod docker compose up --detach
 ```
 
-## Exemple pràctic: Docmost amb Garage S3
+## Exemple pràctic
 
-Posem en pràctica tot el que hem après amb un exemple real. [Docmost](https://docmost.com/) és un wiki col·laboratiu de codi obert que requereix PostgreSQL, Redis i opcionalment emmagatzematge S3. Usarem [Garage](https://garagehq.deuxfleurs.fr/), un sistema d'emmagatzematge S3 compatible i lleuger, per als fitxers adjunts.
+Posem en pràctica tot el que hem après amb un exemple real amb Docmost, PostgreSQL i Redis. [Docmost](https://docmost.com/) és un wiki col·laboratiu de codi obert que requereix PostgreSQL, Redis i, opcionalment, emmagatzematge S3. Per simplificar, en aquest article usarem emmagatzematge local per als fitxers adjunts.
 
 ### Estructura del projecte
 
@@ -217,13 +201,12 @@ docmost/
 ├── compose.yaml
 ├── .env
 ├── .env.example
-├── garage.toml
 └── .gitignore
 ```
 
-### Fitxer .env.example
+### Fitxer `.env.example`
 
-Cream primer un fitxer d'exemple que documentarà les variables necessàries sense contenir valors reals:
+El fitxer `.env.example` és un fitxer d'exemple que documentarà les variables necessàries sense contenir valors reals i que podem pujar al nostre repositori Git:
 
 ```ini
 # Configuració de Docmost
@@ -234,86 +217,39 @@ APP_URL=http://localhost:3000
 POSTGRES_USER=docmost
 POSTGRES_PASSWORD=canvia_aquest_password
 POSTGRES_DB=docmost
-
-# Emmagatzematge S3 (Garage)
-STORAGE_DRIVER=s3
-AWS_S3_ACCESS_KEY_ID=genera_amb_garage_key_create
-AWS_S3_SECRET_ACCESS_KEY=genera_amb_garage_key_create
-AWS_S3_BUCKET=docmost
-AWS_S3_ENDPOINT=http://garage:3900
-AWS_S3_REGION=garage
-AWS_S3_FORCE_PATH_STYLE=true
 ```
 
-### Fitxer .env
+### Fitxer `.env`
 
 Copiam `.env.example` a `.env` i hi posam els valors reals:
 
 ```ini
 # Configuració de Docmost
-APP_SECRET=7d37d093435a41f2aab8f13c19ba067d9776c90215f56614adad6ece597dbb34
+APP_SECRET=7d37d093435a41f2aab8f13c19ba067d9776c90215f56614adad6ece
 APP_URL=http://localhost:3000
 
 # Base de dades PostgreSQL
 POSTGRES_USER=docmost
 POSTGRES_PASSWORD=Xk9mP2vL8nQ4wR7j
 POSTGRES_DB=docmost
-
-# Emmagatzematge S3 (Garage)
-STORAGE_DRIVER=s3
-AWS_S3_ACCESS_KEY_ID=GK31c2a3f4e5d6c7b8a9
-AWS_S3_SECRET_ACCESS_KEY=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0
-AWS_S3_BUCKET=docmost
-AWS_S3_ENDPOINT=http://garage:3900
-AWS_S3_REGION=garage
-AWS_S3_FORCE_PATH_STYLE=true
 ```
 
-Podem generar un secret aleatori amb:
+Podem usar OpenSSL per a generar secret aleatoris. La següent comanda genera una cadena de caràcters alfanumèrics, eliminant `/`, `=` i `+` perquè són part de l'alfabet [Base64](https://ca.wikipedia.org/wiki/Base64):
 
 ```bash
-openssl rand -hex 32
+openssl rand -base64 25 | tr --delete /=+ | cut --characters -32
 ```
 
-### Fitxer .gitignore
+### Fitxer `.gitignore`
 
-Per evitar que les credencials es pugin al repositori:
+Per evitar que les credencials es pugin al repositori Git en assegurarem de que el nostre fitxer `.gitignore` inclogui les següents línies:
 
 ```gitignore
 .env
 !.env.example
 ```
 
-### Fitxer garage.toml
-
-Garage requereix un fitxer de configuració:
-
-```toml
-metadata_dir = "/var/lib/garage/meta"
-data_dir = "/var/lib/garage/data"
-db_engine = "sqlite"
-replication_factor = 1
-
-rpc_bind_addr = "[::]:3901"
-rpc_public_addr = "127.0.0.1:3901"
-rpc_secret = "bc92a31f07afb47b94f4275ec1729a2d4bf1241ba7497e305f1a19699cecee42"
-
-[s3_api]
-s3_region = "garage"
-api_bind_addr = "[::]:3900"
-root_domain = ".s3.garage.localhost"
-
-[admin]
-api_bind_addr = "[::]:3903"
-```
-
-Podem generar el `rpc_secret` amb:
-
-```bash
-openssl rand -hex 32
-```
-
-### Fitxer compose.yaml
+### Fitxer `compose.yaml`
 
 ```yaml
 services:
@@ -329,13 +265,6 @@ services:
       APP_SECRET: ${APP_SECRET}
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
       REDIS_URL: "redis://redis:6379"
-      STORAGE_DRIVER: ${STORAGE_DRIVER}
-      AWS_S3_ACCESS_KEY_ID: ${AWS_S3_ACCESS_KEY_ID}
-      AWS_S3_SECRET_ACCESS_KEY: ${AWS_S3_SECRET_ACCESS_KEY}
-      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
-      AWS_S3_ENDPOINT: ${AWS_S3_ENDPOINT}
-      AWS_S3_REGION: ${AWS_S3_REGION}
-      AWS_S3_FORCE_PATH_STYLE: ${AWS_S3_FORCE_PATH_STYLE}
     ports:
       - "3000:3000"
     volumes:
@@ -350,7 +279,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
     restart: unless-stopped
 
   redis:
@@ -361,101 +290,62 @@ services:
       - redis-data:/data
     restart: unless-stopped
 
-  garage:
-    image: dxflrs/garage:v2.2.0
-    container_name: docmost-garage
-    volumes:
-      - ./garage.toml:/etc/garage.toml:ro
-      - garage-meta:/var/lib/garage/meta
-      - garage-data:/var/lib/garage/data
-    restart: unless-stopped
-
 volumes:
   docmost-data:
   postgres-data:
   redis-data:
-  garage-meta:
-  garage-data:
 ```
 
 Observa com:
 
-- Totes les credencials s'interpolen des del fitxer `.env`
-- La variable `DATABASE_URL` es construeix combinant múltiples variables
-- Cada servei té el seu volum per a persistència
-- Garage munta el fitxer de configuració com a només lectura (`:ro`)
+- Totes les credencials s'interpolen des del fitxer `.env`.
+- La variable `DATABASE_URL` es construeix combinant múltiples variables.
+- Cada servei té el seu volum per a persistència.
 
-### Arrencada i configuració de Garage
+### Arrencar els serveis
 
-Cream el directori i els fitxers:
+Cream el directori de feina:
 
 ```bash
 mkdir --parents ~/Projects/docmost
 cd ~/Projects/docmost
 ```
 
-Després de crear tots els fitxers, arrenquem els serveis:
+Després de crear-hi a dins tots els fitxers especificats en els anteriors apartats, arrenquem els serveis:
 
 ```bash
 docker compose up --detach
 ```
-
-Garage requereix una configuració inicial. Primer, obtenim l'identificador del node:
-
-```bash
-docker exec docmost-garage /garage node id
-```
-
-Assignam el node al layout i l'apliquem:
-
-```bash
-docker exec docmost-garage /garage layout assign -z dc1 -c 1G <node_id>
-docker exec docmost-garage /garage layout apply --version 1
-```
-
-Cream una clau d'accés i un bucket:
-
-```bash
-docker exec docmost-garage /garage key create docmost-key
-docker exec docmost-garage /garage bucket create docmost
-docker exec docmost-garage /garage bucket allow --read --write --owner docmost --key docmost-key
-```
-
-La comanda `key create` mostrarà el `Key ID` i el `Secret key`. Actualitza el fitxer `.env` amb aquests valors i reinicia Docmost:
-
-```bash
-docker compose restart docmost
-```
-
-Finalment, accedeix a `http://localhost:3000` per completar la configuració inicial de Docmost.
 
 ## Bones pràctiques
 
 Per concloure, algunes recomanacions per gestionar la configuració de manera segura i mantenible:
 
 **Seguretat:**
-- Mai versioneu fitxers `.env` amb credencials reals
-- Useu `.env.example` per documentar les variables necessàries
-- Genereu secrets aleatoris amb `openssl rand -hex 32` o similar
-- Afegiu `.env` al `.gitignore` del projecte
+- Mai versionis fitxers `.env` amb credencials reals.
+- Usa `.env.example` per documentar les variables necessàries.
+- Genera secrets aleatoris amb `openssl` o similar.
+- Afegeix `.env` al `.gitignore` del projecte.
 
 **Organització:**
-- Manteniu fitxers `.env` separats per entorn (`.env.development`, `.env.production`)
-- Documenteu cada variable amb comentaris
-- Useu noms de variables descriptius i en majúscules
+- Manté fitxers `.env` separats per entorn, e.g., `.env.production`.
+- Documenta cada variable amb comentaris.
+- Usa noms de variables descriptius i en majúscules.
 
 **Mantenibilitat:**
-- Centralitzeu les credencials compartides al fitxer `.env`
-- Eviteu duplicar valors; useu interpolació
-- Reviseu periòdicament les credencials i roteu-les si cal
+- Centralitza les credencials compartides al fitxer `.env`.
+- Evita duplicar valors; usa interpolació.
+- Revisa periòdicament les credencials i rota-les si escau.
 
 ## Exercicis
+
+Es proposen dos exercicis pràctics per facilitar l’aprenentatge progressiu.
 
 ### Exercici 1
 
 **Metabase amb variables d'entorn**
 
-En aquest exercici es proposa desplegar [Metabase](https://www.metabase.com/), una eina de business intelligence, usant variables d'entorn per a la configuració.
+En aquest exercici es proposa desplegar [Metabase](https://www.metabase.com/), una eina de *business intelligence*, usant variables d'entorn per a la configuració. Passos:
 
 1. Crea un directori `metabase` al teu directori de projectes.
 2. Crea un fitxer `.env` amb les variables necessàries per a PostgreSQL.
@@ -475,16 +365,23 @@ En aquest exercici es proposa desplegar [Metabase](https://www.metabase.com/), u
 
 {{< details summary="Respostes" >}}
 
-Fitxer `.env`:
+Crea el directori de feina:
+
+```bash
+mkdir --parents ~/Projects/metabase
+cd ~/Projects/metabase
+```
+
+Crea el fitxer `.env`:
 
 ```ini
 # PostgreSQL
 POSTGRES_USER=metabase
-POSTGRES_PASSWORD=Kj8nM4pL2qR9wX5v
+POSTGRES_PASSWORD=<password>
 POSTGRES_DB=metabase
 ```
 
-Fitxer `compose.yaml`:
+Crea el fitxer `compose.yaml`:
 
 ```yaml
 services:
@@ -512,21 +409,15 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
     restart: unless-stopped
 
 volumes:
   postgres-data:
 ```
 
-Crea el directori de feina:
 
-```bash
-mkdir --parents ~/Projects/metabase
-cd ~/Projects/metabase
-```
-
-Crea els fitxers `.env` i `compose.yaml` amb el contingut anterior i executa:
+Executa Docker Compose:
 
 ```bash
 docker compose up --detach
@@ -540,7 +431,7 @@ Accedeix a `http://localhost:3000` i segueix l'assistent de configuració inicia
 
 **Vikunja amb env_file**
 
-En aquest exercici es proposa desplegar [Vikunja](https://vikunja.io/), una aplicació de gestió de tasques, usant la directiva `env_file` per organitzar la configuració.
+En aquest exercici es proposa desplegar [Vikunja](https://vikunja.io/), una aplicació de gestió de tasques, usant la directiva `env_file` per organitzar la configuració. Passos:
 
 1. Crea un directori `vikunja` al teu directori de projectes.
 2. Crea dos fitxers de configuració:
@@ -564,27 +455,34 @@ En aquest exercici es proposa desplegar [Vikunja](https://vikunja.io/), una apli
 
 {{< details summary="Respostes" >}}
 
-Fitxer `.env.postgres`:
+Crea el directori de feina:
+
+```bash
+mkdir --parents ~/Projects/vikunja
+cd ~/Projects/vikunja
+```
+
+Crea el fitxer `.env.postgres`:
 
 ```ini
 POSTGRES_USER=vikunja
-POSTGRES_PASSWORD=Nm7kL3pQ9wR2xV8j
+POSTGRES_PASSWORD=<password>
 POSTGRES_DB=vikunja
 ```
 
-Fitxer `.env.vikunja`:
+Crea el fitxer `.env.vikunja`:
 
 ```ini
 VIKUNJA_SERVICE_PUBLICURL=http://localhost:3456
-VIKUNJA_SERVICE_JWTSECRET=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0
+VIKUNJA_SERVICE_JWTSECRET=<very-long-and-secure-secret>
 VIKUNJA_DATABASE_TYPE=postgres
 VIKUNJA_DATABASE_HOST=db
 VIKUNJA_DATABASE_USER=vikunja
-VIKUNJA_DATABASE_PASSWORD=Nm7kL3pQ9wR2xV8j
+VIKUNJA_DATABASE_PASSWORD=<password>
 VIKUNJA_DATABASE_DATABASE=vikunja
 ```
 
-Fitxer `compose.yaml`:
+Crea el fitxer `compose.yaml`:
 
 ```yaml
 services:
@@ -607,7 +505,7 @@ services:
     env_file:
       - .env.postgres
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
     restart: unless-stopped
 
 volumes:
@@ -615,21 +513,7 @@ volumes:
   postgres-data:
 ```
 
-Crea el directori de feina:
-
-```bash
-mkdir --parents ~/Projects/vikunja
-cd ~/Projects/vikunja
-```
-
-Crea els fitxers `.env.postgres`, `.env.vikunja` i `compose.yaml` amb el contingut anterior. Assegura't que Vikunja té permisos d'escriptura al directori de fitxers:
-
-```bash
-mkdir --parents files
-chown 1000 files
-```
-
-Executa:
+Executa Docker Compose:
 
 ```bash
 docker compose up --detach
