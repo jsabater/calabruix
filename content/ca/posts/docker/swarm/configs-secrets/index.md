@@ -1,7 +1,7 @@
 ---
 title: "Configuració i secrets a Docker Swarm"
 date: 2026-02-11
-lastmod: 2026-02-11
+lastmod: 2026-04-12
 description: "Gestió segura de configuració i credencials amb Docker Configs i Docker Secrets"
 summary: "Gestió segura de configuració i credencials amb Docker Configs i Docker Secrets"
 categories: ["teaching"]
@@ -138,7 +138,7 @@ Comencem per crear un secret. Tenim dues formes:
   echo "MyS3cr3tP@ssw0rd" | docker secret create db_password -
   ```
 
-Podem usar OpenSSL per a generar secret aleatoris. La següent comanda genera una cadena de caràcters alfanumèrics (elimina `/`, `=` i `+` perquè són part de l'alfabet [Base64](https://ca.wikipedia.org/wiki/Base64)):
+Podem usar OpenSSL per a generar secret aleatoris. La següent comanda genera una cadena de caràcters alfanumèrics, eliminant `/`, `=` i `+` perquè són part de l'alfabet [Base64](https://ca.wikipedia.org/wiki/Base64):
 
 ```bash
 openssl rand -base64 25 | tr --delete /=+ | cut --characters -32
