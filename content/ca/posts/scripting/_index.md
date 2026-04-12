@@ -20,12 +20,12 @@ La sèrie està dividida en dues parts.
 
 1. [Introducció a Python i algorismes]({{<relref "/posts/scripting/introduction/">}}): Primers passos amb Python: què és un algorisme, instal·lació, l'intèrpret interactiu, primer script i permisos d'execució.
 2. [Variables i tipus de dades]({{<relref "/posts/scripting/variables/">}}): Variables, tipus bàsics, conversions, f-strings i entrada de dades.
-3. [Col·leccions de dades]({{<relref "/posts/scripting/">}}): Llistes, tuples, diccionaris i conjunts per organitzar informació.
-4. [Expressions i operadors]({{<relref "/posts/scripting/">}}): Operadors aritmètics, de comparació, lògics i de pertinença.
-5. [Estructures de control]({{<relref "/posts/scripting/">}}): Decisions amb if, elif, else i match-case.
-6. [Bucles]({{<relref "/posts/scripting/">}}): Repetició amb for i while, range, enumerate i comprensions.
-7. [Funcions]({{<relref "/posts/scripting/">}}): Definició de funcions, paràmetres, retorn i documentació.
-8. [Bones pràctiques i depuració]({{<relref "/posts/scripting/">}}): PEP 8, gestió d'errors, logging i eines d'anàlisi de codi.
+3. [Col·leccions de dades]({{<relref "/posts/scripting/collections/">}}): Llistes, tuples, diccionaris i conjunts per organitzar informació.
+4. [Expressions i operadors]({{<relref "/posts/scripting/expressions/">}}): Operadors aritmètics, de comparació, lògics i de pertinença.
+5. [Estructures de control]({{<relref "/posts/scripting/control-structures/">}}): Decisions amb `if`, `elif`, `else` i `match-case`.
+6. [Bucles]({{<relref "/posts/scripting/loops/">}}): Repetició amb `for` i `while`, `range`, `enumerate` i comprensions.
+7. [Funcions]({{<relref "/posts/scripting/functions/">}}): Definició de funcions, paràmetres, retorn i documentació.
+8. [Bones pràctiques i depuració]({{<relref "/posts/scripting/good-practices/">}}): PEP 8, gestió d'errors, logging i eines d'anàlisi de codi.
 
 ### Part II: Scripting per a administració
 
