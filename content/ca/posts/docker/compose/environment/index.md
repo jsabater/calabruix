@@ -7,7 +7,7 @@ summary: "Gestió de la configuració amb variables d'entorn, fitxers .env, dire
 categories: ["teaching"]
 tags: ["docker", "compose"]
 series: ["Docker Compose"]
-series_order: 20
+series_order: 2
 weight: 20
 slug: variables-entorn
 ---

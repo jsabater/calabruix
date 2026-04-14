@@ -7,7 +7,7 @@ summary: "Introducció, estructura del fitxer de configuració, definició de se
 categories: ["teaching"]
 tags: ["docker", "compose"]
 series: ["Docker Compose"]
-series_order: 10
+series_order: 1
 weight: 10
 slug: fonaments
 ---

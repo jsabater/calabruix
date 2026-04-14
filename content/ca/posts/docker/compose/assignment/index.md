@@ -7,10 +7,10 @@ summary: ""
 categories: ["virtualisation"]
 tags: ["docker", "compose"]
 series: ["Docker Compose"]
-series_order: 4
-weight: 40
-draft: true
+series_order: 10
+weight: 100
 slug: practica
+draft: true
 ---
 
 A l'empresa on fem feina, després de fer un prototipus del nou entorn de desenvolupament i arrel del feedback rebut, ens han demanat una versió lleguremanet evolucionada de l'arquitectura web usant Docker Compose. Aquesta nova iteració serà usada com a referència de cara al nou entorn de producció.

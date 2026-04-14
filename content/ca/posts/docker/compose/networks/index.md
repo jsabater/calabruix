@@ -7,7 +7,7 @@ summary: "Configuració de xarxes Docker Compose, aïllament frontend/backend, r
 categories: ["teaching"]
 tags: ["docker", "compose"]
 series: ["Docker Compose"]
-series_order: 30
+series_order: 3
 weight: 30
 slug: xarxes
 ---
