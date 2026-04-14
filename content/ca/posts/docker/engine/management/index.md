@@ -28,7 +28,7 @@ docker run --name mariadb-demo \
   --env MARIADB_PASSWORD=demopass \
   --publish 3306:3306 \
   --detach \
-  mariadb:12
+  mariadb:12.2
 ```
 
 Analitzem les opcions utilitzades:
@@ -39,7 +39,7 @@ Analitzem les opcions utilitzades:
 | `--env VARIABLE=valor` | Defineix variables d'entorn dins del contenidor               |
 | `--publish 3306:3306`  | Mapeja el port 3306 de l'amfitrió al port 3306 del contenidor |
 | `--detach`             | Executa el contenidor en segon pla                            |
-| `mariadb:12`           | La imatge i etiqueta a utilitzar                              |
+| `mariadb:12.2`         | La imatge i etiqueta a utilitzar                              |
 
 Les **variables d'entorn** són el mecanisme estàndard per configurar contenidors. Cada imatge defineix les seves pròpies variables; en el cas de MariaDB:
 
@@ -62,8 +62,8 @@ docker ps
 La sortida mostra informació bàsica de cada contenidor:
 
 ```
-CONTAINER ID   IMAGE       COMMAND                  CREATED          STATUS          PORTS                    NAMES
-968c157c2e0f   mariadb:12  "docker-entrypoint.s…"   30 seconds ago   Up 29 seconds   0.0.0.0:3306->3306/tcp   mariadb-demo
+CONTAINER ID   IMAGE         COMMAND                  CREATED          STATUS          PORTS                    NAMES
+968c157c2e0f   mariadb:12.2  "docker-entrypoint.s…"   30 seconds ago   Up 29 seconds   0.0.0.0:3306->3306/tcp   mariadb-demo
 ```
 
 Per veure tots els contenidors, incloent els aturats, afegim l'opció `--all`:
@@ -176,7 +176,7 @@ docker run --name mariadb-demo \
   --env MARIADB_PASSWORD=demopass \
   --publish 3306:3306 \
   --detach \
-  mariadb:12
+  mariadb:12.2
 ```
 
 La comanda `docker exec` permet executar comandes dins d'un contenidor en execució. Per exemple, podem executar una comanda simple:
@@ -341,7 +341,7 @@ Per netejar els recursos creats durant aquesta lliçó:
 
 ```bash
 docker rm --force mariadb-demo adminer
-docker rmi mariadb:12 adminer
+docker rmi mariadb:12.2 adminer
 ```
 
 ## Exercicis pràctics
