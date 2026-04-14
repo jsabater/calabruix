@@ -1,7 +1,7 @@
 ---
 title: "Introducció a Python i algorismes"
 date: 2026-04-04
-lastmod: 2026-04-04
+lastmod: 2026-04-14
 description: "Primers passos amb Python: què és un algorisme, instal·lació, l'intèrpret interactiu, primer script i permisos d'execució"
 summary: "Primers passos amb Python: què és un algorisme, instal·lació, l'intèrpret interactiu, primer script i permisos d'execució"
 categories: ["teaching"]
@@ -157,6 +157,8 @@ Podem usar l'intèrpret com una calculadora:
 1024
 ```
 
+> Python interpreta les expressions, que inclouen un un operador i dos operands, i en presenta el resultat.
+
 També podem treballar amb text (el que en programació anomenam *strings* o cadenes de caràcters):
 
 ```python
@@ -165,6 +167,10 @@ També podem treballar amb text (el que en programació anomenam *strings* o cad
 >>> "administrador" + "@" + "domini.eu"
 'administrador@domini.eu'
 ```
+
+L'operador suma `+` ens permet concatenar cadenes de caràcters.
+
+> Python, de nou, interpreta l'expressió. Com que aqui usam cadenes de caràcters, el resultat serà una cadena.
 
 La funció `print()` ens permet mostrar missatges per pantalla:
 
@@ -200,6 +206,10 @@ print("Som un futur administrador de sistemes.")
 ```
 
 Guardam el fitxer amb el nom `hola.py`. L'extensió `.py` indica que és un fitxer de Python.
+
+{{ < alert > }}
+És necessari guardar el fitxer `hola.py` com a fitxer sense format, també conegut com a fitxer de text pla.
+{{ < /alert > }}
 
 Per executar l'script, obrim un terminal, anam al directori on hem guardat el fitxer i executam:
 
