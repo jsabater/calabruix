@@ -1,7 +1,7 @@
 ---
-title: "Docker Engine"
+title: "Contenidors amb Docker"
 date: 2026-03-23
-lastmod: 2026-03-23
+lastmod: 2026-04-15
 description: "Fonaments de Docker: instal·lació, contenidors, imatges, volums i xarxes"
 summary: "Fonaments de Docker: instal·lació, contenidors, imatges, volums i xarxes"
 categories: ["teaching", "virtualisation"]
