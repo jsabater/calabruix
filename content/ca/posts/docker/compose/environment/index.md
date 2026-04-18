@@ -1,7 +1,7 @@
 ---
 title: "Variables d'entorn i configuració"
 date: 2026-04-04
-lastmod: 2026-04-04
+lastmod: 2026-04-18
 description: "Gestió de la configuració amb variables d'entorn, fitxers .env, directiva env_file i bones pràctiques de seguretat"
 summary: "Gestió de la configuració amb variables d'entorn, fitxers .env, directiva env_file i bones pràctiques de seguretat"
 categories: ["teaching"]
@@ -350,7 +350,7 @@ En aquest exercici es proposa desplegar [Metabase](https://www.metabase.com/), u
 1. Crea un directori `metabase` al teu directori de projectes.
 2. Crea un fitxer `.env` amb les variables necessàries per a PostgreSQL.
 3. Crea un fitxer `compose.yaml` amb dos serveis:
-   - `metabase` amb la imatge `metabase/metabase:latest` al port 3000.
+   - `metabase` amb la imatge `metabase/metabase:v0.59.x` al port 3000.
    - `db` amb la imatge `postgres:18-alpine`.
 4. Configura Metabase per usar PostgreSQL com a base de dades d'aplicació (no la base de dades H2 per defecte). Les variables d'entorn de Metabase són:
    - `MB_DB_TYPE`: Tipus de base de dades (`postgres`).
@@ -386,7 +386,7 @@ Crea el fitxer `compose.yaml`:
 ```yaml
 services:
   metabase:
-    image: metabase/metabase:latest
+    image: metabase/metabase:v0.59.x
     container_name: metabase
     depends_on:
       - db
