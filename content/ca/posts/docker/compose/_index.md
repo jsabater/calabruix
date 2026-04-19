@@ -17,3 +17,4 @@ Cada tema combina explicacions teòriques amb exemples pràctics i exercicis, pr
 1. [Fonaments de Docker Compose]({{<relref "/posts/docker/compose/introduction/">}}): Aprèn els fonaments de Docker Compose, com definir serveis amb el fitxer `compose.yaml`, les comandes essencials per gestionar el cicle de vida dels contenidors i les convencions de noms automàtiques que aplica Compose.
 2. [Variables d'entorn i configuració]({{<relref "/posts/docker/compose/environment/">}}): Gestió de la configuració amb variables d'entorn, fitxers .env, directiva env_file i bones pràctiques de seguretat.
 3. [Xarxes i comunicació]({{<relref "/posts/docker/compose/networks/">}}): Configuració de xarxes Docker Compose, aïllament frontend/backend, resolució DNS i comunicació entre serveis.
+4. [Persistència i seguretat]({{<relref "/posts/docker/compose/volumes/">}}): Gestió de volums Docker Compose, persistència de dades, bind mounts, còpies de seguretat i restauració.
