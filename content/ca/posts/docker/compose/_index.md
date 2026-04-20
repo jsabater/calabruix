@@ -18,3 +18,17 @@ Cada tema combina explicacions teòriques amb exemples pràctics i exercicis, pr
 2. [Variables d'entorn i configuració]({{<relref "/posts/docker/compose/environment/">}}): Gestió de la configuració amb variables d'entorn, fitxers .env, directiva env_file i bones pràctiques de seguretat.
 3. [Xarxes i comunicació]({{<relref "/posts/docker/compose/networks/">}}): Configuració de xarxes Docker Compose, aïllament frontend/backend, resolució DNS i comunicació entre serveis.
 4. [Persistència i seguretat]({{<relref "/posts/docker/compose/volumes/">}}): Gestió de volums Docker Compose, persistència de dades, bind mounts, còpies de seguretat i restauració.
+5. [Construcció d'imatges]({{<relref "/posts/docker/compose/images/">}}): Construcció d'imatges personalitzades amb Docker Compose, multi-stage builds i bones pràctiques.
+
+
+<!--
+
+| Article | Tema | Tecnologia/Exemple |
+| --- | --- | --- |
+| 5 | Build Node.js | Node.js + Express |
+| 6 | Healthchecks | N8N (Node.js + PostgreSQL + Redis) |
+| 7 | Perfils | Entorns Plane (Python + PostgreSQL + Redis + S3) |
+| 8 | Secrets | Django Ninja + Vault + PostgreSQL |
+| 9 | Avançat | Odoo (Python + PostgreSQL) |
+| 10 | Pràctica final | Django Ninja REST API |
+-->
