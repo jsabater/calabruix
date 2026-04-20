@@ -9,7 +9,7 @@ tags: ["docker", "compose"]
 series: ["Docker Compose"]
 series_order: 5
 weight: 50
-slug: build
+slug: build-imatges
 ---
 
 Fins ara hem fet feina amb imatges oficials disponibles a Docker Hub. Però en projectes reals sovint necessitam construir les nostres pròpies imatges per empaquetar aplicacions personalitzades. Docker Compose facilita aquest procés amb la clau `build`, que permet definir com construir imatges directament des del fitxer `compose.yaml`.
