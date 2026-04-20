@@ -259,6 +259,8 @@ metabase/
 
 ### Fitxer `.env`
 
+El fitxer `.env` contendrà les credencials d'accés a la base de dades PostgreSQL:
+
 ```ini
 # PostgreSQL
 POSTGRES_USER=metabase
@@ -267,6 +269,8 @@ POSTGRES_DB=metabase
 ```
 
 ### Fitxer `compose.yaml`
+
+Per a aquest exemple pràctic usarem dos serveis i un volum al nostre fitxer `compose.yaml`:
 
 ```yaml
 services:
