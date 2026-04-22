@@ -300,7 +300,7 @@ En aquest exemple:
 - `docs/xarxes/eines/wireshark/index.md` podria contenir les instruccions d'instal·lació i ús de l'eina `wireshark`.
 - `docs/xarxes/diagrames/index.md` podria contenir els apunts sobre com fer diagrames de xarxes.
 
-Aquesta estructura de directoris i subdirectoris la podem estendre tant com vulguem.Si volem documentar més d'una assignatura, simplement afegim més directoris al mateix nivell:
+Aquesta estructura de directoris i subdirectoris la podem estendre tant com vulguem. Si volem documentar més d'una assignatura, simplement afegim més directoris al mateix nivell:
 
 ```
 content/docs/
@@ -325,7 +325,7 @@ Tot el contingut que vulguis documentar ha d'estar dins `content/docs/`. Si nece
 
 Cada fitxer Markdown comença amb un *front matter*, o bloc de metadades delimitat per `---`. Hugo i Hextra llegeixen aquests camps per configurar la pàgina.
 
-En el cas d'una secció, o *branch bundle* (fitxer `_index.md`), el contingut mínim del *front matter* mínim seria el següent:
+En el cas d'una secció, o *branch bundle* (fitxer `_index.md`), el contingut mínim del *front matter* seria el següent:
 
 ```yaml
 ---
@@ -337,13 +337,27 @@ weight: 1
 
 El camp `weight` controla l'ordre de les seccions al menú lateral. Un valor menor apareix abans. Si dues seccions tenen el mateix `weight`, s'ordenen alfabèticament.
 
-La portada o pàgina d'inici del lloc web (fitxer `content/_index.md`) també requerirà de metadades:
+La portada o pàgina d'inici del lloc web (fitxer `content/_index.md`) també requerirà de metadades, però manco:
 
 ```yaml
 ---
 title: "Documentació tècnica"
 ---
 ```
+
+A continuació es mostren els camps de *front matter* més rellevants per a la documentació tècnica amb Hextra. Els camps marcats com a obligatoris són necessaris perquè Hugo processi la pàgina correctament:
+
+| Camp          | Obligatori | Descripció                                                                                |
+|---------------|:----------:|-------------------------------------------------------------------------------------------|
+| `title`       | Sí         | Títol de la pàgina, visible al menú lateral i a la capçalera                              |
+| `linkTitle`   | No         | Títol curt per al menú lateral si `title` és massa llarg                                  |
+| `description` | No         | Descripció breu (metadada SEO i resum als llistats)                                       |
+| `weight`      | No         | Ordre al menú lateral (valors menors apareixen primer)                                    |
+| `date`        | No         | Data de creació; la pot generar Hugo automàticament                                       |
+| `lastmod`     | No         | Data de darrera modificació, mostrada al peu si `displayUpdatedDate: true` al `hugo.yaml` |
+| `draft`       | No         | Esborrany? Si `true` s'oculta la pàgina en la build de producció                          |
+| `slug`        | No         | Personalitza la part final de la URL de la pàgina                                         |
+| `tags`        | No         | Etiquetes temàtiques, visibles si `params.page.showTags: true` al `hugo.yaml`             |
 
 ### Escriure contingut
 
@@ -438,7 +452,7 @@ En qualsevol cas, les imatges que fiquis dins de la mateixa carpeta que el docum
 Podem enllaçar els diferents continguts que anem generant, creant així un graf de navegació. Per fer-ho, usam la sintaxi Markdown que ja coneixem:
 
 ```markdown
-Consulta l'apunt de [Wireshark](docs/xarxes/eines/wireshark) per a la llista completa de paràmetres d'aquesta eina.
+Consulta l'apunt de [Wireshark](/docs/xarxes/eines/wireshark) per a la llista completa de paràmetres d'aquesta eina.
 ```
 
 ### Aparença
@@ -556,13 +570,13 @@ L'objectiu d'aquest exercici és construir l'estructura de contingut del lloc we
 2. Escriu el *front matter* i un contingut real a cada una de les seccions. El contingut ha de provenir d'una assignatura o projecte real del mòdul, no d'exemples genèrics.
 3. Comprova que el website té, com a mínim, **4 seccions** visibles al menú lateral.
 4. Comprova que el website té, com a mínim, per pàgina:
-   - **400 mots** de text real
+   - **200 mots** de text real
    - **2 blocs de codi** amb sintaxi destacada.
    - **1 taula**
    - **1 callout** (nota, avís o consell)
 5. Verifica que `hugo server --cleanDestinationDir --buildDrafts` no dona errors i que totes les seccions apareixen al menú lateral.
 
-> **Pista:** Si el menú lateral no mostra les teves seccions, comprova que els fitxers es diuen `_index.md` (amb guió baix) i no `index.md`. Els branch bundles requereixen `_index.md` per aparèixer al menú d'Hextra.
+> Si el menú lateral no mostra les teves seccions, comprova que els directoris intermedis usen _index.md (branch bundle) i les pàgines terminals usen index.md (leaf bundle).
 
 ### Exercici 2
 
