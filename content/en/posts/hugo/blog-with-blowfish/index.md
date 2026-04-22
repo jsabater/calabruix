@@ -1,7 +1,7 @@
 ---
 title: "Build your blog using Hugo and Blowfish"
 date: 2024-09-05
-lastmod: 2026-04-03
+lastmod: 2026-04-21
 description: "An installation and configuration guide of the Hugo static site generator with the Blowfish theme for your blog website."
 summary: "Install and configure the Hugo site generator with the Blowfish theme for your blog website."
 categories: ["frameworks"]
@@ -23,10 +23,10 @@ apt-get install git
 
 ## Install Hugo
 
-We will install the extended edition of Hugo, as recommended in their [installation instructions](https://gohugo.io/installation/linux/#editions), using a Debian package that we will download from the [latest release page at Github](https://github.com/gohugoio/hugo/releases/latest).
+We will install the extended edition of Hugo, as recommended in their [installation instructions](https://gohugo.io/installation/linux/#editions), using a Debian package that we will download from the [latest release page at Github](https://github.com/gohugoio/hugo/releases/latest). The following set of commands will automate the task (adjust the version in the first line, if needed):
 
 ```bash
-HUGO_VERSION="0.159.2"
+HUGO_VERSION="0.160.1"
 wget https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
     --output-document /tmp/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
 sudo dpkg --install /tmp/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
@@ -74,7 +74,8 @@ We will install Blowfish as a Git submodule, as recommended in their [installati
 
 ```bash
 cd ~/Sites/mywebsite
-git submodule add --branch main https://github.com/nunocoracao/blowfish.git themes/blowfish
+git submodule add --branch main \
+  https://github.com/nunocoracao/blowfish.git themes/blowfish
 ```
 
 > You can check the maximum Hugo version supported by the theme in its `config.toml` file and adjust your Hugo version accordingly.
@@ -87,6 +88,19 @@ git submodule update --remote --merge
 ```
 
 > Once the submodule has been updated, the site needs to be rebuilt.
+
+When in need to clone the repository into another computer, you have to keep in mind that, when cloning a repository that contains submodules, you have to initialise them explicitly.
+
+```bash
+git clone --recurse-submodules \
+  git@github.com:<username>/mywebsite.git
+```
+
+Or, if you have already cloned it without the option of the submodules, run:
+
+```bash
+git submodule update --init
+```
 
 Finally, we will create a `.gitignore` file to exclude certain files from the repository automatically.
 
