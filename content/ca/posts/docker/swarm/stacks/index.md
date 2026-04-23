@@ -1,7 +1,7 @@
 ---
 title: "De Compose a Swarm amb Stacks"
 date: 2026-01-31
-lastmod: 2026-01-31
+lastmod: 2026-04-23
 description: "Desplegament d'aplicacions multi-servei amb Docker Stack i fitxers Compose"
 summary: "Desplegament d'aplicacions multi-servei amb Docker Stack i fitxers Compose"
 categories: ["teaching"]
@@ -333,22 +333,37 @@ I després ja podem fer el desplegament.
 
 ## Exemple complet     
 
-Vegem un exemple d'una aplicació web amb NGINX com a proxy invers, una API amb Python i Redis per a cache, en un entorn de desenvolupament:
+Vegem un exemple d'una aplicació web amb Traefik com a proxy invers, una API amb Python i Redis per a cache. A Docker Compose hem usat NGINX com a proxy invers, però a Swarm és més natural usar Traefik, car s'integra nativament amb l'orquestrador, descobreix automàticament els serveis mitjançant labels i gestiona el balanceig de càrrega sense configuració addicional.
 
 ```yaml
 # docker-stack.yml
 services:
   proxy:
-    image: nginx:1.26-alpine
+    image: traefik:v3.6
+    command:
+      - "--providers.swarm=true"
+      - "--providers.swarm.exposedByDefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--ping=true"
+      - "--ping.entryPoint=ping"
+      - "--entrypoints.ping.address=:8082"
     ports:
       - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     deploy:
-      replicas: 2
+      replicas: 1
+      placement:
+        constraints:
+          - node.role==manager
       update_config:
         parallelism: 1
         delay: 10s
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       - frontend
 
@@ -359,6 +374,10 @@ services:
       - LOG_LEVEL=info
     deploy:
       replicas: 4
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.api.rule=PathPrefix(`/api`)"
+        - "traefik.http.services.api.loadbalancer.server.port=8000"
       update_config:
         parallelism: 2
         delay: 5s
@@ -370,23 +389,28 @@ services:
         reservations:
           cpus: '0.25'
           memory: 128M
-    networks:
-      - frontend
-      - backend
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - frontend
+      - backend
 
   cache:
-    image: redis:7-alpine
+    image: redis:8.6-alpine
     deploy:
       replicas: 1
       placement:
         constraints:
           - node.role==worker
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       - backend
     volumes:
@@ -403,6 +427,16 @@ volumes:
   cache-data:
 ```
 
+Alguns aspectes a destacar de la configuració de Traefik:
+
+- L'element `--providers.swarm=true` habilita el descobriment automàtic de serveis a Swarm.
+- L'element `--providers.swarm.exposedByDefault=false` indica que els serveis no s'exposin automàticament; cal habilitar-los explícitament amb el label `traefik.enable=true`.
+- Els elements `--ping=true` i `--ping.entryPoint=ping` habiliten l'*endpoint* `/ping` per a *healthchecks*, exposat al port 8082 (separat del tràfic web).
+- El *healthcheck* usa la comanda nativa `traefik healthcheck --ping` en comptes de `curl` o `wget`.
+- El servei `api` inclou etiquetes que indiquen a Traefik com enrutar el tràfic: les peticions a `/api` es redirigeixen al port 8000 del servei.
+
+> Nota: A diferència de NGINX, Traefik no requereix un fitxer de configuració extern per a l'enrutament bàsic. Tot es configura mitjançant etiquetes (*labels*) als serveis.
+
 Per desplegar aquesta configuració usaríem la següent comanda:
 
 ```bash
@@ -415,13 +449,13 @@ Imaginem que editam el fitxer `docker-stack.yml` i modificam la imatge de la nos
 docker stack deploy -c docker-stack.yml webapp
 ```
 
-Swarm farà *rolling update* de l'API sense afectar el proxy ni el cache.
+Swarm farà *rolling update* de l'API sense afectar el proxy invers (Traefik) ni la memòria cau (Redis).
 
 > La pràctica recomanada és definir el `HEALTHCHECK` complet al `Dockerfile`, usant el `docker-compose.yml` només per a ajustar certs valors o quan la imatge és d'un tercer i no inclou aquesta configuració.
 
 ## Bind mounts
 
-Quant al bind mount del servei `proxy` de l'exemple anterior, essent adient per a un entorn de desenvolupament, cal tenir en compte les següents dificultats en un entorn de producció:
+A l'exemple anterior, Traefik necessita accés al socket de Docker (`/var/run/docker.sock`) per descobrir els serveis. Aquest és un cas legítim de bind mount a producció. Però, en general, els bind mounts presenten dificultats en un entorn distribuït:
 
 * El fitxer ha d'existir a tots els nodes on pugui executar-se el servei.
 * Cal copiar el fitxer a cada node del clúster (sincronització manual).
@@ -439,38 +473,54 @@ Per a solventar aquests problemes tenim diverses opcions:
 
 > Docker Configs i Docker Secrets es tracten al [següent article]({{< relref "/posts/docker/swarm/configs-secrets/" >}}).
 
-Pel cas del fitxer `nginx.conf` de l'exemple de l'apartat anterior, Docker Configs seria una molt bona opció. Per fer-ne ús, el primer que faríem seria canviar la configuració del fitxer `docker-stacks.yml`:
+Vegem un exemple amb Redis. Imaginem que volem configurar límits de memòria i política d'evicció. Podríem passar-ho com a arguments:
 
 ```yaml
 services:
-  proxy:
-    image: nginx:1.26-alpine
+  cache:
+    image: redis:8.6-alpine
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+```
+
+Però si la configuració és més extensa, és més net usar un fitxer `redis.conf`. Docker Configs ens permet distribuir-lo automàticament a tots els nodes:
+
+```yaml
+services:
+  cache:
+    image: redis:8.6-alpine
+    command: redis-server /etc/redis/redis.conf
     configs:
-      - source: nginx_config
-        target: /etc/nginx/nginx.conf
+      - source: redis_config
+        target: /etc/redis/redis.conf
 
 configs:
-  nginx_config:
-    file: ./nginx.conf
+  redis_config:
+    file: ./redis.conf
 ```
 
-Una vegada creat el contingut del fitxer `nginx.conf` segons les nostres necessitats, usaríem les següents comandes per a crear la configuració i actualitzar el servei:
+El fitxer `redis.conf` podria contenir, per exemple, les següent directives:
+
+```text
+maxmemory 256mb
+maxmemory-policy allkeys-lru
+appendonly yes
+save 900 1
+save 300 10
+```
+
+Per desplegar aquesta configuració usaríem la següent comanda:
 
 ```bash
-# Cream la configuració
-docker config create nginx_config nginx.conf
-
-# Actualitzam el servei
-docker service update \
-  --config-add source=nginx_config,target=/etc/nginx/nginx.conf \
-  mystack_proxy
+docker stack deploy -c docker-stack.yml mystack
 ```
 
-Això no vol dir que no tenguem escenaris on els *bind mounts* no siguin necessaris a producció, com per exemple:
+Docker Swarm crearà automàticament el config i el distribuirà als nodes on s'executi el servei.
 
-* Fitxers de logs que han de persistir al host.
+Això no vol dir que no tenguem escenaris on els bind mounts siguin necessaris a producció, com per exemple:
+
 * Sockets (com `/var/run/docker.sock` per a Traefik).
-* Dades locals amb constraint de node (el servei sempre s'executa al mateix node).
+* Fitxers de logs que han de persistir al host.
+* Dades locals amb *constraint* de node (el servei sempre s'executa al mateix node).
 
 > Aquesta secció només introdueix el concepte de Docker Configs. Al [següent article]({{< relref "/posts/docker/swarm/configs-secrets/" >}}) es profunditza en la gestió.
 
