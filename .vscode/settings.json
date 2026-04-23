@@ -1,0 +1,6 @@
+{
+  "search.exclude": {
+    "**/themes": true,
+    "**/.venv": true
+  }
+}
