@@ -1,7 +1,7 @@
 ---
 title: "Xarxes a Docker Swarm"
 date: 2026-01-31
-lastmod: 2026-01-31
+lastmod: 2026-04-23
 description: "Xarxes overlay, descobriment de serveis, balanceig de càrrega i routing mesh"
 summary: "Xarxes overlay, descobriment de serveis, balanceig de càrrega i routing mesh"
 categories: ["teaching"]
@@ -239,7 +239,7 @@ Una vegada creades les xarxes, connectarem els serveis a les xarxes pertinents:
 
 ```bash
 # El proxy invers es connecta al frontend
-docker service create --name proxy --network frontend --publish 80:80 traefik:v3.6.7
+docker service create --name proxy --network frontend --publish 80:80 traefik:v3.6
 
 # L'API es connecta a ambdues xarxes
 docker service create --name api --network frontend --network backend myapp/api
