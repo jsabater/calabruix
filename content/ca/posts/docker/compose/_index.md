@@ -19,14 +19,13 @@ Cada tema combina explicacions teòriques amb exemples pràctics i exercicis, pr
 3. [Xarxes i comunicació]({{<relref "/posts/docker/compose/networks/">}}): Configuració de xarxes Docker Compose, aïllament frontend/backend, resolució DNS i comunicació entre serveis.
 4. [Persistència i seguretat]({{<relref "/posts/docker/compose/volumes/">}}): Gestió de volums Docker Compose, persistència de dades, bind mounts, còpies de seguretat i restauració.
 5. [Construcció d'imatges]({{<relref "/posts/docker/compose/images/">}}): Construcció d'imatges personalitzades amb Docker Compose, multi-stage builds i bones pràctiques.
+6. [Healthchecks i dependències]({{<relref "/posts/docker/compose/healthchecks/">}}): Configuració de healthchecks, gestió de dependències entre serveis i policymes de reinici amb Docker Compose.
 
 
 <!--
 
 | Article | Tema | Tecnologia/Exemple |
 | --- | --- | --- |
-| 5 | Build Node.js | Node.js + Express |
-| 6 | Healthchecks | N8N (Node.js + PostgreSQL + Redis) |
 | 7 | Perfils | Entorns Plane (Python + PostgreSQL + Redis + S3) |
 | 8 | Secrets | Django Ninja + Vault + PostgreSQL |
 | 9 | Avançat | Odoo (Python + PostgreSQL) |
