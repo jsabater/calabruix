@@ -65,19 +65,52 @@ Be consistent. If a function is tightly coupled to pyinfra (uses host.get_fact()
 
 ## Installation
 
-Create a project folder, set up a virtual environment and install the package
+We will be using `uv` as our virtual environment manager so, if you do not have it installed, run the following:
 
 ```bash
-mkdir ~/Projects/pyinfra
-python3 -m venv ~/Projects/pyinfra/.venv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+If needed, the installer will display a finall message requesting you to update your `PATH` by running a command.
+
+Let's create a new project using `uv`:
+
+```bash
+uv init --no-pin-python --description "Pyinfra project" \
+  ~/Projects/pyinfra
+```
+
+> The command `uv init` will create a `pyproject.toml` file with a `requires-python` directive, whose value will be based on the version available in your system. Feel free to override it depending on what you expect on your production environment.
+
+Next, let's set up and activate a virtual environment:
+
+```bash
+uv venv ~/Projects/pyinfra/.venv
 source ~/Projects/pyinfra/.venv/bin/activate
-pip install pyinfra pyyaml
+```
+
+> The command `uv venv` will create a virtual environment in the `.env` folder of the current directory and is the equivalent of `python3 -m venv .venv`.
+
+Now, let's now add some requirements to the virtual environment. Because we are going to run Pyinfra on different environments, we will settle to Python version 3.11.2, which is the version included on Debian 12 Bookworm:
+
+```bash
+cd ~/Projects/pyinfra
+echo "3.11.2" > .python-version
+uv add python-dotenv==1.2.2 requests==2.33.1
+uv add ansible-core==2.19.5 ansible-vault==4.1.0 pyyaml==6.0.3
+uv add pyinfra==3.7
 ```
 
 Test the installation:
 
 ```bash
 pyinfra --version
+```
+
+We can also list the installed packages:
+
+```bash
+uv pip list
 ```
 
 ## Project structure
