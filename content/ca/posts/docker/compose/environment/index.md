@@ -283,7 +283,7 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:8-alpine
+    image: redis:8.6-alpine
     container_name: docmost-redis
     command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
     volumes:
