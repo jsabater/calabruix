@@ -1,7 +1,7 @@
 ---
 title: "Pràctica final de Docker Swarm"
 date: 2026-03-03
-lastmod: 2026-03-03
+lastmod: 2026-04-23
 description: "Exercici integrador: desplegament complet d'una aplicació Django en un clúster Docker Swarm"
 summary: "Exercici integrador: desplegament complet d'una aplicació Django en un clúster Docker Swarm"
 categories: ["teaching"]
@@ -42,7 +42,7 @@ L'aplicació consta dels següents serveis:
 | `traefik`  | `traefik:v3.6`              | 1         | Només al node manager             |
 | `app`      | `<usuari>/sportsclub:1.0.0` | 2         | Només als workers                 |
 | `postgres` | `postgres:18-alpine`        | 1         | Node amb etiqueta `database=true` |
-| `redis`    | `redis:8-alpine`            | 1         | Sense restricció                  |
+| `redis`    | `redis:8.6-alpine`          | 1         | Sense restricció                  |
 
 Substitueix `<usuari>` pel teu nom d'usuari de Docker Hub.
 
@@ -206,7 +206,7 @@ Aquesta és la tasca central de la pràctica. Crea el fitxer `docker-stack.yml` 
 
 **Servei `redis`:**
 
-* Imatge `redis:8-alpine`.
+* Imatge `redis:8.6-alpine`.
 * Persistència habilitada.
 * Volum per a les dades.
 * Connexió només a la xarxa `backend`.
