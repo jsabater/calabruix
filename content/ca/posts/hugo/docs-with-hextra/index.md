@@ -1,7 +1,7 @@
 ---
 title: "Documentació tècnica amb Hugo i Hextra"
 date: 2026-04-21
-lastmod: 2026-04-22
+lastmod: 2026-04-30
 description: "Guia per crear un website de documentació tècnica amb Hugo i el tema Hextra: instal·lació, configuració, creació de contingut i generació dels fitxers estàtics."
 summary: "Crea un website de documentació tècnica professional amb Hugo i el tema Hextra, sense dependències externes ni eines addicionals."
 categories: ["teaching"]
@@ -552,7 +552,7 @@ hugo --cleanDestinationDir
 
 Els fitxers HTML, CSS i JavaScript resultants es guarden a `public/`. El contingut d'aquesta carpeta és el que hauríem de pujar al nostre servidor web, e.g., Apache o NGINX.
 
-Pots obrir el fitxer `public/index.html` directament al teu navegador, tot i que alguns recursos (fonts, scripts externs) poden no carregar-se correctament per les restriccions del protocol `file://`. La forma recomanada de previsualitzar el resultat final és amb `hugo server` (sense fer ús de `--buildDrafts`) i accedint a la pàgina `http://localhost:1313/` en el navegador.
+Pots obrir el fitxer `public/index.html` directament al teu navegador, tot i que alguns recursos (fonts, scripts externs) no es carregaran correctament perquè Hugo els genera usant rutes absolutes. La forma recomanada de previsualitzar el resultat final és amb `hugo server` (sense fer ús de `--buildDrafts`) i accedint a la pàgina `http://localhost:1313/` en el navegador.
 
 > Si vols publicar el website amb Cloudflare Pages, pots trobar els passos detallats en [aquesta secció](/posts/hugo/blog-with-blowfish/#cloudflare-pages) de l'article sobre com crear un blog amb Hugo i Blowfish. El procés és idèntic per a qualsevol tema d'Hugo.
 
@@ -587,13 +587,22 @@ L'objectiu d'aquest exercici és personalitzar el lloc web i generar els fitxers
 1. Canvia el color principal del tema modificant `assets/css/custom.css` tal com s'explica a la secció de personalització. Tria un color diferent del que usen els companys de classe.
 2. Configura el menú de navegació superior al `hugo.yaml` per reflectir l'estructura real del teu website.
 3. Modifica el títol i la descripció del website al `hugo.yaml`.
-4. Genera els fitxers estàtics:
+4. Assegura't de que la generació dels fitxers estàtics funcioni:
    ```bash
    hugo --cleanDestinationDir
    ```
-5. Obre `public/index.html` al navegador i verifica que el contingut és correcte.
+5. Si obris `public/index.html` al navegador, veuràs que el contingut del lloc web no es mostra correctament. Això és normal perquè Hugo ha usat rutes absolutes per les imatges, fitxers d'estils i scripts.
 6. Crea un fitxer `README.md` a l'arrel del repositori seguint l'esquelet proporcionat a continuació.
-7. Comprimeix el directori `public/` en un fitxer ZIP i lliura'l juntament amb el `README.md` a través de l'aula virtual.
+7. Comprimeix el directori del projecte `mywebsite/` en un fitxer ZIP i lliura'l juntament amb el `README.md` a través de l'aula virtual.
+
+Per a la correcció de l'exercici es descomprimirà l'arxiu ZIP i s'executarà la següent comanda:
+
+```bash
+cd mywebsite
+hugo --cleanDestinationDir
+```
+
+Llavors s'usarà la URL http://localhost:1313/ per visualitzar el lloc web.
 
 **Esquelet del README.md:**
 
