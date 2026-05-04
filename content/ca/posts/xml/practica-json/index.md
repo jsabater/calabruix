@@ -1,7 +1,7 @@
 ---
 title: "Pràctica lliurable: Botiga d'esports en JSON"
 date: 2026-03-11
-lastmod: 2026-05-01
+lastmod: 2026-05-04
 description: "Creació d'un catàleg de productes esportius en JSON amb validació d'esquemes i consultes amb jq."
 summary: "Creació d'un catàleg de productes esportius en JSON amb validació d'esquemes i consultes amb jq."
 categories: ["teaching"]
@@ -154,12 +154,22 @@ El fitxer `botiga.schema.json` ha d'incloure:
    - Data: `format: "date"`.
    - URL d'imatges: `format: "uri"`.
 
-6. **Enumeracions** amb `enum`:
+6. **Restriccions de vectors (arrays):**
+   - `uniqueItems` per a llistes sense duplicats.
+   - `minItems` i `maxItems` per a llistes de certa longitud.
+   - `items` per a llistes d'elements de cert tipus.
+
+7. **Restriccions lògiques:** Usa al manco una de les seguents restriccions:
+   - `allOf` per a llistes de camps amb valors obligatoris.
+   - `oneOf` o `anyOf` per a llistes de camps amb valors possibles.
+   - `not` per a negar una restricció.
+
+8. **Enumeracions** amb `enum`:
    - Talles de roba: `["XS", "S", "M", "L", "XL", "XXL"]`.
    - Moneda: `["EUR", "USD", "GBP"]`.
    - Colors disponibles (defineix 6-8 colors).
 
-7. **Reutilització** amb `$defs` i `$ref`:
+9. **Reutilització** amb `$defs` i `$ref`:
    - Defineix subesquemes reutilitzables per a: producte, variant, ressenya.
    - Referencia'ls amb `$ref` on calgui.
    - Això evita duplicar definicions i fa l'esquema més mantenible.
@@ -205,22 +215,22 @@ Per a cada consulta, has d'incloure:
 
 El document `CONSULTES.md` ha de seguir aquest format:
 
-- Un títol (nivell 1) del document.
-- Un subtítol (nivell 2) per a cada consulta, amb el nom de la consulta.
-- La comanda a executar, formatada. Exemple:
-  ​```bash
+* Un títol (nivell 1) del document.
+* Un subtítol (nivell 2) per a cada consulta, amb el nom de la consulta.
+* La comanda a executar, formatada. Exemple:
+  ```bash
   jq '.productes[].nom' botiga.json
-  ​```
+  ```
 
-- El resultat de la comanda, formatat. Exemple:
-  ​```text
-  Esportives running Nike Air Zoom
-  Camiseta tècnica Adidas
-  Pilota de futbol Adidas UCL
+* El resultat de la comanda, formatat. Exemple:
+  ```text
+  "Esportives running Nike Air Zoom"
+  "Camiseta tècnica Adidas"
+  "Pilota de futbol Adidas UCL"
   ...
-  ​```
+  ```
 
-- L'explicació del que fa la consulta, per exemple:
+* L'explicació del que fa la consulta, per exemple:
   ```text
   Aquesta consulta accedeix a l'array 'productes' i extreu
   el camp 'nom' de cada element.
@@ -310,16 +320,6 @@ grep -c '"pattern"' botiga.schema.json
 grep -c '"enum"' botiga.schema.json
 grep -c '"minimum"\|"maximum"' botiga.schema.json
 ```
-
-### Bloc 3: Consultes jq
-
-Verifica que el document `CONSULTES.md` existeix i conté totes les consultes:
-
-```bash
-grep -c '```bash' CONSULTES.md
-```
-
-Executa cada consulta del document per verificar que funciona correctament. Si alguna consulta dona error, revisa la sintaxi.
 
 ## Llista de verificació
 
