@@ -1,7 +1,7 @@
 ---
 title: "Pràctica lliurable: Botiga d'esports en JSON"
 date: 2026-03-11
-lastmod: 2026-03-11
+lastmod: 2026-05-01
 description: "Creació d'un catàleg de productes esportius en JSON amb validació d'esquemes i consultes amb jq."
 summary: "Creació d'un catàleg de productes esportius en JSON amb validació d'esquemes i consultes amb jq."
 categories: ["teaching"]
@@ -57,7 +57,7 @@ El document `botiga.json` ha de contenir:
    - Nom de la categoria.
    - Descripció breu.
 
-   > Exemples de categories: Running, Fitness, Natació, Ciclisme, Futbol, Bàsquet, Tennis, Muntanya...
+> Exemples de categories: Running, Fitness, Natació, Ciclisme, Futbol, Bàsquet, Tennis, Muntanya...
 
 3. **Entre 15 i 20 productes** amb la següent informació per a cadascun:
    - Identificador únic ([*](SKU)).
@@ -66,7 +66,7 @@ El document `botiga.json` ha de contenir:
    - Marca.
    - Categoria (referència a l'identificador de categoria).
    - Preu (amb moneda).
-   - Preu amb descompte (si n'hi ha, pot ser `null`).
+   - Preu amb descompte (pot ser `null`).
    - Estoc disponible.
    - Valoració mitjana (0-5).
    - Nombre de valoracions.
@@ -75,23 +75,23 @@ El document `botiga.json` ha de contenir:
    - Imatges (array d'URLs).
    - Etiquetes (array de paraules clau).
 
-4. **Variants de producte** per a almenys 4 productes de roba o calçat:
+4. **Variants de producte** per a almanco 4 productes de roba o calçat:
    - Talla (XS, S, M, L, XL o números per a calçat).
    - Color.
    - Estoc específic de la variant.
    - SKU de la variant (derivat del SKU principal).
 
-   > Exemple: Una samarreta tècnica pot tenir variants per a cada combinació de talla i color.
+> Exemple: Una camiseta tècnica pot tenir variants per a cada combinació de talla i color.
 
 5. **Ressenyes d'usuaris** per a almenys 4 productes, amb:
    - Nom de l'usuari.
    - Puntuació (1-5).
    - Comentari.
    - Data de la ressenya.
-   - Verificat (booleà: indica si l'usuari ha comprat el producte).
+   - Verificat (booleà que indica si l'usuari ha comprat el producte).
 
 6. **Ús dels 6 tipus de dades JSON:**
-   - `string`: noms, descripcions, URLs...
+   - `string`: noms, descripcions, codis de monedes, URLs...
    - `number`: preus, estocs, puntuacions...
    - `boolean`: disponibilitat, verificat...
    - `null`: descompte inexistent, camps opcionals...
@@ -139,7 +139,7 @@ El fitxer `botiga.schema.json` ha d'incloure:
 
 3. **Camps obligatoris** amb `required`:
    - L'esquema ha d'indicar quins camps són obligatoris a cada nivell.
-   - Per exemple: un producte ha de tenir obligatòriament `sku`, `nom`, `preu` i `estoc`.
+   - Per exemple, un producte ha de tenir obligatòriament `sku`, `nom`, `preu` i `estoc`.
 
 4. **Restriccions numèriques:**
    - Preu: `minimum: 0` (no pot ser negatiu).
@@ -180,11 +180,11 @@ En aquest bloc demostraràs que saps usar l'eina `jq` per extreure, filtrar i pr
 
 ### Requisits
 
-El document `CONSULTES.md` ha de contenir **totes les següents consultes `jq`** de la llista següent, o equivalents adaptades al teu document:
+El document `CONSULTES.md` ha de contenir **totes les consultes** `jq` de la llista següent, o equivalents adaptades al teu document:
 
 1. Llistar tots els noms de productes.
 2. Filtrar productes d'una categoria específica, per exemple, tots els productes de "Running".
-3. Filtrar productes amb preu inferior a X euros, per exemple, productes per sota de 50€.
+3. Filtrar productes amb preu inferior a X euros, per exemple, productes per sota de 50 €.
 4. Filtrar productes amb descompte, és a dir, on `preuDescompte` no sigui `null`.
 5. Comptar el nombre total de productes.
 6. Comptar el nombre de productes per categoria.
@@ -205,20 +205,27 @@ Per a cada consulta, has d'incloure:
 
 El document `CONSULTES.md` ha de seguir aquest format:
 
-1. Un títol (nivell 1) del document
-2. Un subtítol (nivell 2) per a cada consulta, amb el nom de la consulta.
-3. La comanda a executar, formatada. Exemple:
-   ​```bash
-   jq '.productes[].nom' botiga.json
-   ​```
-4. El resultat de la comanda, formatat. Exemple:
-   ​```text
-   "Sabatilles running Nike Air Zoom"
-   "Samarreta tècnica Adidas"
-   "Pilota de futbol Adidas UCL"
-   ...
-   ​```
-5. L'explicació del que fa la consulta, per exemple: "Aquesta consulta accedeix a l'array `productes` i extreu el camp `nom` de cada element".
+- Un títol (nivell 1) del document.
+- Un subtítol (nivell 2) per a cada consulta, amb el nom de la consulta.
+- La comanda a executar, formatada. Exemple:
+  ​```bash
+  jq '.productes[].nom' botiga.json
+  ​```
+
+- El resultat de la comanda, formatat. Exemple:
+  ​```text
+  Esportives running Nike Air Zoom
+  Camiseta tècnica Adidas
+  Pilota de futbol Adidas UCL
+  ...
+  ​```
+
+- L'explicació del que fa la consulta, per exemple:
+  ```text
+  Aquesta consulta accedeix a l'array 'productes' i extreu
+  el camp 'nom' de cada element.
+  ```
+  Cal explicar com la consulta aconsegueix el resultat.
 
 ## Autoavaluació
 
