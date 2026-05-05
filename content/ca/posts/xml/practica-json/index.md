@@ -1,7 +1,7 @@
 ---
 title: "Pràctica lliurable: Botiga d'esports en JSON"
 date: 2026-03-11
-lastmod: 2026-05-04
+lastmod: 2026-05-05
 description: "Creació d'un catàleg de productes esportius en JSON amb validació d'esquemes i consultes amb jq."
 summary: "Creació d'un catàleg de productes esportius en JSON amb validació d'esquemes i consultes amb jq."
 categories: ["teaching"]
@@ -112,7 +112,11 @@ El document `README.md` ha d'explicar breument (1-2 pàgines en format Markdown)
 
 5. **Convencions de noms:** Has usat `camelCase`, `snake_case` o una altra convenció? Per què?
 
-6. **Altres decisions:** Qualsevol altra decisió rellevant que vulguis justificar.
+6. **Altres decisions:** Qualsevol altra decisió rellevant que vulguis justificar, e.g., preus, etc.
+
+7. **Restriccions implementades:** Restriccions als tipus de dades que has usat al JSON Schema.
+
+8. **Autoavaluació:** Inclou les comandes del blocs 1 i 2 de l'autoavaluació que trobaràs més avall en aquest document.
 
 Aprofita aquest document per afegir la documentació o context que consideris necessari a l'hora de fer la correcció.
 
