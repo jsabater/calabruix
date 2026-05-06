@@ -206,7 +206,7 @@ El document `CONSULTES.md` ha de contenir **totes les consultes** `jq` de la lli
 8. Calcular la suma total de l'estoc disponible.
 9. Mostrar productes amb estoc 0, és a dir, no disponibles.
 10. Extreure només el nom i el preu de cada producte (projecció de camps).
-11. Ordenar productes per preu (ascendent o descendent).
+11. Ordenar productes per preu (descendent).
 12. Mostrar el producte amb millor valoració.
 
 Per a cada consulta, has d'incloure:
@@ -237,7 +237,7 @@ El document `CONSULTES.md` ha de seguir aquest format:
 * L'explicació del que fa la consulta, per exemple:
   ```text
   Aquesta consulta accedeix a l'array 'productes' i extreu
-  el camp 'nom' de cada element.
+  el valor de la clau 'nom' de cada element.
   ```
   Cal explicar com la consulta aconsegueix el resultat.
 
