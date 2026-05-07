@@ -20,6 +20,7 @@ Cada tema combina explicacions teòriques amb exemples pràctics i exercicis, pr
 4. [Persistència i seguretat]({{<relref "/posts/docker/compose/volumes/">}}): Gestió de volums Docker Compose, persistència de dades, bind mounts, còpies de seguretat i restauració.
 5. [Construcció d'imatges]({{<relref "/posts/docker/compose/images/">}}): Construcció d'imatges personalitzades amb Docker Compose, multi-stage builds i bones pràctiques.
 6. [Healthchecks i dependències]({{<relref "/posts/docker/compose/healthchecks/">}}): Configuració de healthchecks, gestió de dependències entre serveis i policymes de reinici amb Docker Compose.
+7. [Perfils i entorns]({{<relref "/posts/docker/compose/profiles/">}}): Gestió de perfils per activar serveis selectivament i configuració de múltiples entorns amb Docker Compose.
 
 
 <!--
