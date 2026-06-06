@@ -1,7 +1,6 @@
 {
     "recommendations": [
         "codeium.codeium",
-        "ugi-dev.better-commits",
-        "bierner.markdown-mermaid"
+        "ugi-dev.better-commits"
     ]
 }
