@@ -20,15 +20,13 @@ Cada tema combina explicacions teòriques amb exemples pràctics i exercicis, pr
 4. [Persistència i seguretat]({{<relref "/posts/docker/compose/volumes/">}}): Gestió de volums Docker Compose, persistència de dades, bind mounts, còpies de seguretat i restauració.
 5. [Construcció d'imatges]({{<relref "/posts/docker/compose/images/">}}): Construcció d'imatges personalitzades amb Docker Compose, multi-stage builds i bones pràctiques.
 6. [Healthchecks i dependències]({{<relref "/posts/docker/compose/healthchecks/">}}): Configuració de healthchecks, gestió de dependències entre serveis i policymes de reinici amb Docker Compose.
-7. [Perfils i entorns]({{<relref "/posts/docker/compose/profiles/">}}): Gestió de perfils per activar serveis selectivament i configuració de múltiples entorns amb Docker Compose.
+7. [Perfils i entorns a Docker Compose]({{<relref "/posts/docker/compose/profiles/">}}): Gestió de perfils per activar serveis selectivament i configuració de múltiples entorns amb Docker Compose.
+8. [Secrets a Docker Compose]({{<relref "/posts/docker/compose/secrets/">}}): Gestió segura de credencials amb variables d'entorn, fitxers i Docker Secrets.
 
 
 <!--
 
 | Article | Tema | Tecnologia/Exemple |
-| --- | --- | --- |
-| 7 | Perfils | Entorns Plane (Python + PostgreSQL + Redis + S3) |
-| 8 | Secrets | Django Ninja + Vault + PostgreSQL |
 | 9 | Avançat | Odoo (Python + PostgreSQL) |
 | 10 | Pràctica final | Django Ninja REST API |
 -->
