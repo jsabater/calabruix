@@ -1,10 +1,6 @@
 ---
-title: "Deploying Python applications using pyinfra"
-date: 2025-01-15
-description: ""
-summary: ""
-categories: ["automation"]
-tags: ["django", "python", "pyinfra"]
+title: "Notes for the Pyinfra article"
+date: 2026-05-12
 draft: true
 ---
 
@@ -979,4 +975,38 @@ The Pyinfra Way: Host-Centric ("Read the Script")
 In Pyinfra, the Host is the boss.
 You pass the script to Pyinfra. Pyinfra hands a copy of the script to blackpearl1 and a copy to nginx1.
 Pyinfra tells them: "Read this script from top to bottom. If you see an operation, and you are allowed to run it, add it to your to-do list."
+
+## About deploy scripts
+
+Wrapping standard Pyinfra operations in our own standard Python functions is generally considered an anti-pattern.
+
+Pyinfra's operations (like pyinfra.operations.systemd.service) are already the high-level API. They are designed to be idempotent and declarative. When you wrap them in imperative functions like start() or stop(), you are hiding the declarative nature of the tool and adding a layer of boilerplate that you now have to maintain.
+
+Deploy scripts should be the narrative of your infrastructure. If a deploy script is just one line calling a wrapper function, you lose the immediate visibility of what that deploy is actually doing.
+
+Creating `deploys/gunicorn_reload.py`, `deploys/gunicorn_restart.py`, `deploys/redis_reload.py,` and so on, will quickly lead to massive file bloat. This is where the distinction between Deployments (state definition) and Ad-Hoc Operations (imperative actions) comes in.
+
+The canonical way to solve this is:
+
+### Actual deployments (state change)
+
+If reloading Gunicorn is a step in your deployment process (e.g., after updating code or changing a config), it belongs inside the main deploy script, not in its own file.
+
+### Routine operations (actions)
+
+If you just want to restart Gunicorn on a Tuesday because memory is high, you don't need a deploy script at all. Pyinfra has a CLI mode for Ad-Hoc commands.
+
+Instead of creating deploys/gunicorn_restart.py, you can execute the operation directly from your terminal (or wrap this in your `Makefile` script):
+
+```bash
+pyinfra inventory.py --limit website systemd.service gunicorn restarted=True
+```
+
+### Complex operational workflows
+
+If a "restart" involves multiple coordinated steps (e.g., "drain traffic from NGINX, stop Gunicorn, clear Redis cache, start Gunicorn, restore traffic"), then you should create a script for it, perhaps named `deploys/maintenance_restart.py`.
+
+## About facts
+
+
 
