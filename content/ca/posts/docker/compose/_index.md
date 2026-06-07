@@ -22,11 +22,4 @@ Cada tema combina explicacions teòriques amb exemples pràctics i exercicis, pr
 6. [Healthchecks i dependències]({{<relref "/posts/docker/compose/healthchecks/">}}): Configuració de healthchecks, gestió de dependències entre serveis i policymes de reinici amb Docker Compose.
 7. [Perfils i entorns a Docker Compose]({{<relref "/posts/docker/compose/profiles/">}}): Gestió de perfils per activar serveis selectivament i configuració de múltiples entorns amb Docker Compose.
 8. [Secrets a Docker Compose]({{<relref "/posts/docker/compose/secrets/">}}): Gestió segura de credencials amb variables d'entorn, fitxers i Docker Secrets.
-
-
-<!--
-
-| Article | Tema | Tecnologia/Exemple |
-| 9 | Avançat | Odoo (Python + PostgreSQL) |
-| 10 | Pràctica final | Django Ninja REST API |
--->
+9. [Tècniques avançades]({{<relref "/posts/docker/compose/advanced/">}}): Escalat, límits de recursos, logging, extensions YAML, contenidors d'inicialització i integració amb Traefik.
