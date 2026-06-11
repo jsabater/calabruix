@@ -784,7 +784,7 @@ Es proposen dos exercicis pràctics per facilitar l'aprenentatge progressiu.
 
 **Afegir un frontend React**
 
-L'equip de frontend ha preparat una aplicació React senzilla que consumeix l'API de tasques. Descarrega't [l'aplicació de frontend](/docker/compose/images/frontend.zip). {{< icon "download" >}}
+L'equip de frontend ha preparat una aplicació React senzilla que consumeix l'API de tasques. Descarrega't [l'aplicació de frontend](/downloads/docker/compose/images/frontend.zip). {{< icon "download" >}}
 
 La teva tasca és:
 

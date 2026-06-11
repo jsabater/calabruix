@@ -392,7 +392,7 @@ Es proposen tres exercicis pràctics per facilitar l'aprenentatge progressiu, m�
 
 **Consultes `XPath` amb `xmllint`**
 
-Donat el [document XML d'una botiga de música](/xml/eines/botiga-musica.xml), escriu les expressions `XPath` necessàries per obtenir la informació sol·licitada i la comanda `xmllint` completa per a cada consulta:
+Donat el [document XML d'una botiga de música](/downloads/xml/eines/botiga-musica.xml), escriu les expressions `XPath` necessàries per obtenir la informació sol·licitada i la comanda `xmllint` completa per a cada consulta:
 
 1. Obtenir el nom de la botiga (atribut de l'element arrel).
 2. Llistar tots els títols dels discos.

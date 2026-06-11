@@ -50,7 +50,7 @@ Els elements precedits per `@` són atributs. Observa com hem decidit:
 
 ## El document complet
 
-A continuació es presenta {{< icon "download" >}} [el document XML base](/xml/exemple/institut.xml) amb el que farem feina durant la major part d'aquesta sèrie d'articles, que anomenarem `institut.xml`:
+A continuació es presenta {{< icon "download" >}} [el document XML base](/downloads/xml/exemple/institut.xml) amb el que farem feina durant la major part d'aquesta sèrie d'articles, que anomenarem `institut.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>

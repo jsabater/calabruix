@@ -22,7 +22,7 @@ Els principals reptes de la conversió són:
 
 ## Exemple de l'institut
 
-A continuació, convertirem [l'exemple de l'institut](/xml/exemple/institut.xml) que hem usat al llarg de la sèrie, explicant les decisions preses i per què. Per contextualitzar, aquest és un extracte de l'XML original:
+A continuació, convertirem [l'exemple de l'institut](/downloads/xml/exemple/institut.xml) que hem usat al llarg de la sèrie, explicant les decisions preses i per què. Per contextualitzar, aquest és un extracte de l'XML original:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -112,7 +112,7 @@ Les decisions preses a l'hora de fer aquesta conversió es resumeixen en la seg�
 
 ## Exemple d'empresa
 
-Tot seguit anam a fer una conversió més complexa, car [l'exemple de document XML d'empresa](/xml/namespaces/empresa.xml) utilitza espais de noms. L'esquema del document XML original amb namespaces és aquest:
+Tot seguit anam a fer una conversió més complexa, car [l'exemple de document XML d'empresa](/downloads/xml/namespaces/empresa.xml) utilitza espais de noms. L'esquema del document XML original amb namespaces és aquest:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -487,7 +487,7 @@ La sintaxi `#/$defs/adreca` significa "dins d'aquest document (`#`), a la secci�
 
 ### Document de l'institut
 
-Vegem un [esquema complet per validar el document JSON de l'institut](/xml/json-schema/institut.schema.json) que hem usat als exemples anteriors. L'esquema defineix l'estructura esperada amb totes les restriccions:
+Vegem un [esquema complet per validar el document JSON de l'institut](/downloads/xml/json-schema/institut.schema.json) que hem usat als exemples anteriors. L'esquema defineix l'estructura esperada amb totes les restriccions:
 
 ```json
 {

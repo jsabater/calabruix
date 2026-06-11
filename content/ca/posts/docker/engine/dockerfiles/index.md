@@ -287,7 +287,7 @@ Django Ninja és un framework per construir APIs REST amb Django, inspirat en Fa
 
 ### Preparació
 
-{{< icon "download" >}} Descarrega [l'arxiu de l'aplicació d'exemple](/docker/engine/dockerfiles/myapi.tar.gz) al teu directori de projectes, e.g., `~/Projects`. Un pic descarregat, extreu-lo i accedeix al directori:
+{{< icon "download" >}} Descarrega [l'arxiu de l'aplicació d'exemple](/downloads/docker/engine/dockerfiles/myapi.tar.gz) al teu directori de projectes, e.g., `~/Projects`. Un pic descarregat, extreu-lo i accedeix al directori:
 
 ```bash
 cd ~/Projects

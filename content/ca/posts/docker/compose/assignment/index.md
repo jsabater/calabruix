@@ -207,9 +207,9 @@ Heu de publicar les imatges que hagueu creat a Docker Hub:
 
 Per aquest projecte se us proporcionen els fitxers següents:
 
-1. `frontend/index.html`: [Front-end estàtic amb HTMX](/docker/compose/assignment/index.html) {{< icon "download" >}}.
-2. `docker/worker/worker.js`: [Worker de Node.js](/docker/compose/assignment/worker.js) {{< icon "download" >}} per consumir missatges de RabbitMQ.
-3. `docker/worker/package.json`: [Dependències del worker](/docker/compose/assignment/package.json) {{< icon "download" >}}.
+1. `frontend/index.html`: [Front-end estàtic amb HTMX](/downloads/docker/compose/assignment/index.html) {{< icon "download" >}}.
+2. `docker/worker/worker.js`: [Worker de Node.js](/downloads/docker/compose/assignment/worker.js) {{< icon "download" >}} per consumir missatges de RabbitMQ.
+3. `docker/worker/package.json`: [Dependències del worker](/downloads/docker/compose/assignment/package.json) {{< icon "download" >}}.
 
 A continuació es fa una breu explicació de cada fitxer, per contextualitzar.
 

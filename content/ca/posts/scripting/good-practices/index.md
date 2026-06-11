@@ -1113,7 +1113,7 @@ L'equip d'operacions ens ha passat un fitxer de logs on s'han agregat les sortid
 
 **Fitxer de logs proporcionat**
 
-Es proporciona {{< icon "download" >}} [el fitxer a analitzar](/scripting/good-practices/servidor.log). Exemple del fitxer per a veure el format de cada línia:
+Es proporciona {{< icon "download" >}} [el fitxer a analitzar](/downloads/scripting/good-practices/servidor.log). Exemple del fitxer per a veure el format de cada línia:
 
 ```log
 2026-04-11 10:15:32 [INFO] nginx: GET /api/users 200 45ms

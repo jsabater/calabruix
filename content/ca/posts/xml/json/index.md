@@ -114,7 +114,7 @@ Exemple de JSON invàlid:
 }
 ```
 
-Exemple complet de [document JSON de l'institut](/xml/json/institut.json):
+Exemple complet de [document JSON de l'institut](/downloads/xml/json/institut.json):
 
 ```json
 {

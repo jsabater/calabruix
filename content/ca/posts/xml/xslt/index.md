@@ -760,7 +760,7 @@ Si necessites un valor diferent segons el context, defineix una nova variable am
 
 ## Exemple complet
 
-Una vegada hem explicat els eines que tenim al nostre abast a l'hora d'aplicar transformacions XSLT a documents XML, anem a transformar {{< icon "download" >}} [l'XML de l'institut](/xml/xslt/institut.xml) a HTML. El document XML d'entrada és el següent:
+Una vegada hem explicat els eines que tenim al nostre abast a l'hora d'aplicar transformacions XSLT a documents XML, anem a transformar {{< icon "download" >}} [l'XML de l'institut](/downloads/xml/xslt/institut.xml) a HTML. El document XML d'entrada és el següent:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -792,7 +792,7 @@ Una vegada hem explicat els eines que tenim al nostre abast a l'hora d'aplicar t
 </institut>
 ```
 
-I el {{< icon "download" >}} [full d'estils XSLT usat](/xml/xslt/institut.xsl) serà el següent, el qual podríem guardaren un fitxer `institut.xsl`:
+I el {{< icon "download" >}} [full d'estils XSLT usat](/downloads/xml/xslt/institut.xsl) serà el següent, el qual podríem guardaren un fitxer `institut.xsl`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -931,7 +931,7 @@ I el {{< icon "download" >}} [full d'estils XSLT usat](/xml/xslt/institut.xsl) s
 </xsl:stylesheet>
 ```
 
-Cal notar que el fitxer `institut.xsd` fa referència al fitxer `institut.css`, que {{< icon "download" >}} [també haurem de menester](/xml/xslt/institut.css).
+Cal notar que el fitxer `institut.xsd` fa referència al fitxer `institut.css`, que {{< icon "download" >}} [també haurem de menester](/downloads/xml/xslt/institut.css).
 
 ## Anàlisi de la transformació
 
@@ -957,7 +957,7 @@ I les transformacions aplicades són les següents:
 
 ## Execució de transformacions
 
-Podem usar un navegador web per a dur a terme les transformacions. Simplement obre {{< icon "download" >}} [el fitxer XML](/xml/xslt/institut.xml) que conté la instrucció `xml-stylesheet` en un navegador modern. Firefox ofereix el millor suport.
+Podem usar un navegador web per a dur a terme les transformacions. Simplement obre {{< icon "download" >}} [el fitxer XML](/downloads/xml/xslt/institut.xml) que conté la instrucció `xml-stylesheet` en un navegador modern. Firefox ofereix el millor suport.
 
 També podem usar `xmllint` a la línia de comandes d'un Linux:
 

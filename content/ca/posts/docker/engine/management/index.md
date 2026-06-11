@@ -433,9 +433,9 @@ docker rm --force pg-test
 
 Per a aquest exercici farem servir uns fitxers SQL ja preparats, que pots descarregar:
 
-- {{< icon "download" >}} [city.sql](/docker/engine/management/city.sql): Crea la taula `city` amb dades de ciutats i coordenades geogràfiques (requereix PostGIS).
-- {{< icon "download" >}} [student.sql](/docker/engine/management/student.sql): Crea la taula `student` amb dades d'estudiants.
-- {{< icon "download" >}} [queries.sql](/docker/engine/management/queries.sql): Consultes SQL per generar activitat al servidor.
+- {{< icon "download" >}} [city.sql](/downloads/docker/engine/management/city.sql): Crea la taula `city` amb dades de ciutats i coordenades geogràfiques (requereix PostGIS).
+- {{< icon "download" >}} [student.sql](/downloads/docker/engine/management/student.sql): Crea la taula `student` amb dades d'estudiants.
+- {{< icon "download" >}} [queries.sql](/downloads/docker/engine/management/queries.sql): Consultes SQL per generar activitat al servidor.
 
 1. Descarrega els tres fitxers SQL.
 2. Executa un contenidor PostgreSQL usant la imatge `postgis/postgis:18-3.6-alpine` anomenat `pg-monitor` amb una base de dades `escola`, usuari `escola` i clau `mMG5fZFtXm0N6TgW1F6P`.
