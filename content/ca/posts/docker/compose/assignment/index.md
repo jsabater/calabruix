@@ -1,142 +1,395 @@
 ---
-title: "Pràctica introductòria a Docker Compose"
-date: 2026-01-02
-lastmod: 2026-01-02
-description: ""
-summary: ""
-categories: ["virtualisation"]
-tags: ["docker", "compose"]
+title: "Pràctica final de desplegament"
+date: 2026-06-11
+lastmod: 2026-06-11
+description: "Desplegament complet d'una aplicació web amb Docker Compose, amb proxy invers, API, base de dades, cache i cues de missatges"
+summary: "Desplegament complet d'una aplicació web amb proxy invers, API, base de dades, cache i cues de missatges"
+categories: ["teaching"]
+tags: ["docker", "compose", "assignment"]
 series: ["Docker Compose"]
 series_order: 10
 weight: 100
 slug: practica
-draft: true
 ---
 
-A l'empresa on fem feina, després de fer un prototipus del nou entorn de desenvolupament i arrel del feedback rebut, ens han demanat una versió lleguremanet evolucionada de l'arquitectura web usant Docker Compose. Aquesta nova iteració serà usada com a referència de cara al nou entorn de producció.
+En aquesta pràctica final, desplegareu l'aplicació **Sports Club**, una API REST desenvolupada amb Django Ninja que gestiona un petit club d'atletisme, i afegireu nous serveis, aplicant tots els conceptes treballats durant la sèrie de Docker Compose per crear un entorn de desplegament complet, segur i mantenible.
 
-La proposta d'arquitectura consta de 5 blocs, on cadascun representa un conjunt de serveis o contenidors Docker independents
+L'aplicació [Sports Club](https://github.com/jsabater/sportsclub) és un projecte de codi obert, disponible a Github, específicament creat perquè l'alumnat disposi d'una API REST per fer pràctiques de front-end, contenidors i ciberseguretat. Haureu de fer un *fork* del repositori i fer feina sobre la vostra còpia.
 
-* Balancejador de càrrega.
-* Front-end.
-* Back-end.
-* Aplicació heretada.
-* Aplicació d'intel·ligència de negoci.
+## Arquitectura requerida
 
-## Balancejador de càrrega
+Heu de desplegar un entorn amb els següents serveis:
 
-Aquest bloc inclou un balancejador de càrrega (en anglès, "load balancer"), que actua com a punt d'entrada de les peticions que arriben al nostre web de reserves. Aquest servidor té com a missió repartir la *càrrega dinàmica* (PHP) entre els nostres servidors d'aplicacions i la *càrrega estàtica* (imatges i documents) cap al magatzem d'objectes S3.
+**Serveis principals**
 
-A més de la IP privada corresponent, el balancejador de càrrega haurà de tenir una "IP pública" que, a efectes d'aquesta pràctica, serà de la xarxa local de l'ordinador de l'alumne. També a efectes d'aquesta pràctica, escoltarà les peticions al port 80.
+1. **Traefik**: Proxy invers que encamina les peticions als serveis corresponents.
+2. **NGINX**: Serveix el *front-end* estàtic (HTML/CSS/JS amb HTMX) que consumeix l'API REST.
+3. **API REST**: L'aplicació Django Ninja **Sports Club** que actua com a *back-end*.
+4. **PostgreSQL**: Base de dades principal de l'aplicació.
+5. **Valkey**: Cache de dades.
+6. **RabbitMQ**: Broker de missatges per a tasques asíncrones.
+7. **Worker**: Consumidor de missatges de RabbitMQ (se us proporciona el codi).
 
-El balancejador de càrrega podrà estar basat en [NGINX](https://nginx.org/), [HA Proxy](https://haproxy.org/) o [Apache](https://httpd.apache.org/) (amb `mod_proxy` i `mod_proxy_balancer`), entre d'altres.
+**Serveis de desenvolupament**
 
-## Front-end
+8. **Adminer**: Interfície web per gestionar PostgreSQL.
+9. **Mailpit**: Servidor SMTP de proves per capturar emails.
 
-El nostre front-end estarà format per tres servidors Apache, amb el mòdul de PHP, on hi executarem la nostra nova aplicació web de reserves.
+## Metodologia de treball
 
-A més, necessitarem un contenidor d'objectes compatible amb S3, que podrà estar basat en [Garage](https://garagehq.deuxfleurs.fr/), [MinIO](https://min.io/) o [SeaweedFS](https://seaweedfs.com/), entre d'altres. Aquest contenidor serà accessible tant per part dels servidors del front-end com pel balancejador de càrrega.
+A diferència dels exercicis que hem anat fent al llarg d'aquesta sèrie, en aquesta pràctica partim d'un projecte existent, que funciona de forma autònoma i que necessitam modificar per adaptar-lo als requeriments. Això no només vol dir afegir serveis, sinó també modificar-los i, si escau, eliminar-los.
 
-## Back-end
+### Aproximació recomanada
 
-El back-end tendrà els següents contenidors:
+La manera més directa de realitzar aquesta pràctica és fer feina sobre el vostre *fork* del repositori `sportsclub`:
 
-* Dos servidors PostgreSQL, un per escriptures i un altre per a lectures, sincronitzats, que actuaran com a servidors de base de dades principals del nostre nou aplicació web.
-* Un contenidor amb Redis, per a la caché de dades.
-* Un contenidor amb RabbitMQ, per a la gestió de cues de tasques.
-* Un contenidor amb un programa que consumirà (processarà i executarà) les tasques del RabbitMQ.
+1. Feu un *fork* del repositori [sportsclub](https://github.com/jsabater/sportsclub) al vostre compte.
+2. Clonau el *fork* al vostre ordinador.
+3. Ampliau i millorau el `compose.yaml` i els `Dockerfiles` al directori `docker/` existent.
+4. Afegiu els nous serveis (Traefik, Valkey, RabbitMQ, worker, etc.) al mateix projecte, modificant els existents segons considereu necessari.
 
-Quan a l'agent consumidor de tasques, s'ha pres la decisió de permetre a l'equip de desenvolupament usar tant Java com PHP per a implementar-los, sempre seguint les recomanacions del propi web oficial:
+Aquesta aproximació reflecteix un escenari real: teniu un projecte existent i l'heu de preparar per a un desplegament complet.
 
-* [RabbitMQ Java Stream tutorial](https://www.rabbitmq.com/tutorials/tutorial-one-java-stream)
-* [RabbitMQ PHP tutorial](https://www.rabbitmq.com/tutorials/tutorial-one-php)
+### Alternatives
 
-S'espera que els contenidors dels agents, en arrencar, executing l'agent, bé usant Java, bé PHP. La configuració d'aquest procés agent és opcional i servirà per a millorar nota.
+Si preferiu mantenir una separació més clara entre l'aplicació i la infraestructura, podeu explorar altres aproximacions:
 
-Els servidors Apache necessitaran poder accedir al PostgreSQL per a la gestió de dades, al Redis per a la gestió de la caché i al RabbitMQ per a crear-hi tasques.
+- **Repositoris separats amb xarxes compartides**: Manteniu `sportsclub` com a repositori independent, aplicant-hi les millores pertinents i els canvis necessaris, i creau un segon repositori per a la infraestructura, compartint xarxes Docker entre ambdós.
+- **Comunicació via host**: Ídem, amb dos repositoris completament independents, però establint la comunicació a través de la xarxa de l'amfitrió, simulant serveis distribuïts.
 
-L'agent consumidor de tasques tendrà accés al PostgreSQL per a la gestió de dades, al Redis per a la gestió de la caché i al RabbitMQ per a consumir tasques.
+Aquestes alternatives afegeixen complexitat i requereixen coordinar configuracions entre repositoris. Si optau per una d'elles, documentau-ho adequadament al `PRACTICA.md`.
 
-## Intel·ligència de negoci
-
-El personal directiu, de màrqueting i de vendes fa servir una aplicació d'intel·ligència de negoci (en anglés, "business intelligence") anomenada [Metabase](https://metabase.com/). Aquesta eina, basada en Java, utilitza PostgreSQL com a base de dades.
-
-Per a evitar la saturació de la base de dades principal de l'aplicació de reserves de l'empresa, es farà un desenvolupament que duplicarà algunes dades des de la base principal cap a la base de dades de Metabase. Aquest desenvolupament es farà amb procediments emmagatzemats de PostgreSQL i, per tant, només caldrà habilitar la comunicació directa entre aquests dos contenidors.
-
-Per tant, aquest bloc comptarà amb dos contenidors:
-
-* Un servidor de Metabase, que ja inclou el servidor Jetty com a servidor web i d'aplicacions.
-* Un servidor PostgreSQL, com a base de dades de l'aplicació Metabase.
-
-## Aplicació heretada
-
-La nostra aplicació antiga (en anglès, "legacy application"), basada en Java i que usa Apache Tomcat com a servidor d'aplicaciós i MariaDB com a base de dades, tendrà els següents contenidors:
-
-* Un servidor d'aplicacions Tomcat, on hi executarem la nostra aplicació web antiga.
-* Un servidor de base de dades MariaDB.
-
-Aquesta aplicació es consulta de manera puntual, tant des de la nova aplicació web com des de l'eina d'intel·ligència de negoci. Afortunadament, aquest aplicació ja tenia una API de serveis web, que s'utilitza per a recuperar algunes dades i executar alguns processos de càlcul que no s'han migrat al nou sistema.
 
 ## Tasques
 
-Tasques a dur a terme:
+Com a part d'aquesta pràctica, heu de dur a terme les següents tasques.
 
-1. A partir dels requeriments, és a dir, l'enunciat de la pràctica, crea un diagrama amb la teva proposta de contenidors, ports, xarxes i volums. Pots usar l'eina que vulguis.
-2. Disenya un projecte amb un subdirectori `docker/`, que contendrà els `Dockerfiles` necessaris per a cobrir els requeriments, i un subdirectori `src/`, que contendrà els fitxers fonts del teu projecte, que usaràs a les instruccions `COPY`, `ADD`, `ENTRYPOINT` o `CMD`. A l'arrel del projecte, crea el teu fitxer `docker-compose.yml`.
-3. Redacta una documentació que expliqui:
-   * Aquelles decisions que, a partir de l'enunciat, has pres a l'hora d'implementar la solució, especialment en termes d'imatges, volums i xarxes. No cal repetir el que ja diu l'enunciat.
-   * L'estructura del teu projecte. És important que raonis les teves decisions a l'hora de determinar-ne la composició. Assegura't de ser clar i concís amb la terminologia i amb la nomenclatura que hagis decidit usar (per exemple, el nom de les xarxes).
-   * Explica les ordres `docker compose` que són necessàries per a reproduir l'entorn en un ordinador que no sigui el teu. Si aquestes instruccions no funcionen, no es podrà corregir la pràctica.
-4. Usant comentaris, documenta in situ les instruccions que decideixis usar als `Dockerfiles`.
-5. Registra't un compte a [Docker Hub](https://hub.docker.com/) usant el teu correu electrònic del centre i puja-hi les imatges que hagis generat [^1].
+### Disseny de l'arquitectura
 
-[^1]: Recerca les ordres `docker login` i `docker push`.
+Abans d'escriure cap fitxer de configuració, dissenyau l'arquitectura:
 
-Per ajudar en la concepció del diagrama de l'arquitectura, pots tenir en compte les següents consideracions:
+1. Creau un **diagrama** que representi:
+   - Tots els contenidors i les seves imatges base
+   - Les xarxes i quins serveis pertanyen a cadascuna
+   - Els volums i quins serveis els utilitzen
+   - Els ports exposats i el flux de peticions
+   - Les dependències entre serveis
 
-* Com segmentaràs les xarxes? Quines xarxes ad-hoc, o selectives, necessitaràs?
-* Quines xarxes assignaràs a quins contenidors?
-* Quins contenidors tendran accés a més d'una xarxa?
-* Com assignaràs la IP pública al balancejador de càrrega?
-* Quins contenidors necessitaran persistència de dades?
-* Quins contenidors hauran de compartir volums o dades?
-* Quins contenidors necessitaran d'una configuració específica?
-* Com garantiràs que les dependències d'arrencada?
-* Quins verificacions d'estat (en anglès, "health checks") consideres imprescindibles i quins consideres opcionals?
+2. A la documentació haureu de justificar les vostres decisions:
+   - Per què heu segmentat les xarxes d'aquesta manera?
+   - Quins serveis necessiten accés a múltiples xarxes i per què?
+   - Quines dades necessiten persistència?
 
-És requisit d'aquesta pràctica usar un únic fitxer `docker-compose.yml` i els fitxers `Dockerfile` que consideris necessaris.
+Podeu usar l'eina de diagrama com a codi que vulgueu, e.g., D2, Mermaid, PlantUML, etc. Haureu d'entregar el codi font del diagrama així com una imatge amb l'exportació.
 
-## Entregables
+### Configuració de l'entorn
 
-Heu d'entregar els següents fitxers a través de l'aula virtual de l'assignatura:
+El repositori `sportsclub` ja conté una estructura bàsica. Haureu d'ampliar-la fins a tenir:
 
-1. El diagrama de l'arquitectura, en format original i exportat a imatge (PNG, WebP o semblant). Si uses una eina en línia, registra't un compte usant el teu correu electrònic del centre i inclou un enllaç al document.
-2. Fitxer de text `README.md` dins l'arrel del projecte, en format Markdown, amb els continguts descrits a l'apartat anterior. Aquest document ha de contenir la informació justa i necessària. No cal repetir allò que és als apunts. Sigues concís, precís i breu.
-3. El contingut del projecte arxivat en format ZIP.
-4. Enllaç al compte a Docker Hub amb les imatges resultants dels `Dockerfiles`.
-
-A efectes d'aquesta pràctica, n'hi ha prou que incloguis un petit script PHP a cada servidor Apache, que mostri la sortida de la instrucció `phpinfo()`. Així mateix, de cara a l'aplicació antiga basada en Java, és suficient crear un fitxer `info.jsp` que mostri algunes informacions de sistema. Aquí en tens un exemple, que pots prendre com a referència:
-
-```jsp
-<%@ page import="java.util.Properties" %>
-<%
-    Properties props = System.getProperties();
-    out.println("<h2>System Properties</h2>");
-    for (String key : props.stringPropertyNames()) {
-        out.println(key + " = " + props.getProperty(key) + "<br>");
-    }
-%>
+```
+sportsclub/
+├── compose.yaml              # Ampliat amb tots els serveis
+├── compose.override.yaml     # Opcional: si s'usa l'estratègia d'override
+├── .env.example              # Ampliat amb totes les variables
+├── .gitignore                # Revisat per incloure fitxers i directoris
+├── docs/
+│   ├── arquitectura.mmd      # O .d2, .puml, etc., segons l'eina usada
+│   ├── arquitectura.png      # Exportació del diagrama
+│   └── PRACTICA.md           # Fitxer amb la documentació de la pràctica
+├── docker/
+│   ├── app/
+│   │   └── Dockerfile        # Existent: corregir i millorar, si escau
+│   ├── nginx/
+│   │   ├── Dockerfile        # Existent: corregir i millorar, si escau
+│   │   └── nginx.conf        # Existent: actualitzar, si escau
+│   ├── postgres/
+│   │   └── Dockerfile        # Existent: actualitzar, si escau
+│   └── worker/
+│       ├── Dockerfile        # Nou: Dockerfile del worker
+│       ├── package.json      # Proporcionat
+│       └── worker.js         # Proporcionat
+├── frontend/
+│   └── index.html            # Proporcionat
+├── README.md                 # Fitxer original que no s'ha de modificar
+└── sportsclub/               # Existent: codi Django
+    └── ...
 ```
 
-## Quan al RabbitMQ
+Requisits:
 
-Per aquesta pràctica, és suficient que el contenidor amb el RabbitMQ arrenqui el servei. Quan al contenidor amb l'agent o dèmon que processa les tasques de les cues del RabbitMQ, no és necessària la seva implementació, però t'ajudarà a pujar nota.
+- Decidiu on i com emmagatzemar les credencials i configuracions sensibles.
+- Investigau la documentació de cada servei per determinar quines variables d'entorn són necessàries.
+- Actualitzau la plantilla `.env.example` perquè altres desenvolupadors puguin configurar l'entorn.
+- Justificau les vostres decisions al fitxer `PRACTICA.md`, fent referència als conceptes vists durant el curs.
 
-## Rúbrica
+### Xarxes i aïllament
 
-| **Criteri**                                | **Descripció**                                                                                                                                                         | **Punts (màx.)** | **Observacions / Què mirar**                                                                                                                                                                                                                                                        |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Diagrama de l'arquitectura          | Representa correctament tots els contenidors, xarxes, ports i volums, amb relacions coherents i llegibles.                                                             | 0–2          | 2 → Diagrama complet, clar i ben justificat.<br>1 → Petites omissions o incoherències.<br>0 → Incomplet, erroni o inexistent.                                                                                                                                                       |
-| Estructura del projecte             | Estructura de directoris (`docker/`, `src/`, etc.) coherent i ordenada. Inclou documentació (`README.md`) clara, ben redactada i amb cura formal.                      | 0–3          | 3 → Organització impecable i coherent; documentació clara, amb explicació de decisions i instruccions d'execució correctes.<br>2 → Correcte amb petites mancances o errors formals.<br>1 → Estructura confusa o documentació incompleta.<br>0 → Desorganitzat o sense documentació. |
-| Execució i reproduïbilitat          | Les instruccions permeten executar i reproduir l'entorn completament amb Docker Compose.                                                                             | 0–3          | 3 → Tot funciona segons el descrit; l'entorn es pot reproduir sense errors.<br>2 → Funciona parcialment o amb petits ajustos.<br>1 → Només arrenca una part o requereix molta intervenció manual.<br>0 → No es pot executar.                                                        |
-| Qualitat del `doker-compose.yml`, dels Dockerfiles i les imatges | `docker-compose.yml` i `Dockerfiles` correctes, eficients i documentats. Bon ús d'instruccions, bones pràctiques i publicació correcta d'imatges al Docker Hub. | 0–2          | 2 → `docker-compose.yml` i `Dockerfiles` nets, ben estructurats i funcionals; imatges publicades i etiquetades correctament.<br>1 → Funciona però amb errors o manca d'optimització; publicació parcial o etiquetatge confús.<br>0 → Errors greus o falta d'imatges.                                         |
+Dissenyau i implementau una estratègia de xarxes que:
+
+- Aïlli els serveis segons les seves necessitats de comunicació
+- Segueixi el principi de mínim privilegi
+- Permeti el flux de peticions des del proxy fins als serveis finals
+
+### Volums i persistència
+
+Identificau quins serveis necessiten persistència de dades i configurau volums amb nom adequats. Justificau les vostres decisions.
+
+### Healthchecks i dependències
+
+Configureu *healthchecks* per a **tots** els serveis:
+
+- Investigau quina és la manera recomanada de verificar l'estat de cada servei.
+- Configurau les dependències entre serveis de manera que cap servei arrenqui abans que les seves dependències estiguin realment disponibles.
+- Triau la condició de dependència adequada per a cada cas i justificau la vostra elecció.
+
+> L'API de Sports Club disposa d'un endpoint `/api/v1/health` per verificar-ne l'estat.
+
+### Dockerfile de l'API
+
+El repositori `sportsclub` conté un `Dockerfile` amb **errors intencionats i males pràctiques**. Heu de:
+
+1. Identificar els problemes.
+2. Corregir-los aplicant les bones pràctiques treballades al curs.
+3. Documentar al `PRACTICA.md` quins problemes heu trobat i com els heu solucionat.
+
+### Extensions YAML
+
+Usau extensions YAML per evitar la repetició de configuracions comunes entre serveis. Identificau quines configuracions es repeteixen i extraieu-les a blocs reutilitzables.
+
+### Límits de recursos
+
+Investigau els requisits de recursos de cada servei i definiu límits de CPU i memòria adequats. Documentau al `PRACTICA.md`:
+
+- Quins límits heu definit per a cada servei
+- Com heu arribat a aquests valors (fonts consultades, proves realitzades)
+
+### Perfils i entorns
+
+Configurau l'entorn perquè:
+
+- En mode "producció", només s'arrenquin els serveis principals.
+- En mode "desenvolupament", també s'arrenquin les eines de desenvolupament (Adminer, Mailpit).
+
+Usau la característica de perfils de Docker Compose o l'estratègia de múltiples fitxers Compose que considereu més adequada.
+
+### Configuració del proxy
+
+Configurau Traefik com a proxy invers amb:
+
+- Descobriment automàtic de serveis
+- Routing basat en *path* (decidiu vosaltres l'esquema de rutes)
+- *Healthcheck* configurat
+
+### Worker de RabbitMQ
+
+Se us proporciona un *worker* en [Node.js](https://nodejs.org/) que consumeix missatges de [RabbitMQ](https://www.rabbitmq.com/). Heu de:
+
+1. Crear el `Dockerfile` per al *worker*.
+2. Configurar-lo correctament al `compose.yaml`.
+3. Assegurar-vos que les dependències i *healthchecks* estan ben configurats.
+
+### Front-end
+
+Se us proporciona un fitxer `index.html` amb [HTMX](https://htmx.org/) que consumeix l'API. Configurau NGINX per servir aquest fitxer i encaminar les peticions a l'API quan correspongui.
+
+### Docker Hub
+
+Heu de publicar les imatges que hagueu creat a Docker Hub:
+
+1. Creau un compte a [Docker Hub](https://hub.docker.com/) usant el vostre correu electrònic del centre.
+2. Publicau les imatges amb etiquetes adequades (versió, `latest`).
+3. Documentau al `PRACTICA.md`:
+   - Els enllaços als vostres repositoris de Docker Hub
+   - Les comandes que heu usat per autenticar-vos, etiquetar i pujar les imatges
+   - L'estratègia d'etiquetatge que heu seguit i per què
+
+## Fitxers proporcionats
+
+Per aquest projecte se us proporcionen els fitxers següents:
+
+1. `frontend/index.html`: [Front-end estàtic amb HTMX](/docker/compose/assignment/index.html) {{< icon "download" >}}.
+2. `docker/worker/worker.js`: [Worker de Node.js](/docker/compose/assignment/worker.js) {{< icon "download" >}} per consumir missatges de RabbitMQ.
+3. `docker/worker/package.json`: [Dependències del worker](/docker/compose/assignment/package.json) {{< icon "download" >}}.
+
+A continuació es fa una breu explicació de cada fitxer, per contextualitzar.
+
+**Front-end estàtic amb HTMX**
+
+Front-end estàtic que, fent ús de la llibreria HTMX:
+
+- Mostra l'estat de l'API i la base de dades amb indicadors de color
+- Llista atletes, entrenadors, instal·lacions i entrenaments
+- Transforma automàticament les respostes JSON en taules HTML
+- Té botons per actualitzar cada secció
+- Estils CSS integrats (sense dependències externes excepte HTMX)
+
+**Worker de Node.js per consumir missatges de RabbitMQ**
+
+Worker de Node.js que, fent ús de la llibreria [amqp](https://www.npmjs.com/package/amqp):
+
+- Es connecta a RabbitMQ amb reintents automàtics
+- Consumeix missatges de la cua `tasks`
+- Processa diferents tipus de missatges (email, notification, report)
+- Gestiona el tancament graciós (`SIGINT`, `SIGTERM`)
+- Llegeix la configuració de variables d'entorn
+
+**Dependències del worker**
+
+Fitxer `package.json` que defineix les dependències del worker de Node.js, amb les següents característiques:
+
+- Només `amqplib` com a dependència
+- Requereix Node.js 20+
+
+> No necessitau instal·lar Node.js a la vostra màquina, car la compilació es fa directament en la imatge Docker.
+
+
+## Documentació
+
+El fitxer `PRACTICA.md` ha d'incloure els següents apartats, en aquest ordre:
+
+1. **Descripció del projecte**: Breu descripció de què és i què fa.
+
+2. **Arquitectura**: Diagrama i descripció dels serveis, xarxes i volums. Si feu el diagrama amb Mermaid, podeu incrustar-lo dins el fitxer. Altrament, podeu enllaçar la imatge.
+
+3. **Requisits previs**: Què cal tenir instal·lat.
+
+4. **Configuració**:
+   - On s'emmagatzemen les credencials i per què
+   - Com se'n fa ús d'aquesta configuració, incloses les credencials
+   - Com preparar l'entorn abans de la primera execució
+
+5. **Instruccions d'execució**:
+   - Com arrencar l'entorn (desenvolupament i producció)
+   - Com aturar l'entorn
+
+6. **Neteja de l'entorn**: Comandes per eliminar completament tots els recursos creats (contenidors, imatges, volums, xarxes). Explicau què fa cada comanda.
+
+7. **Verificació del desplegament**: Comandes per verificar que tot funciona correctament. Per a cada comanda, explicau:
+   - Què verifica
+   - Quina informació aporta
+   - Quin resultat s'espera
+
+8. **Decisions tècniques**: Explicació de les decisions que heu pres, incloent:
+   - Gestió de credencials i secrets
+   - Estratègia de xarxes
+   - Límits de recursos i justificació
+   - Correccions al `Dockerfile` de l'API REST
+   - Qualsevol altra decisió rellevant
+
+9. **Publicació a Docker Hub**:
+   - Enllaços als repositoris de Docker Hub
+   - Comandes usades per a la publicació
+   - Estratègia d'etiquetatge
+
+10. **Estructura del projecte**: Descripció dels fitxers i directoris.
+
+
+## Contingut mínim del repositori
+
+El vostre repositori ha de contenir, com a mínim:
+
+**Fitxers de configuració de Docker Compose:**
+- `compose.yaml` — Configuració base amb tots els serveis
+- `compose.override.yaml` — Només si s'usa l'estratègia de fitxers override en lloc de perfils
+- `.env.example` — Plantilla de variables d'entorn
+
+**Dockerfiles:**
+- `docker/app/Dockerfile` — Dockerfile de l'API (corregit i millorat)
+- `docker/worker/Dockerfile` — Dockerfile del worker (nou)
+
+**Fitxers del worker (proporcionats):**
+- `docker/worker/worker.js`
+- `docker/worker/package.json`
+
+**Frontend (proporcionat):**
+- `frontend/index.html`
+
+**Documentació:**
+- `docs/PRACTICA.md` — Documentació completa de la pràctica
+- `docs/arquitectura.mmd` — Diagrama de l'arquitectura (en el format i extensió pertinent)
+- `docs/arquitectura.png` — Exportació a imatge del diagrama de l'arquitectura
+
+**Altres:**
+- `.gitignore` — Actualitzat per excloure fitxers sensibles
+
+
+## Checklist de verificació
+
+Abans d'entregar, revisau:
+
+1. Estructura i fitxers:
+   - Existeixen tots els fitxers requerits?
+   - Els fitxers sensibles estan exclosos del repositori?
+   - La documentació conté tot el que es demana i és útil?
+
+2. Configuració:
+   - Les credencials estan gestionades de forma segura i justificada?
+   - Els serveis estan aïllats en xarxes segons les seves necessitats?
+   - Les dades persistents usen volums amb nom?
+   - Tots els serveis tenen *healthchecks*?
+   - Les dependències estan configurades correctament?
+   - Hi ha configuracions repetides que es podrien extreure a extensions?
+
+3. Execució:
+   - L'entorn arrenca correctament en mode producció?
+   - L'entorn arrenca correctament en mode desenvolupament?
+   - Tots els serveis arriben a l'estat *healthy*?
+   - El front-end és accessible i mostra dades de l'API?
+   - El proxy encamina les peticions correctament?
+
+4. Publicació:
+   - Les imatges estan publicades a Docker Hub?
+   - Les etiquetes són coherents i informatives?
+   - Els enllaços als repositoris funcionen?
+
+5. Qualitat:
+   - El `Dockerfile` de l'API segueix bones pràctiques?
+   - Els *commits* són petits, funcionals i amb missatges descriptius?
+
+## Entrega
+
+Heu d'entregar:
+
+1. Enllaç al vostre **fork del repositori**[^1] `sportsclub`:
+   - Amb tots els fitxers necessaris, incloent `PRACTICA.md` amb la documentació
+   - Amb *commits* petits i atòmics (un canvi concret per *commit*)
+   - Cada *commit* ha de deixar el projecte en un estat funcional
+   - Els missatges de *commit* han de ser descriptius i explicar què canvia i per què
+   
+   > Es penalitzaran commits grans que canvien massa coses alhora o missatges genèrics com "fix", "update" o "canvis"
+
+2. Un únic **arxiu ZIP** amb el contingut del projecte (sense `.git/`, `node_modules/`, `__pycache__/`, `.venv/`, etc.).
+
+3. Enllaç als **repositoris de Docker Hub** amb les imatges publicades.
+
+
+> Si heu optat per una aproximació alternativa amb repositoris separats, heu d'entregar els enllaços a tots els repositoris implicats.
+
+[^1]: Podeu fer un *fork* a Github mateix, o usar alternatives com Codeberg, GitLab, etc.
+
+
+## Defensa oral
+
+La pràctica s'ha de defensar oralment. Durant la defensa:
+
+1. Partireu d'un entorn net, sense contenidors, imatges, volums ni xarxes relacionats amb el projecte. Executareu les comandes d'instal·lació i configuració que hagueu documentat al fitxer `PRACTICA.md`.
+2. Arrencareu l'entorn des de zero i demostrareu que funciona.
+3. Explicareu les decisions tècniques que heu pres.
+4. Respondreu preguntes sobre els conceptes aplicats.
+
+La defensa és **obligatòria** per aprovar la pràctica. Una pràctica lliurada però no defensada es considera no presentada.
+
+> Per accedir a la defensa oral, cal haver lliurat tots els elements requerits (repositori, ZIP i enllaços a Docker Hub) abans de la data límit i que l'entorn arrenqui correctament.
+
+## Criteris d'avaluació
+
+S'avaluarà:
+
+- Correctesa i presentació del diagrama
+- Correctesa tècnica de la solució
+- Aplicació de les bones pràctiques treballades al curs
+- Qualitat de la documentació
+- Justificació de les decisions tècniques
+- Capacitat de respondre preguntes durant la defensa
+- Qualitat de l'historial de commits
+- Correcta publicació d'imatges a Docker Hub

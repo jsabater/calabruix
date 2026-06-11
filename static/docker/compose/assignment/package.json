@@ -1,0 +1,22 @@
+{
+  "name": "sportsclub-worker",
+  "version": "1.0.0",
+  "description": "Worker de RabbitMQ per a Sports Club",
+  "main": "worker.js",
+  "scripts": {
+    "start": "node worker.js"
+  },
+  "keywords": [
+    "rabbitmq",
+    "worker",
+    "sportsclub"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "amqplib": "^0.10.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

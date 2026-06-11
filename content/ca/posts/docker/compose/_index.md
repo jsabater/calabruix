@@ -23,3 +23,4 @@ Cada tema combina explicacions teòriques amb exemples pràctics i exercicis, pr
 7. [Perfils i entorns a Docker Compose]({{<relref "/posts/docker/compose/profiles/">}}): Gestió de perfils per activar serveis selectivament i configuració de múltiples entorns amb Docker Compose.
 8. [Secrets a Docker Compose]({{<relref "/posts/docker/compose/secrets/">}}): Gestió segura de credencials amb variables d'entorn, fitxers i Docker Secrets.
 9. [Tècniques avançades]({{<relref "/posts/docker/compose/advanced/">}}): Escalat, límits de recursos, logging, extensions YAML, contenidors d'inicialització i integració amb Traefik.
+10. [Pràctica final de desplegament amb Docker Compose]({{<relref "/posts/docker/compose/assignment/" >}}): Desplegament complet d'una aplicació web amb proxy invers, API, base de dades, cache i cues de missatges.
