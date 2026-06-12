@@ -1,14 +1,56 @@
 # Solucions
 
+La situació actual del repositori `sportsclub` es la següent:
+
+```
+├── compose.yaml                # Blue-green deployment amb NGINX
+├── docker/
+│   ├── app/Dockerfile          # Python 3.13, uvicorn al port 8080
+│   ├── nginx/
+│   │   ├── Dockerfile          # NGINX stable
+│   │   └── nginx.conf          # Proxy a app-blue/app-green
+│   └── postgres/Dockerfile     # PostgreSQL 18 (buit, només FROM)
+├── sportsclub/                 # Codi Django
+└── requirements.txt
+```
+
+El següent diagrama representa l'arquitectura actual:
+
+```
+                     ┌─────────────────┐
+                     │      NGINX      │
+                     │ (proxy/balancer)│
+                     │     :8000       │
+                     └────────┬────────┘
+                              │
+             ┌────────────────┼────────────────┐
+             │                                 │
+             ▼                                 ▼
+      ┌─────────────┐                   ┌─────────────┐
+      │  app-blue   │                   │  app-green  │
+      │   (actiu)   │                   │  (standby)  │
+      │   :8080     │                   │   :8080     │
+      └──────┬──────┘                   └──────┬──────┘
+             │                                 │
+             └────────────────┬────────────────┘
+                              │
+                              ▼
+                       ┌─────────────┐
+                       │ PostgreSQL  │
+                       │   :5432     │
+                       └─────────────┘
+```
+
+
 ## Diagrama de referència
 
-Es proposa el següent diagrama de referència:
+El següent diagrama representa l'arquitectura objectiu:
 
 ```
                       ┌─────────────────┐
                       │     Traefik     │
                       │  (proxy invers) │
-                      │     :80/:443    │
+                      │      :80        │
                       └────────┬────────┘
                                │
            ┌───────────────────┼───────────────────┐
@@ -16,8 +58,8 @@ Es proposa el següent diagrama de referència:
            ▼                   ▼                   ▼
     ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
     │    NGINX     │    │     API      │    │  RabbitMQ    │
-    │  (front-end) │    │ (sportsclub) │    │ (management) │
-    │    :80       │    │   :8000      │    │   :15672     │
+    │  (frontend)  │    │ (sportsclub) │    │ (management) │
+    │     :80      │    │    :8080     │    │   :15672     │
     └──────────────┘    └──────┬───────┘    └──────┬───────┘
                                │                   │
            ┌───────────────────┼───────────────────┤
@@ -29,13 +71,14 @@ Es proposa el següent diagrama de referència:
     └─────────────┘     └─────────────┘     └─────────────┘
 ```
 
+
 ## Xarxes proposades
 
 Es proposa la següent configuració de xarxes:
 
-- `frontend`: Traefik, NGINX
+- `frontend`: Traefik, NGINX, API
 - `backend`: API, PostgreSQL, Valkey, RabbitMQ, Worker
-- `proxy`: Traefik, API, NGINX, RabbitMQ (management)
+
 
 ## Volums proposats
 
@@ -44,6 +87,63 @@ Es proposen els següents volums de dades:
 - `postgres-data`: Dades de PostgreSQL
 - `valkey-data`: Dades de Valkey
 - `rabbitmq-data`: Dades de RabbitMQ
+
+
+## Servei d'NGINX
+
+NGINX deixa d'usar-se com a proxy invers i passa a actuar únicament com a servidor web del front-end. Per tant, el seu fitxer de configuració `docker/nginx/nginx.conf` ha d'adaptar-se a aquestes circumstàncies:
+
+```nginx
+# docker/nginx/nginx.conf
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    server {
+        listen 80;
+        server_name localhost;
+
+        root /usr/share/nginx/html;
+        index index.html;
+
+        # Frontend estàtic
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        # Health check
+        location /health {
+            access_log off;
+            return 200 "healthy\n";
+            add_header Content-Type text/plain;
+        }
+    }
+}
+```
+
+> Hem aprofitat per a after un endpoint `/health` que NGINX usara per saber si el servei està actiu o no.
+
+Així mateix, haurem de modificar també el `Dockerfile` per incloure el codi del front-end (fitxer `index.html` proporcionat):
+
+```dockerfile
+# docker/nginx/Dockerfile
+FROM nginx:1.30-alpine
+
+# Copiar configuració
+COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
+
+# Copiar frontend
+COPY frontend/ /usr/share/nginx/html/
+
+EXPOSE 80
+```
+
+
+
 
 ## Variables d'entorn mínimes
 
@@ -94,9 +194,7 @@ Es proposen els següents límits de recursos, considerats suficients donat el q
 | Nginx      | 0.25     | 128M         |
 | Traefik    | 0.25     | 256M         |
 
-## Fitxer HTML del front-end
 
-Per a poder aprofitar la configuración per defecte d'NGINX, col·locarem el fitxer `index.html` a la ruta `/usr/share/nginx/html/index.html`, muntant el directori `frontend/`  en aquesta ubicació. D'aquesta forma NGINX ja el servirà correctament a l'arrel.
 
 ## Fitxers del worker
 
@@ -130,6 +228,7 @@ RABBITMQ_DEFAULT_PASS=super-secret-rabbitmq-password
 Es proposa el següent fitxer `Dockerfile` del worker, per a ser col·locat dins `docker/worker/`:
 
 ```dockerfile
+# docker/worker/Dockerfile
 FROM node:24-alpine
 WORKDIR /app
 COPY package.json ./
@@ -139,304 +238,65 @@ USER node
 CMD ["node", "worker.js"]
 ```
 
-Una proposta alternativa més didàctica, amb multi-stage builds, seria:
+Els fitxers `docker/worker/worker.js` i `docker/worker/packages.json` es proporcionen a l'enunciat.
 
-```dockerfile
-FROM node:24-alpine AS builder
-WORKDIR /app
-COPY package.json ./
-RUN npm install
 
-# --------------------------------------------------
 
-FROM node:24-alpine
-WORKDIR /app
-COPY --from=builder /app/node_modules ./node_modules
-COPY package.json worker.js ./
-USER node
-CMD ["node", "worker.js"]
+# Consultar la documentació de l'API
+
+```bash
+curl http://localhost:8080/api/v1/docs
 ```
 
-## Fitxer compose.yaml
-
-Es proposa el següent fitxer `compose.yaml`, a l'arrel del projecte:
-
-```yaml
-# compose.yaml
-
-# Extensions YAML
-
-x-logging: &default-logging
-  driver: json-file
-  options:
-    max-size: "10m"
-    max-file: "3"
-
-x-healthcheck-defaults: &healthcheck-defaults
-  interval: 10s
-  timeout: 5s
-  retries: 5
-  start_period: 30s
-
-x-restart-policy: &restart-policy
-  restart: unless-stopped
 
 
-# Serveis
+## Comandes per provar
 
-services:
+```bash
+# 1. Configurar entorn
+cp .env.example .env
+# Editar .env amb les credencials
 
-  # Traefik - Proxy invers
-  traefik:
-    image: traefik:v3.4
-    command:
-      - "--api.dashboard=true"
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedByDefault=false"
-      - "--entryPoints.web.address=:80"
-      - "--ping=true"
-    ports:
-      - "80:80"
-      - "8080:8080"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - frontend
-      - proxy
-    healthcheck:
-      <<: *healthcheck-defaults
-      test: ["CMD", "traefik", "healthcheck", "--ping"]
-    logging: *default-logging
-    <<: *restart-policy
+# 2. Construir imatges
+docker compose build
 
+# 3. Arrencar serveis base
+docker compose up -d postgres
+docker compose ps  # Esperar healthy
 
-  # NGINX - Front-end estàtic
-  nginx:
-    image: nginx:alpine
-    volumes:
-      - ./frontend:/usr/share/nginx/html:ro
-    networks:
-      - frontend
-      - proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`localhost`) && !PathPrefix(`/api`) && !PathPrefix(`/rabbitmq`)"
-      - "traefik.http.routers.frontend.entrypoints=web"
-      - "traefik.http.services.frontend.loadbalancer.server.port=80"
-    healthcheck:
-      <<: *healthcheck-defaults
-      test: ["CMD-SHELL", "wget -q --spider http://localhost/ || exit 1"]
-    logging: *default-logging
-    <<: *restart-policy
+# 4. Arrencar resta de serveis
+docker compose up -d
 
+# 5. Verificar estat
+docker compose ps
 
-  # API REST - Django Ninja (Sports Club)
-  api:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-    environment:
-      POSTGRES_HOST: db
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      SECRET_KEY: ${DJANGO_SECRET_KEY}
-      DEBUG: ${DEBUG:-false}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
-    networks:
-      - backend
-      - proxy
-    depends_on:
-      db:
-        condition: service_healthy
-      valkey:
-        condition: service_healthy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`localhost`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.api.entrypoints=web"
-      - "traefik.http.services.api.loadbalancer.server.port=8000"
-    healthcheck:
-      <<: *healthcheck-defaults
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8000/api/v1/docs || exit 1"]
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          memory: 256M
-    logging: *default-logging
-    <<: *restart-policy
+# 6. Provar endpoints
+curl http://localhost/                    # Frontend
+curl http://localhost/api/v1/docs         # Documentació API
+curl http://localhost/api/v1/health       # Health check
 
-
-# PostgreSQL - Base de dades
-  db:
-    image: postgres:18-alpine
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - postgres-data:/var/lib/postgresql
-    networks:
-      - backend
-    healthcheck:
-      <<: *healthcheck-defaults
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          memory: 256M
-    logging: *default-logging
-    <<: *restart-policy
-
-
-# Valkey - Cache
-  valkey:
-    image: valkey/valkey:8-alpine
-    command: valkey-server --requirepass ${VALKEY_PASSWORD}
-    volumes:
-      - valkey-data:/data
-    networks:
-      - backend
-    healthcheck:
-      <<: *healthcheck-defaults
-      test: ["CMD-SHELL", "valkey-cli -a ${VALKEY_PASSWORD} ping | grep -q PONG"]
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-        reservations:
-          memory: 128M
-    logging: *default-logging
-    <<: *restart-policy
-
-
-  # RabbitMQ - Broker de missatges
-  rabbitmq:
-    image: rabbitmq:4-management-alpine
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-    networks:
-      - backend
-      - proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.rabbitmq.rule=Host(`localhost`) && PathPrefix(`/rabbitmq`)"
-      - "traefik.http.routers.rabbitmq.entrypoints=web"
-      - "traefik.http.middlewares.rabbitmq-strip.stripprefix.prefixes=/rabbitmq"
-      - "traefik.http.routers.rabbitmq.middlewares=rabbitmq-strip"
-      - "traefik.http.services.rabbitmq.loadbalancer.server.port=15672"
-    healthcheck:
-      <<: *healthcheck-defaults
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      start_period: 60s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          memory: 256M
-    logging: *default-logging
-    <<: *restart-policy
-
-  # Worker - Consumidor de RabbitMQ amb Node.js
-  worker:
-    build:
-      context: ./docker/worker
-      dockerfile: Dockerfile
-    environment:
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${RABBITMQ_DEFAULT_USER}
-      RABBITMQ_PASS: ${RABBITMQ_DEFAULT_PASS}
-      QUEUE_NAME: tasks
-    networks:
-      - backend
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-        reservations:
-          memory: 128M
-    logging: *default-logging
-    <<: *restart-policy
-
-  # Adminer - Gestió de base de dades (perfil dev)
-  adminer:
-    image: adminer:latest
-    networks:
-      - backend
-      - proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.adminer.rule=Host(`localhost`) && PathPrefix(`/adminer`)"
-      - "traefik.http.routers.adminer.entrypoints=web"
-      - "traefik.http.services.adminer.loadbalancer.server.port=8080"
-    depends_on:
-      db:
-        condition: service_healthy
-    profiles:
-      - dev
-    logging: *default-logging
-    <<: *restart-policy
-
-
-  # Mailpit - Servidor SMTP de proves (perfil dev)
-  mailpit:
-    image: axllent/mailpit:latest
-    environment:
-      MP_SMTP_AUTH_ACCEPT_ANY: 1
-      MP_SMTP_AUTH_ALLOW_INSECURE: 1
-    networks:
-      - backend
-      - proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.mailpit.rule=Host(`localhost`) && PathPrefix(`/mailpit`)"
-      - "traefik.http.routers.mailpit.entrypoints=web"
-      - "traefik.http.middlewares.mailpit-strip.stripprefix.prefixes=/mailpit"
-      - "traefik.http.routers.mailpit.middlewares=mailpit-strip"
-      - "traefik.http.services.mailpit.loadbalancer.server.port=8025"
-    profiles:
-      - dev
-    logging: *default-logging
-    <<: *restart-policy
-
-
-# Xarxes
-
-networks:
-  frontend:
-    name: sportsclub-frontend
-  backend:
-    name: sportsclub-backend
-  proxy:
-    name: sportsclub-proxy
-
-
-# Volums
-
-volumes:
-  postgres-data:
-    name: sportsclub-postgres-data
-  valkey-data:
-    name: sportsclub-valkey-data
-  rabbitmq-data:
-    name: sportsclub-rabbitmq-data
+# 7. Mode desenvolupament
+docker compose --profile dev up -d
+curl http://localhost/adminer             # Adminer
+curl http://localhost/mailpit             # Mailpit
 ```
+
+
+Resultats:
+
+http://localhost/ carrega correctament el frontend i les accions sobre els endpoints d'atletes funcionen.
+
+http://localhost/api/v1/docs mostra una pàgina en blanc.
+
+http://localhost/api/v1/core/health funciona correctament, retornant el JSON
+
+http://localhost:8080/dashboard/ carrega correctament.
+
+http://localhost:15672/ carrega correctament.
+
+curl http://localhost/api/v1/core/health funciona bé
+curl http://localhost/api/v1/people/athletes funciona bé.
+La comanda docker compose --profile dev up -d​ funciona bé. La comanda docker compose logs worker -f​ mostra el logs (esperant missatges).
+
+
+

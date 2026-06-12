@@ -38,7 +38,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - frontend
-      - proxy
     healthcheck:
       <<: *healthcheck-defaults
       test: ["CMD", "traefik", "healthcheck", "--ping"]
@@ -46,18 +45,18 @@ services:
     <<: *restart-policy
 
   # NGINX - Front-end estàtic
-  nginx:
-    image: nginx:alpine
-    volumes:
-      - ./frontend:/usr/share/nginx/html:ro
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
     networks:
       - frontend
-      - proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`localhost`) && !PathPrefix(`/api`) && !PathPrefix(`/rabbitmq`)"
+      - "traefik.http.routers.frontend.rule=!PathPrefix(`/api`) && !PathPrefix(`/adminer`)"
       - "traefik.http.routers.frontend.entrypoints=web"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      - "traefik.docker.network=sportsclub-frontend"
     healthcheck:
       <<: *healthcheck-defaults
       test: ["CMD-SHELL", "wget -q --spider http://localhost/ || exit 1"]
@@ -68,7 +67,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/app/Dockerfile
     environment:
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
@@ -80,7 +79,7 @@ services:
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
     networks:
       - backend
-      - proxy
+      - frontend
     depends_on:
       db:
         condition: service_healthy
@@ -88,12 +87,13 @@ services:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.api.rule=PathPrefix(`/api`)"
       - "traefik.http.routers.api.entrypoints=web"
-      - "traefik.http.services.api.loadbalancer.server.port=8000"
+      - "traefik.http.services.api.loadbalancer.server.port=8080"
+      - "traefik.docker.network=sportsclub-frontend"
     healthcheck:
       <<: *healthcheck-defaults
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8000/api/v1/docs || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/core/health"]
     deploy:
       resources:
         limits:
@@ -111,6 +111,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql
     networks:
@@ -130,7 +132,7 @@ services:
 
   # Valkey - Cache
   valkey:
-    image: valkey/valkey:8-alpine
+    image: valkey/valkey:9.1-alpine
     command: valkey-server --requirepass ${VALKEY_PASSWORD}
     volumes:
       - valkey-data:/data
@@ -155,18 +157,12 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - "15672:15672"
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     networks:
       - backend
-      - proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.rabbitmq.rule=Host(`localhost`) && PathPrefix(`/rabbitmq`)"
-      - "traefik.http.routers.rabbitmq.entrypoints=web"
-      - "traefik.http.middlewares.rabbitmq-strip.stripprefix.prefixes=/rabbitmq"
-      - "traefik.http.routers.rabbitmq.middlewares=rabbitmq-strip"
-      - "traefik.http.services.rabbitmq.loadbalancer.server.port=15672"
     healthcheck:
       <<: *healthcheck-defaults
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
@@ -192,11 +188,20 @@ services:
       RABBITMQ_USER: ${RABBITMQ_DEFAULT_USER}
       RABBITMQ_PASS: ${RABBITMQ_DEFAULT_PASS}
       QUEUE_NAME: tasks
+      API_HOST: api
+      API_PORT: 8080
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      EMAIL_FROM: noreply@sportsclub.local
     networks:
       - backend
     depends_on:
       rabbitmq:
         condition: service_healthy
+      api:
+        condition: service_healthy
+    profiles:
+      - dev
     deploy:
       resources:
         limits:
@@ -212,12 +217,13 @@ services:
     image: adminer:latest
     networks:
       - backend
-      - proxy
+      - frontend
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.adminer.rule=Host(`localhost`) && PathPrefix(`/adminer`)"
+      - "traefik.http.routers.adminer.rule=PathPrefix(`/adminer`)"
       - "traefik.http.routers.adminer.entrypoints=web"
       - "traefik.http.services.adminer.loadbalancer.server.port=8080"
+      - "traefik.docker.network=sportsclub-frontend"
     depends_on:
       db:
         condition: service_healthy
@@ -232,16 +238,10 @@ services:
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - "8025:8025"
     networks:
       - backend
-      - proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.mailpit.rule=Host(`localhost`) && PathPrefix(`/mailpit`)"
-      - "traefik.http.routers.mailpit.entrypoints=web"
-      - "traefik.http.middlewares.mailpit-strip.stripprefix.prefixes=/mailpit"
-      - "traefik.http.routers.mailpit.middlewares=mailpit-strip"
-      - "traefik.http.services.mailpit.loadbalancer.server.port=8025"
     profiles:
       - dev
     logging: *default-logging
@@ -253,8 +253,6 @@ networks:
     name: sportsclub-frontend
   backend:
     name: sportsclub-backend
-  proxy:
-    name: sportsclub-proxy
 
 # Volums
 volumes:

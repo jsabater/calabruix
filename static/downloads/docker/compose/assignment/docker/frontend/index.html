@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports Club</title>
+    <script src="/htmx.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #16a34a;
+            --warning: #ca8a04;
+            --error: #dc2626;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--card-bg);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+
+        .status-indicator.healthy {
+            background: var(--success);
+        }
+
+        .status-indicator.unhealthy {
+            background: var(--error);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .card-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background-color 0.2s, opacity 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background: var(--bg);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            background: var(--bg);
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .error {
+            color: var(--error);
+            padding: 1rem;
+            background: #fef2f2;
+            border-radius: 0.5rem;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .success {
+            color: var(--success);
+            padding: 1rem;
+            background: #f0fdf4;
+            border-radius: 0.5rem;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            line-height: 1;
+        }
+
+        .htmx-request .htmx-indicator {
+            display: inline-block;
+        }
+
+        .htmx-indicator {
+            display: none;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.5rem 1rem;
+        }
+
+        .detail-label {
+            font-weight: 500;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .detail-value {
+            font-size: 0.875rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏃 Sports Club</h1>
+            <p>Gestió d'atletes del club d'atletisme</p>
+        </header>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-indicator" id="api-status"></span>
+                <span>API</span>
+            </div>
+            <div class="status-item">
+                <span class="status-indicator" id="db-status"></span>
+                <span>Base de dades</span>
+            </div>
+        </div>
+
+        <!-- Llista d'atletes -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Atletes</h2>
+                <div class="btn-group">
+                    <button class="btn btn-secondary btn-sm"
+                            hx-get="/api/v1/people/athletes"
+                            hx-target="#athletes-table"
+                            hx-indicator="#athletes-loading">
+                        ↻ Actualitzar
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="showCreateForm()">
+                        + Nou atleta
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="athletes-loading" class="loading htmx-indicator">
+                    Carregant atletes...
+                </div>
+                <div id="athletes-table"
+                     hx-get="/api/v1/people/athletes"
+                     hx-trigger="load"
+                     hx-indicator="#athletes-loading">
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulari de creació (inicialment ocult) -->
+        <div class="card hidden" id="create-form-card">
+            <div class="card-header">
+                <h2>Nou atleta</h2>
+            </div>
+            <div class="card-body">
+                <form id="create-athlete-form" onsubmit="createAthlete(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="create-first-name">Nom *</label>
+                            <input type="text" id="create-first-name" name="first_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="create-last-name">Cognoms *</label>
+                            <input type="text" id="create-last-name" name="last_name" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="create-email">Email</label>
+                            <input type="email" id="create-email" name="email">
+                        </div>
+                        <div class="form-group">
+                            <label for="create-jersey">Dorsal</label>
+                            <input type="number" id="create-jersey" name="jersey_number" min="1" max="999">
+                        </div>
+                    </div>
+                    <div id="create-message"></div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="hideCreateForm()">Cancel·lar</button>
+                        <button type="submit" class="btn btn-success">Crear atleta</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Detall d'atleta (inicialment ocult) -->
+        <div class="card hidden" id="detail-card">
+            <div class="card-header">
+                <h2>Detall de l'atleta</h2>
+                <button class="btn btn-secondary btn-sm" onclick="hideDetail()">✕ Tancar</button>
+            </div>
+            <div class="card-body" id="athlete-detail">
+            </div>
+        </div>
+
+        <!-- Formulari d'edició (inicialment ocult) -->
+        <div class="card hidden" id="edit-form-card">
+            <div class="card-header">
+                <h2>Editar atleta</h2>
+            </div>
+            <div class="card-body">
+                <form id="edit-athlete-form" onsubmit="updateAthlete(event)">
+                    <input type="hidden" id="edit-public-id" name="public_id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-first-name">Nom *</label>
+                            <input type="text" id="edit-first-name" name="first_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-last-name">Cognoms *</label>
+                            <input type="text" id="edit-last-name" name="last_name" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-email">Email</label>
+                            <input type="email" id="edit-email" name="email">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-jersey">Dorsal</label>
+                            <input type="number" id="edit-jersey" name="jersey_number" min="1" max="999">
+                        </div>
+                    </div>
+                    <div id="edit-message"></div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="hideEditForm()">Cancel·lar</button>
+                        <button type="submit" class="btn btn-warning">Guardar canvis</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <footer>
+            <p>Sports Club &copy; 2026 — Pràctica de Docker Compose</p>
+        </footer>
+    </div>
+
+    <!-- Modal de confirmació d'eliminació -->
+    <div class="modal-backdrop hidden" id="delete-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Confirmar eliminació</h3>
+                <button class="modal-close" onclick="hideDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Estàs segur que vols eliminar l'atleta <strong id="delete-athlete-name"></strong>?</p>
+                <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">
+                    Identificador: <code id="delete-athlete-id"></code>
+                </p>
+                <p style="color: var(--error); font-size: 0.875rem; margin-top: 1rem;">
+                    Aquesta acció no es pot desfer.
+                </p>
+                <div class="form-actions">
+                    <button class="btn btn-secondary" onclick="hideDeleteModal()">Cancel·lar</button>
+                    <button class="btn btn-danger" onclick="confirmDelete()">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variable global per guardar l'ID de l'atleta a eliminar
+        let athleteToDelete = null;
+
+        // ===== Health Check =====
+        async function checkHealth() {
+            const apiStatus = document.getElementById('api-status');
+            const dbStatus = document.getElementById('db-status');
+        
+            try {
+                const response = await fetch('/api/v1/core/health');
+                const data = await response.json();
+            
+                if (response.ok && (data.status === 'healthy' || data.status === 'ok')) {
+                    apiStatus.classList.add('healthy');
+                    apiStatus.classList.remove('unhealthy');
+
+                    if (data.database === 'connected' || data.database === 'ok') {
+                        dbStatus.classList.add('healthy');
+                        dbStatus.classList.remove('unhealthy');
+                    } else {
+                        dbStatus.classList.add('unhealthy');
+                        dbStatus.classList.remove('healthy');
+                    }
+                } else {
+                    apiStatus.classList.add('unhealthy');
+                    apiStatus.classList.remove('healthy');
+                    dbStatus.classList.add('unhealthy');
+                    dbStatus.classList.remove('healthy');
+                }
+            } catch (error) {
+                apiStatus.classList.add('unhealthy');
+                apiStatus.classList.remove('healthy');
+                dbStatus.classList.add('unhealthy');
+                dbStatus.classList.remove('healthy');
+            }
+        }
+
+        // ===== Renderitzar taula d'atletes =====
+        function renderAthletesTable(athletes) {
+            if (!Array.isArray(athletes) || athletes.length === 0) {
+                return '<div class="empty">No hi ha atletes registrats</div>';
+            }
+
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Identificador</th>
+                            <th>Nom</th>
+                            <th>Dorsal</th>
+                            <th>Accions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            athletes.forEach(athlete => {
+                const displayName = athlete.display_name || `${athlete.first_name} ${athlete.last_name}`;
+                const jersey = athlete.jersey_number || '-';
+                
+                html += `
+                    <tr>
+                        <td><span class="badge">${athlete.public_id}</span></td>
+                        <td>${displayName}</td>
+                        <td>${jersey}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-secondary btn-sm" onclick="showDetail('${athlete.public_id}')">
+                                    Veure
+                                </button>
+                                <button class="btn btn-warning btn-sm" onclick="showEditForm('${athlete.public_id}')">
+                                    Editar
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="showDeleteModal('${athlete.public_id}', '${displayName}')">
+                                    Eliminar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            return html;
+        }
+
+        // ===== Renderitzar detall d'atleta =====
+        function renderAthleteDetail(athlete) {
+            return `
+                <div class="detail-grid">
+                    <span class="detail-label">Identificador:</span>
+                    <span class="detail-value"><span class="badge">${athlete.public_id}</span></span>
+                    
+                    <span class="detail-label">Nom:</span>
+                    <span class="detail-value">${athlete.first_name}</span>
+                    
+                    <span class="detail-label">Cognoms:</span>
+                    <span class="detail-value">${athlete.last_name}</span>
+                    
+                    <span class="detail-label">Email:</span>
+                    <span class="detail-value">${athlete.email || '-'}</span>
+                    
+                    <span class="detail-label">Dorsal:</span>
+                    <span class="detail-value">${athlete.jersey_number || '-'}</span>
+                </div>
+                <div style="margin-top: 1.5rem; padding: 1rem; background: var(--bg); border-radius: 0.5rem;">
+                    <p style="font-size: 0.875rem; color: var(--text-muted);">
+                        <strong>Consell:</strong> Pots usar l'identificador <code>${athlete.public_id}</code> 
+                        per enviar una tasca a RabbitMQ i generar un email de benvinguda.
+                    </p>
+                </div>
+            `;
+        }
+
+        // ===== Formulari de creació =====
+        function showCreateForm() {
+            document.getElementById('create-form-card').classList.remove('hidden');
+            document.getElementById('create-athlete-form').reset();
+            document.getElementById('create-message').innerHTML = '';
+            document.getElementById('create-first-name').focus();
+        }
+
+        function hideCreateForm() {
+            document.getElementById('create-form-card').classList.add('hidden');
+        }
+
+        async function createAthlete(event) {
+            event.preventDefault();
+            const form = event.target;
+            const messageDiv = document.getElementById('create-message');
+            
+            const data = {
+                first_name: form.first_name.value,
+                last_name: form.last_name.value,
+            };
+            
+            if (form.email.value) data.email = form.email.value;
+            if (form.jersey_number.value) data.jersey_number = parseInt(form.jersey_number.value);
+
+            try {
+                const response = await fetch('/api/v1/people/athletes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    messageDiv.innerHTML = '<div class="success">Atleta creat correctament!</div>';
+                    form.reset();
+                    refreshAthletes();
+                    setTimeout(hideCreateForm, 1500);
+                } else {
+                    const error = await response.json();
+                    messageDiv.innerHTML = `<div class="error">Error: ${error.detail || 'No s\'ha pogut crear l\'atleta'}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="error">Error de connexió: ${error.message}</div>`;
+            }
+        }
+
+        // ===== Detall d'atleta =====
+        async function showDetail(publicId) {
+            const detailCard = document.getElementById('detail-card');
+            const detailContent = document.getElementById('athlete-detail');
+            
+            detailCard.classList.remove('hidden');
+            detailContent.innerHTML = '<div class="loading">Carregant...</div>';
+
+            try {
+                const response = await fetch(`/api/v1/people/athletes/${publicId}`);
+                if (response.ok) {
+                    const athlete = await response.json();
+                    detailContent.innerHTML = renderAthleteDetail(athlete);
+                } else {
+                    detailContent.innerHTML = '<div class="error">No s\'ha pogut carregar l\'atleta</div>';
+                }
+            } catch (error) {
+                detailContent.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        function hideDetail() {
+            document.getElementById('detail-card').classList.add('hidden');
+        }
+
+        // ===== Formulari d'edició =====
+        async function showEditForm(publicId) {
+            const editCard = document.getElementById('edit-form-card');
+            const messageDiv = document.getElementById('edit-message');
+            
+            editCard.classList.remove('hidden');
+            messageDiv.innerHTML = '';
+
+            try {
+                const response = await fetch(`/api/v1/people/athletes/${publicId}`);
+                if (response.ok) {
+                    const athlete = await response.json();
+                    document.getElementById('edit-public-id').value = athlete.public_id;
+                    document.getElementById('edit-first-name').value = athlete.first_name || '';
+                    document.getElementById('edit-last-name').value = athlete.last_name || '';
+                    document.getElementById('edit-email').value = athlete.email || '';
+                    document.getElementById('edit-jersey').value = athlete.jersey_number || '';
+                } else {
+                    messageDiv.innerHTML = '<div class="error">No s\'ha pogut carregar l\'atleta</div>';
+                }
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        function hideEditForm() {
+            document.getElementById('edit-form-card').classList.add('hidden');
+        }
+
+        async function updateAthlete(event) {
+            event.preventDefault();
+            const form = event.target;
+            const messageDiv = document.getElementById('edit-message');
+            const publicId = document.getElementById('edit-public-id').value;
+            
+            const data = {
+                first_name: form.first_name.value,
+                last_name: form.last_name.value,
+            };
+            
+            if (form.email.value) data.email = form.email.value;
+            if (form.jersey_number.value) data.jersey_number = parseInt(form.jersey_number.value);
+
+            try {
+                const response = await fetch(`/api/v1/people/athletes/${publicId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    messageDiv.innerHTML = '<div class="success">Atleta actualitzat correctament!</div>';
+                    refreshAthletes();
+                    setTimeout(hideEditForm, 1500);
+                } else {
+                    const error = await response.json();
+                    messageDiv.innerHTML = `<div class="error">Error: ${error.detail || 'No s\'ha pogut actualitzar l\'atleta'}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="error">Error de connexió: ${error.message}</div>`;
+            }
+        }
+
+        // ===== Eliminació =====
+        function showDeleteModal(publicId, name) {
+            athleteToDelete = publicId;
+            document.getElementById('delete-athlete-name').textContent = name;
+            document.getElementById('delete-athlete-id').textContent = publicId;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
+
+        function hideDeleteModal() {
+            athleteToDelete = null;
+            document.getElementById('delete-modal').classList.add('hidden');
+        }
+
+        async function confirmDelete() {
+            if (!athleteToDelete) return;
+
+            try {
+                const response = await fetch(`/api/v1/people/athletes/${athleteToDelete}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok || response.status === 204) {
+                    hideDeleteModal();
+                    refreshAthletes();
+                } else {
+                    alert('No s\'ha pogut eliminar l\'atleta');
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // ===== Utilitats =====
+        function refreshAthletes() {
+            htmx.trigger('#athletes-table', 'load');
+        }
+
+        // ===== Gestió de respostes HTMX =====
+        document.body.addEventListener('htmx:beforeSwap', function(event) {
+            if (event.detail.target.id === 'athletes-table') {
+                if (event.detail.xhr.getResponseHeader('Content-Type')?.includes('application/json')) {
+                    try {
+                        const data = JSON.parse(event.detail.serverResponse);
+                        event.detail.serverResponse = renderAthletesTable(data);
+                    } catch (e) {
+                        event.detail.serverResponse = '<div class="error">Error processant les dades</div>';
+                    }
+                }
+            }
+        });
+
+        document.body.addEventListener('htmx:responseError', function(event) {
+            if (event.detail.target.id === 'athletes-table') {
+                event.detail.target.innerHTML = '<div class="error">Error carregant els atletes. Verifica que l\'API està en funcionament.</div>';
+            }
+        });
+
+        // ===== Inicialització =====
+        checkHealth();
+        setInterval(checkHealth, 30000);
+    </script>
+</body>
+</html>

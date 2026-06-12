@@ -14,7 +14,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "amqplib": "^0.10.5"
+    "amqplib": "^0.10.5",
+    "nodemailer": "^6.10.1"
   },
   "engines": {
     "node": ">=20.0.0"
