@@ -1,7 +1,7 @@
 ---
 title: "Pràctica final de desplegament"
 date: 2026-06-11
-lastmod: 2026-06-12
+lastmod: 2026-06-13
 description: "Desplegament complet d'una aplicació web amb Docker Compose, amb proxy invers, API, base de dades, cache i cues de missatges"
 summary: "Desplegament complet d'una aplicació web amb proxy invers, API, base de dades, cache i cues de missatges"
 categories: ["teaching"]
@@ -252,7 +252,7 @@ La interfície de gestió de RabbitMQ és accessible a través del [port 15672 e
 > Com Mailpit, RabbitMQ Management no passa per Traefik. En un entorn de producció, aquesta interfície estaria restringida a una xarxa d'administració o protegida per VPN.
 
 
-## Sistema de cues i notificacions
+## Sistema de cues
 
 El projecte inclou un sistema de tasques asíncrones format per RabbitMQ (broker de missatges), un *worker* de Node.js (consumidor) i Mailpit (servidor SMTP de proves). Aquest sistema ja ve configurat i funcional; només heu de desplegar-lo correctament.
 
@@ -327,7 +327,7 @@ worker-1  |   Processament completat ✓
 ```
 
 
-### Docker Hub
+## Docker Hub
 
 Heu de publicar les imatges que hagueu creat a Docker Hub:
 
@@ -343,9 +343,9 @@ Heu de publicar les imatges que hagueu creat a Docker Hub:
 
 Per aquest projecte se us proporcionen els fitxers següents:
 
-1. `docker/frontend/index.html`: [Front-end estàtic amb HTMX](/downloads/docker/compose/assignment/index.html) {{< icon "download" >}}.
-2. `docker/worker/worker.js`: [Worker de Node.js](/downloads/docker/compose/assignment/worker.js) {{< icon "download" >}} per consumir missatges de RabbitMQ.
-3. `docker/worker/package.json`: [Dependències del worker](/downloads/docker/compose/assignment/package.json) {{< icon "download" >}}.
+1. `docker/frontend/index.html`: [Front-end estàtic amb HTMX](/downloads/docker/compose/assignment/docker/frontend/index.html) {{< icon "download" >}}.
+2. `docker/worker/worker.js`: [Worker de Node.js](/downloads/docker/compose/assignment/docker/worker/worker.js) {{< icon "download" >}} per consumir missatges de RabbitMQ.
+3. `docker/worker/package.json`: [Dependències del worker](/downloads/docker/compose/assignment/docker/worker/package.json) {{< icon "download" >}}.
 
 A continuació es fa una breu explicació de cada fitxer, per contextualitzar.
 
@@ -421,7 +421,7 @@ El fitxer `PRACTICA.md` ha d'incloure els següents apartats, en aquest ordre:
 10. **Estructura del projecte**: Descripció dels fitxers i directoris.
 
 
-## Contingut mínim del repositori
+## Contingut mínim
 
 El vostre repositori ha de contenir, com a mínim:
 
@@ -449,6 +449,7 @@ El vostre repositori ha de contenir, com a mínim:
 
 **Altres:**
 - `.gitignore` — Actualitzat per excloure fitxers sensibles
+- `sportsclub/` — Codi del back-end clonat des del *fork*
 
 
 ## Checklist de verificació
