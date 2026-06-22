@@ -1,7 +1,7 @@
 ---
 title: "Build your blog using Hugo and Blowfish"
 date: 2024-09-05
-lastmod: 2026-04-21
+lastmod: 2026-06-22
 description: "An installation and configuration guide of the Hugo static site generator with the Blowfish theme for your blog website."
 summary: "Install and configure the Hugo site generator with the Blowfish theme for your blog website."
 categories: ["frameworks"]
@@ -26,7 +26,7 @@ apt-get install git
 We will install the extended edition of Hugo, as recommended in their [installation instructions](https://gohugo.io/installation/linux/#editions), using a Debian package that we will download from the [latest release page at Github](https://github.com/gohugoio/hugo/releases/latest). The following set of commands will automate the task (adjust the version in the first line, if needed):
 
 ```bash
-HUGO_VERSION="0.160.1"
+HUGO_VERSION="0.161.1"
 wget https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
     --output-document /tmp/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
 sudo dpkg --install /tmp/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
@@ -70,11 +70,11 @@ hugo new site . --force
 
 ## Install Blowfish
 
-We will install Blowfish as a Git submodule, as recommended in their [installation instructions](https://blowfish.page/docs/installation/#install-without-cli). We will be using the latest version of Blowfish from its `main` branch.
+We will install Blowfish as a Git submodule, as recommended in their [installation instructions](https://blowfish.page/docs/installation/#install-without-cli). We will be using the latest version of Blowfish from its `main` branch, with shallow depth:
 
 ```bash
 cd ~/Sites/mywebsite
-git submodule add --branch main \
+git submodule add --branch main --depth 1 \
   https://github.com/nunocoracao/blowfish.git themes/blowfish
 ```
 
@@ -88,6 +88,15 @@ git submodule update --remote --merge
 ```
 
 > Once the submodule has been updated, the site needs to be rebuilt.
+
+Mark the submodule as shallow, so only the latest revision is downloaded when cloning the repository again in the future:
+
+```bash
+cd ~/Sites/mywebsite
+git config -f .gitmodules submodule.themes/blowfish.shallow true   
+```
+
+> This command just added `shallow = true` to the `themes/blowfish` submodule in the `.gitmodules` file.
 
 When in need to clone the repository into another computer, you have to keep in mind that, when cloning a repository that contains submodules, you have to initialise them explicitly.
 
