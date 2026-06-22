@@ -93,7 +93,7 @@ Mark the submodule as shallow, so only the latest revision is downloaded when cl
 
 ```bash
 cd ~/Sites/mywebsite
-git config -f .gitmodules submodule.themes/blowfish.shallow true   
+git config -f .gitmodules submodule.themes/blowfish.shallow true
 ```
 
 > This command just added `shallow = true` to the `themes/blowfish` submodule in the `.gitmodules` file.
@@ -101,14 +101,19 @@ git config -f .gitmodules submodule.themes/blowfish.shallow true
 When in need to clone the repository into another computer, you have to keep in mind that, when cloning a repository that contains submodules, you have to initialise them explicitly.
 
 ```bash
-git clone --recurse-submodules \
+GIT_SSH_COMMAND="ssh -i ~/.ssh/your_key -o IdentitiesOnly=yes" \
+  git clone --recurse-submodules \
   git@github.com:<username>/mywebsite.git
 ```
 
-Or, if you have already cloned it without the option of the submodules, run:
+> If you only have one SSH key, you can skip the `GIT_SSH_COMMAND` option.
+
+Now, run the following commands inside the new repository directory so that you can start working with it immediately:
 
 ```bash
-git submodule update --init
+git config core.sshCommand "ssh -i ~/.ssh/your_key -o IdentitiesOnly=yes"
+git config user.name "Your Name"
+git config user.email "your.email@domain.com"
 ```
 
 Finally, we will create a `.gitignore` file to exclude certain files from the repository automatically.
