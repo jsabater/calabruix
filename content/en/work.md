@@ -1,7 +1,7 @@
 ---
 title: "What I do"
 date: "2026-01-15"
-lastmod: 2026-03-31
+lastmod: 2026-07-04
 description: "How I can help you"
 slug: work
 ---
@@ -23,7 +23,7 @@ As a manager, I strongly believe in the power of transformation through good lea
 
 As a systems engineer, I am, mostly, a back-end guy: systems, platform, devops, site reliability, REST APIs, but I also have great interest in good software development practices and software architectures. I am a huge fan of [*](TDD), [*](VSA) and [*](DDD), and agile methodologies.
 
-If you want, you can have a look at [my curriculum vitae a Kickresume](https://www.kickresume.com/cv/bLdx3M/).
+If you want, you can have a look at [my curriculum vitae](/downloads/cv/jaume-sabater-july-2026.pdf).
 
 [^1]: The whole quote being "A jack of all trades is a master of none, but oftentimes better than a master of one".
 [^2]: Psychology suggests that my nervous system, when I was a kid, started building a cognitive architecture known as an M-shaped mind.
