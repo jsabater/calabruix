@@ -1,7 +1,7 @@
 ---
 title: "Configuring Zsh on a new laptop for DevOps"
 date: 2026-07-07
-lastmod: 2026-07-07
+lastmod: 2026-07-10
 description: "A reproducible walkthrough of setting up Zsh with Oh My Zsh, fzf, Starship, and zsh-patina on a fresh Linux installation."
 summary: "How to configure the Z shell with Oh My Zsh, fzf, Starship, and zsh-patina on Linux."
 categories: ["infrastructure"]
@@ -84,10 +84,10 @@ And then listing it as an active plug-in in `~/.zshrc`:
 ```zsh
 # Do not add `zsh-syntax-highlighting` or `fast-syntax-highlighting`
 # since we are using `zsh-patina`
-plugins=(colored-man-pages git zsh-autosuggestions)
+plugins=(colored-man-pages git ufw zsh-autosuggestions)
 ```
 
-Plugins that ship with *Oh My Zsh* by default, as opposed to ones you install yourself, like `zsh-autosuggestions`, live under `~/.oh-my-zsh/plugins`, and can be enabled just by adding their name to the `plugins` array. For instance, we took the chance to also enable the `colored-man-pages` plug-in, which adds colour to the manual pages, e.g., `man wget`.
+Plugins that ship with *Oh My Zsh* by default, as opposed to ones you install yourself, like `zsh-autosuggestions`, live under `~/.oh-my-zsh/plugins`, and can be enabled just by adding their name to the `plugins` array. For instance, we took the chance to also enable the `colored-man-pages` and the `ufw` plug-ins, which adds colour to the manual pages, e.g., `man wget`, and adds completion to the Uncomplicated Firewall CLI, e.g., `ufw allow` The `git` plug-in comes enabled by default.
 
 
 ## Complementary tools
