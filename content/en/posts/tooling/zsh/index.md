@@ -1,7 +1,7 @@
 ---
 title: "Configuring Zsh on a new laptop for DevOps"
 date: 2026-07-07
-lastmod: 2026-08-19
+lastmod: 2026-08-23
 description: "A reproducible walkthrough of setting up Zsh with Oh My Zsh, fzf, deja, Starship, and zsh-patina on a fresh Linux installation."
 summary: "How to configure the Z shell with Oh My Zsh, fzf, deja, Starship, and zsh-patina on Linux."
 categories: ["infrastructure"]
@@ -258,7 +258,7 @@ echo 'source <(starship init zsh)' >> ~/.zshrc
 It ships as a `.deb` package rather than a Zsh plugin:
 
 ```bash
-ZSH_PATINA_VERSION="1.9.0"
+ZSH_PATINA_VERSION="1.10.0"
 wget https://github.com/michel-kraemer/zsh-patina/releases/download/${ZSH_PATINA_VERSION}/zsh-patina_${ZSH_PATINA_VERSION}_amd64.deb \
   --output-document /tmp/zsh-patina_${ZSH_PATINA_VERSION}_amd64.deb
 sudo dpkg --install /tmp/zsh-patina_${ZSH_PATINA_VERSION}_amd64.deb
