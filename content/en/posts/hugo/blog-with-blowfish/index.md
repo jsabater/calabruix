@@ -1,7 +1,7 @@
 ---
 title: "Build your blog using Hugo and Blowfish"
 date: 2024-09-05
-lastmod: 2026-07-04
+lastmod: 2026-08-24
 description: "An installation and configuration guide of the Hugo static site generator with the Blowfish theme for your blog website."
 summary: "Install and configure the Hugo site generator with the Blowfish theme for your blog website."
 categories: ["frameworks"]
@@ -18,7 +18,7 @@ We will be using the [Debian](https://www.debian.org) distribution of Linux, but
 In our scenario, the [Git](https://git-scm.com/) distributed version control system is the only tool required. We will use to install the Blowfish theme as a Git submodule, to access [commit information](https://gohugo.io/methods/page/gitinfo/) from a local Git repository, to save a copy of our website on [Github](https://github.com/).
 
 ```bash
-apt-get install git
+sudo apt install git
 ```
 
 ## Install Hugo
@@ -26,7 +26,7 @@ apt-get install git
 We will install the extended edition of Hugo, as recommended in their [installation instructions](https://gohugo.io/installation/linux/#editions), using a Debian package that we will download from the [latest release page at Github](https://github.com/gohugoio/hugo/releases/latest). The following set of commands will automate the task (adjust the version in the first line, if needed):
 
 ```bash
-HUGO_VERSION="0.163.3"
+HUGO_VERSION="0.165.0"
 wget https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
     --output-document /tmp/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
 sudo dpkg --install /tmp/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
@@ -85,6 +85,13 @@ When in need to upgrade to a newer version of the theme, use the following Git c
 ```bash
 cd ~/Sites/mywebsite
 git submodule update --remote --merge
+```
+
+After updating the submodule, we still need to stage and commit the changes:
+
+```bash
+git add themes/blowfish
+git commit -m "chore: bump Blowfish to version x.y.z""
 ```
 
 > Once the submodule has been updated, the site needs to be rebuilt.
