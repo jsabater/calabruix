@@ -8,7 +8,7 @@ tags: ["tooling"]
 
 Here you will find a number of articles about how I use a variety of tools and utilities in the context of Linux, and especially DevOps with Linux, including:
 
-* [The Z shell]({{ relref "/posts/tooling/zsh/" }}).
+* [The Z shell]({{<relref "/posts/tooling/zsh/">}}).
 * Vi Improved.
 
 Articles are usually standalone.
