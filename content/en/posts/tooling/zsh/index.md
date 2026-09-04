@@ -1,7 +1,7 @@
 ---
 title: "Configuring Zsh on a new laptop for DevOps"
 date: 2026-07-07
-lastmod: 2026-08-23
+lastmod: 2026-09-04
 description: "A reproducible walkthrough of setting up Zsh with Oh My Zsh, fzf, deja, Starship, and zsh-patina on a fresh Linux installation."
 summary: "How to configure the Z shell with Oh My Zsh, fzf, deja, Starship, and zsh-patina on Linux."
 categories: ["infrastructure"]
@@ -99,7 +99,7 @@ The rest of the setup does not go through *Oh My Zsh* at all. These are standalo
 ```bash
 FZF_VERSION="0.74.3"
 wget "https://github.com/junegunn/fzf/releases/download/v${FZF_VERSION}/fzf-${FZF_VERSION}-linux_amd64.tar.gz" \
-  -O /tmp/fzf.tar.gz
+  --output-document=/tmp/fzf.tar.gz
 tar -xzf /tmp/fzf.tar.gz -C ~/.local/bin fzf
 chmod +x ~/.local/bin/fzf
 rm /tmp/fzf.tar.gz
@@ -129,7 +129,7 @@ It runs as a background daemon shared across sessions, keeping the per-keystroke
 ```bash
 DEJA_VERSION="0.4.1"
 wget "https://github.com/Giammarco-Ferranti/deja/releases/download/v${DEJA_VERSION}/deja_${DEJA_VERSION}_linux_amd64.tar.gz" \
-  -O "/tmp/deja.tar.gz"
+  --output-document=/tmp/deja.tar.gz
 tar -xzf /tmp/deja.tar.gz -C ~/.local/bin deja
 chmod +x ~/.local/bin/deja
 rm /tmp/deja.tar.gz
@@ -207,7 +207,7 @@ Both *Starship* and several *Oh My Zsh* themes rely on glyphs, e.g., Git branch 
 ```bash
 NERD_FONT_VERSION="3.5.0"
 wget https://github.com/ryanoasis/nerd-fonts/releases/download/v${NERD_FONT_VERSION}/FiraCode.zip \
-  -O /tmp/FiraCode.zip
+  ---output-document=/tmp/FiraCode.zip
 mkdir -p ~/.local/share/fonts/FiraCode
 unzip /tmp/FiraCode.zip -d ~/.local/share/fonts/FiraCode
 fc-cache -fv
@@ -260,7 +260,7 @@ It ships as a `.deb` package rather than a Zsh plugin:
 ```bash
 ZSH_PATINA_VERSION="1.10.0"
 wget https://github.com/michel-kraemer/zsh-patina/releases/download/${ZSH_PATINA_VERSION}/zsh-patina_${ZSH_PATINA_VERSION}_amd64.deb \
-  --output-document /tmp/zsh-patina_${ZSH_PATINA_VERSION}_amd64.deb
+  --output-document=/tmp/zsh-patina_${ZSH_PATINA_VERSION}_amd64.deb
 sudo dpkg --install /tmp/zsh-patina_${ZSH_PATINA_VERSION}_amd64.deb
 rm /tmp/zsh-patina_${ZSH_PATINA_VERSION}_amd64.deb
 ```
