@@ -1,7 +1,7 @@
 ---
 title: "Configuring Zsh on a new laptop for DevOps"
 date: 2026-07-07
-lastmod: 2026-09-04
+lastmod: 2026-09-05
 description: "A reproducible walkthrough of setting up Zsh with Oh My Zsh, fzf, deja, Starship, and zsh-patina on a fresh Linux installation."
 summary: "How to configure the Z shell with Oh My Zsh, fzf, deja, Starship, and zsh-patina on Linux."
 categories: ["infrastructure"]
@@ -317,6 +317,112 @@ source <(zsh-patina activate)
 
 > If you decided to use some other keybinding to cycle through ranked alternatives instead of `Tab`, you will have the extra `export` line.
 
+
+## Yakuake tab labels
+
+[Yakuake](https://apps.kde.org/yakuake/) is a drop-down terminal emulator for [KDE Plasma](https://kde.org/plasma-desktop/). It embeds the same [Konsole](https://apps.kde.org/konsole/) component the standalone application uses, so profiles, colour schemes and rendering behave identically, but instead of living in a window it slides down from the top of the screen on a global shortcut (`F12` by default) and rolls back up when you are done.
+
+It comes from the distribution repositories, so unlike the tools above there is no version to pin:
+
+```bash
+sudo apt install --yes yakuake
+```
+
+Like Konsole, it keeps sessions in tabs along the bottom of the panel. Once there are six or seven of them open, the default `Shell` label is of no use at all. Therefore, we want for each tab to label itself: the name of the directory we are sitting in when the shell is idle, e.g., `mywebsite`, and the name of whatever is currently running when it is not, e.g., `mywebsite - just build`.
+
+
+### The tools for the job
+
+Zsh already has the machinery for this, and so does *Oh My Zsh*. Its `lib/termsupport.zsh` sets both the window title and the tab title on every prompt and every command, formatted through `ZSH_THEME_TERM_TITLE_IDLE` and `ZSH_THEME_TERM_TAB_TITLE_IDLE` and switched off with `DISABLE_AUTO_TITLE`. It does so the way every shell has done for decades: by printing [*](OSC) escape sequences (`\e]2;…\a` for the window, `\e]1;…\a` for the tab) into the terminal and letting the emulator interpret them.
+
+Konsole honours those sequences. Yakuake discards them, so its tab bar never receives anything and Konsole's `%w` tab title format has nothing to show. The only interface Yakuake exposes for tab labels is D-Bus (Desktop Bus).
+
+So the shape of the solution is the same as *Oh My Zsh*'s, but the transport changes. We keep:
+
+- **`add-zsh-hook`**, an autoloadable function shipped with Zsh, to register our code with the `precmd` and `preexec` hooks, i.e., the same two hooks *Starship* and *zsh-patina* use. `precmd` runs before each prompt is drawn (idle) and `preexec` runs after `Enter` but before the command executes (busy).
+- **Zsh parameter expansion** to derive the label without spawning any helper processes.
+
+And we replace the `print -Pn "\e]…"` call with a `gdbus` call. Nothing here is a plug-in, so nothing goes into the `plugins=()` array, and there is no new binary to install either: `gdbus` ships with GLib (GTK C utility library), which is already on any Plasma desktop.
+
+> If you prefer Qt's tooling, `qdbus6` takes the same arguments in a shorter form. I use `gdbus` because it is present even on machines where Qt is not.
+
+
+### How the setup works
+
+Yakuake's D-Bus service is `org.kde.yakuake`, and it exposes two objects we care about: `/yakuake/sessions`, which can tell us which session is currently active, and `/yakuake/tabs`, which can rename a tab given a session id. So, we are going to write a script that goes through three steps:
+
+1. Work out our own session id once.
+2. Define a helper that renames it.
+3. Hang that helper off the two hooks.
+
+Add the following to `~/.zshrc`:
+
+```zsh
+# Yakuake tab labels, set over D-Bus because Yakuake ignores OSC titles
+if [[ -n $KONSOLE_DBUS_SESSION ]] && (( $+commands[gdbus] )); then
+
+  typeset -g YAKUAKE_TAB_ID="${${$(gdbus call --session \
+    --dest org.kde.yakuake --object-path /yakuake/sessions \
+    --method org.kde.yakuake.activeSessionId 2>/dev/null)#\(}%,\)}"
+
+  if [[ $YAKUAKE_TAB_ID == <-> ]]; then
+
+    _yakuake_tab_title() {
+      gdbus call --session --dest org.kde.yakuake \
+        --object-path /yakuake/tabs \
+        --method org.kde.yakuake.setTabTitle \
+        "$YAKUAKE_TAB_ID" "$1" > /dev/null 2>&1 &!
+    }
+
+    _yakuake_tab_title_precmd()  { _yakuake_tab_title "${PWD:t}" }
+
+    _yakuake_tab_title_preexec() {
+      local cmd=${1%% *}
+      [[ $cmd == (sudo|doas|env|command) ]] && cmd="$cmd ${${1#* }%% *}"
+      _yakuake_tab_title "${PWD:t} - $cmd"
+    }
+
+    autoload -Uz add-zsh-hook
+    add-zsh-hook precmd  _yakuake_tab_title_precmd
+    add-zsh-hook preexec _yakuake_tab_title_preexec
+  fi
+fi
+```
+
+Reading it from the top:
+
+- **Pre-requisites.** `$KONSOLE_DBUS_SESSION` is exported by every Konsole-family terminal, and `$+commands[gdbus]` is Zsh's associative array of executables on `PATH` evaluated arithmetically, so it is `1` when the binary is found and `0` when it is not. Together they mean the whole block is simply skipped on a machine or terminal where it does not apply.
+
+- **Obtain session id.** When a new tab is created, the shell starting inside it *is* the active session, so asking once at startup gets us our own id and we never have to look it up again. `gdbus` prints return values as D-Bus tuples, e.g., `(5,)`, so the nested expansions strip that down to `5`: `${…#\(}` trims the leading `(` from the front and `${…%,\)}` trims the trailing `,)` from the end. `typeset -g` makes the result global so it survives into the functions defined below.
+
+- **Value check.** `<->` is Zsh's glob operator for a sequence of digits. If the lookup failed or returned something unexpected, the hooks are never registered at all, rather than firing broken D-Bus calls on every prompt for the rest of the session.
+
+- **Helper.** `> /dev/null 2>&1` discards both the return value and any error, so a failure never prints noise above the prompt. `&!` runs the call in the background *and* disowns it, so the process fork does not sit in the prompt's critical path and no job notification is printed. The trade-off is that two calls made in quick succession have no guaranteed ordering.
+
+- **Idle label.** `${PWD:t}` is the "tail" modifier: the last segment of the path, so `~/Projects/MyCompany/mywebsite` becomes `mywebsite`. For two levels, i.e., `MyCompany/mywebsite`, use `${PWD:h:t}/${PWD:t}` instead.
+
+- **Busy label.** `$1` in `preexec` is the full command line as typed, and `${1%% *}` cuts everything from the first space onwards to leave the first word. A bare first word is uninformative for wrappers, though, as every `sudo` command would read just `sudo`, so for those we append the second word as well: `${1#* }` drops the first word and `%% *` takes the first word of what is left, giving `sudo systemctl`.
+
+- **The registration.** `add-zsh-hook` appends to the `precmd_functions` and `preexec_functions` arrays. This matters: defining `precmd()` and `preexec()` directly would silently replace whatever *Starship* or *zsh-patina* had already installed there. Because it appends rather than replaces, this block is also indifferent to the ordering rules of the previous section, as long as it comes after *Oh My Zsh* has loaded.
+
+
+### Verifying and adjusting
+
+Open a tab and ask Yakuake for the active session id by hand:
+
+```bash
+gdbus call --session --dest org.kde.yakuake \
+  --object-path /yakuake/sessions \
+  --method org.kde.yakuake.activeSessionId
+```
+
+A tuple such as `(0,)` means the service is reachable and the block will work. If it prints nothing, or the labels never change, there are three things worth checking:
+
+1. **Dynamic tab titles.** Yakuake has a *Dynamic tab titles* option in its behaviour settings which makes it manage the labels itself. With it enabled, a title set over D-Bus is either ignored outright or applied and then immediately overwritten. Turn it off.
+
+2. **Manually renamed tabs.** Renaming a tab by double-clicking it pins the label, and D-Bus calls for that tab stop taking effect afterwards.
+
+3. **Konsole windows.** `$KONSOLE_DBUS_SESSION` is exported by Konsole as well, so if Yakuake happens to be running, a shell started in a regular Konsole window will pass the guard and relabel Yakuake's active tab from across the desktop. If you use both, compare `echo $KONSOLE_DBUS_SERVICE` in each and tighten the first condition to match only the Yakuake one.
 
 ## Validating the setup
 
