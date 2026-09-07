@@ -1,7 +1,7 @@
 ---
 title: "Configuring Zsh on a new laptop for DevOps"
 date: 2026-07-07
-lastmod: 2026-09-05
+lastmod: 2026-09-07
 description: "A reproducible walkthrough of setting up Zsh with Oh My Zsh, fzf, deja, Starship, and zsh-patina on a fresh Linux installation."
 summary: "How to configure the Z shell with Oh My Zsh, fzf, deja, Starship, and zsh-patina on Linux."
 categories: ["infrastructure"]
@@ -127,7 +127,7 @@ In practice that last pair is what makes the difference. Typing `dc` in one repo
 It runs as a background daemon shared across sessions, keeping the per-keystroke response under a millisecond, and all state lives in a local SQLite database (nothing leaves the machine). It ships as a Go binary, which we will install following these commands:
 
 ```bash
-DEJA_VERSION="0.4.1"
+DEJA_VERSION="0.4.2"
 wget "https://github.com/Giammarco-Ferranti/deja/releases/download/v${DEJA_VERSION}/deja_${DEJA_VERSION}_linux_amd64.tar.gz" \
   --output-document=/tmp/deja.tar.gz
 tar -xzf /tmp/deja.tar.gz -C ~/.local/bin deja
