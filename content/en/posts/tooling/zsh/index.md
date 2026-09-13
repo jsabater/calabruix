@@ -1,7 +1,7 @@
 ---
 title: "Configuring Zsh on a new laptop for DevOps"
 date: 2026-07-07
-lastmod: 2026-09-07
+lastmod: 2026-09-13
 description: "A reproducible walkthrough of setting up Zsh with Oh My Zsh, fzf, deja, Starship, and zsh-patina on a fresh Linux installation."
 summary: "How to configure the Z shell with Oh My Zsh, fzf, deja, Starship, and zsh-patina on Linux."
 categories: ["infrastructure"]
@@ -97,7 +97,7 @@ The rest of the setup does not go through *Oh My Zsh* at all. These are standalo
 [fzf](https://github.com/junegunn/fzf) is a general-purpose fuzzy finder for the command line. Once wired into Zsh, it upgrades reverse history search (`Ctrl + R`) into an interactive fuzzy search, and adds fuzzy file and directory completion. I install it as a pinned binary release rather than through the distribution's package manager, so the version is explicit and reproducible:
 
 ```bash
-FZF_VERSION="0.74.3"
+FZF_VERSION="0.74.4"
 wget "https://github.com/junegunn/fzf/releases/download/v${FZF_VERSION}/fzf-${FZF_VERSION}-linux_amd64.tar.gz" \
   --output-document=/tmp/fzf.tar.gz
 tar -xzf /tmp/fzf.tar.gz -C ~/.local/bin fzf
