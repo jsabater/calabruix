@@ -91,7 +91,7 @@ After updating the submodule, we still need to stage and commit the changes:
 
 ```bash
 git add themes/blowfish
-git commit -m "chore: bump Blowfish to version x.y.z""
+git commit -m "chore: bump Blowfish to version x.y.z"
 ```
 
 > Once the submodule has been updated, the site needs to be rebuilt.
