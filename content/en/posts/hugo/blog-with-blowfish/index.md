@@ -1,7 +1,7 @@
 ---
 title: "Build your blog using Hugo and Blowfish"
 date: 2024-09-05
-lastmod: 2026-09-26
+lastmod: 2026-10-08
 description: "An installation and configuration guide of the Hugo static site generator with the Blowfish theme for your blog website."
 summary: "Install and configure the Hugo site generator with the Blowfish theme for your blog website."
 categories: ["frameworks"]
