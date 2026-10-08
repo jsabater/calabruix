@@ -26,7 +26,7 @@ sudo apt install git
 We will install the extended edition of Hugo, as recommended in their [installation instructions](https://gohugo.io/installation/linux/#editions), using a Debian package that we will download from the [latest release page at Github](https://github.com/gohugoio/hugo/releases/latest). The following set of commands will automate the task (adjust the version in the first line, if needed):
 
 ```bash
-HUGO_VERSION="0.166.0"
+HUGO_VERSION="0.167.0"
 wget https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
     --output-document /tmp/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
 sudo dpkg --install /tmp/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
