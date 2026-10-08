@@ -149,9 +149,16 @@ forgejoDefaultServer = "https://v8.next.forgejo.org"
   # token = "XXXXXX"
   # enableTrackEvent = true
 
+[kofi]
+  identifier = "jsabater"
+  globalWidget = false
+  # globalWidgetMessage = "Hello"
+  # globalWidgetBackgroundColor =	#00B9FE
+  # globalWidgetTextColor =	#FFFFFF
+
 [buymeacoffee]
-  # identifier = "jsabater"
-  # globalWidget = true
+  identifier = "jsabater"
+  globalWidget = false
   # globalWidgetMessage = "Hello"
   # globalWidgetColor = "#FFDD00"
   # globalWidgetPosition = "Right"
