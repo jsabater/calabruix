@@ -1,7 +1,7 @@
 ---
 title: "Find in text files using fuzzy search with fif"
 date: 2026-09-04
-lastmod: 2026-09-04
+lastmod: 2026-10-12
 description: "Installing and configuring fif, a fuzzy find-in-files tool built on fzf, ripgrep and bat, with a live syntax-highlighted preview."
 summary: "fif turns fzf, ripgrep and bat into a single fuzzy search-inside-files tool with an instant, highlighted preview of every match."
 categories: ["infrastructure"]
@@ -72,7 +72,7 @@ No `batcat` symlink needed on this route (the binary is already named `bat`).
 *fzf*, from the [releases page](https://github.com/junegunn/fzf/releases/latest):
 
 ```bash
-FZF_VERSION="0.74.3"
+FZF_VERSION="0.74.5"
 wget "https://github.com/junegunn/fzf/releases/download/v${FZF_VERSION}/fzf-${FZF_VERSION}-linux_amd64.tar.gz" \
   --output-document=/tmp/fzf.tar.gz
 tar -xzf /tmp/fzf.tar.gz -C ~/.local/bin fzf
